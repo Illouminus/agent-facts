@@ -45,16 +45,22 @@ _SECRET_PATTERNS = tuple(
         r"\b(?=[A-Za-z0-9_]*[0-9])(?=[A-Za-z0-9_]*[G-Zg-z_])[A-Za-z0-9_]{32,}\b",
     )
 )
-# `name: value` / `name=value` / `"name": "value"`; the name is kept, the value redacted.
+# `name: value` / `name=value` / `"name": "value"`; the name is kept, the value redacted. A
+# quoted value runs to its closing quote; an unquoted one to whitespace, a quote or `&`.
+_SECRET_NAMES = (
+    r"x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|auth[_-]?token|id[_-]?token"
+    r"|client[_-]?secret|secret[_-]?key|private[_-]?key|authorization|password|passwd|pwd|secret"
+)
 _NAMED_SECRET = re.compile(
-    r"(?i)\b(?P<name>x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|auth[_-]?token"
-    r"|id[_-]?token|client[_-]?secret|secret[_-]?key|private[_-]?key|authorization"
-    r"|password|passwd|pwd|token|secret)"
-    r"(?P<sep>[\"']?\s*[:=]\s*[\"']?)"
-    r"(?P<value>(?:(?:bearer|basic|token)\s+)?[^\s\"'&,;]+)"
+    rf"(?i)\b(?P<name>{_SECRET_NAMES}|token)"
+    r"(?P<sep>[\"']?\s*[:=]\s*(?P<quote>[\"'])?)"
+    r"(?P<value>(?(quote)[^\"'\n]*|(?:(?:bearer|basic|token)\s+)?[^\s\"'&]+))"
 )
 _SCHEME_VALUE = re.compile(r"(?i)^(?:bearer|basic|token)\s")
-_AUTH_SCHEME = re.compile(r"(?i)\b(?P<scheme>bearer|basic)\s+(?=\S*[0-9])[A-Za-z0-9._~+/=-]{8,}")
+_AUTH_SCHEME = re.compile(
+    r"(?i)\b(?P<scheme>bearer|basic)\s+"
+    r"(?:(?=\S*[0-9])[A-Za-z0-9._~+/=-]{8,}|[A-Za-z0-9._~+/=-]{16,})"
+)
 
 _PROMPT_MARKERS = re.compile(
     r"ignore (?:all |any |the )*(?:previous|prior|above)"
@@ -64,12 +70,16 @@ _PROMPT_MARKERS = re.compile(
 
 
 def _named_secret(m: re.Match[str]) -> str:
-    value, sep = m["value"], m["sep"]
-    if "=" in sep or '"' in sep or "'" in sep or _SCHEME_VALUE.match(value):
-        secret = len(value) >= 4
-    else:  # prose like "Invalid token: expired" is not a credential
-        secret = len(value) >= 8 and any(c.isdigit() for c in value)
-    return f"{m['name']}{sep}{REDACTED}" if secret else m[0]
+    value = m["value"]
+    if not value:
+        return m[0]
+    # Only a bare `token: word` is ambiguous ("Invalid token: expired"); every other name, and
+    # any quoted or `=` form, is redacted whatever the value looks like.
+    prose = m["name"].lower() == "token" and m["quote"] is None and "=" not in m["sep"]
+    if prose and not _SCHEME_VALUE.match(value):
+        if len(value) < 8 or not any(c.isdigit() for c in value):
+            return m[0]
+    return f"{m['name']}{m['sep']}{REDACTED}"
 
 
 def redact_secrets(text: str) -> str:
@@ -179,8 +189,11 @@ def extract_signal(
         value = _lookup(data, path)
         leaf = path[-1].lower()
         if code is None and leaf in _CODE_LEAVES and isinstance(value, str | int):
-            if not isinstance(value, bool) and _ERROR_CODE.match(str(value)):
-                code = str(value)
+            candidate = str(value)
+            # a code is an enum-like vendor word; anything secret-shaped is not one
+            if not isinstance(value, bool) and _ERROR_CODE.match(candidate):
+                if len(candidate) <= 64 and redact_secrets(candidate) == candidate:
+                    code = candidate
         elif message is None and leaf in _MESSAGE_LEAVES and isinstance(value, str):
             message = value.strip() or None
     raw = message or _first_line(excerpt)

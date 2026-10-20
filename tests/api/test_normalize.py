@@ -86,10 +86,28 @@ def test_secret_shaped_strings_are_redacted(secret):
         ('{"api_key": "hunter2hunter2"}', '{"api_key": "<redacted>"}'),
         ("password=correcthorse&x=1", "password=<redacted>&x=#"),
         ("client_secret: s3cr3t-value", "client_secret: <redacted>"),
+        ("password: hunter", "password: <redacted>"),
+        ("password=abc", "password=<redacted>"),
+        ('{"password": "my long pass; phrase"}', '{"password": "<redacted>"}'),
+        ("'secret'='a,b;c' end", "'secret'='<redacted>' end"),
+        ("access_token: abc", "access_token: <redacted>"),
+        ("token=abc", "token=<redacted>"),
+        ("token: s3cr3tvalue9", "token: <redacted>"),
     ],
 )
 def test_named_secrets_keep_their_name(raw, expected):
     assert normalize(raw) == expected
+
+
+@pytest.mark.parametrize(
+    "raw", ["Invalid token: expired", "token: missing", "Bearer authentication required"]
+)
+def test_prose_around_secret_words_survives(raw):
+    assert redact_secrets(raw) == raw
+
+
+def test_long_letter_only_bearer_token_is_redacted():
+    assert redact_secrets("Bearer abcdefghijklmnopqrst") == "Bearer <redacted>"
 
 
 def test_private_key_block_is_redacted():
@@ -203,6 +221,7 @@ def test_status_only():
     assert (s.status, s.normalized, s.empty) == (429, None, False)
 
 
-def test_code_with_bad_characters_is_dropped():
-    body = '{"error": {"code": "not a code!"}}'
+@pytest.mark.parametrize("code", ["not a code!", "sk_live_51HxAbCdEfGhIjKlMnOpQrSt", "x" * 65])
+def test_code_that_is_not_a_vendor_word_is_dropped(code):
+    body = f'{{"error": {{"code": "{code}"}}}}'
     assert extract_signal(400, body, ("error.code",)).error_code is None
