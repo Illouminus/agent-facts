@@ -1,0 +1,11 @@
+# Every 15 minutes (spec 04 tick). Enable: systemctl --user enable --now agentfacts-probe.timer
+[Unit]
+Description=agent-facts probe tick every 15 minutes
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=60
+Unit=agentfacts-probe.service
+
+[Install]
+WantedBy=timers.target

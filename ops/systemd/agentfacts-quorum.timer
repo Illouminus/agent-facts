@@ -1,0 +1,11 @@
+# NOT ENABLED: waits for W4 (see agentfacts-quorum.service). Hourly per spec 08.
+[Unit]
+Description=agent-facts quorum + bot hourly (W4, not enabled)
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=120
+Unit=agentfacts-quorum.service
+
+[Install]
+WantedBy=timers.target

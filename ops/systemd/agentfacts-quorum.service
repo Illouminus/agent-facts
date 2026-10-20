@@ -1,0 +1,13 @@
+# NOT ENABLED: W4 (agentfacts quorum / agentfacts bot, spec 05) is not merged yet; these commands
+# do not exist on main. Enable the timer only after W4 lands and its dry run is green:
+#   systemctl --user enable --now agentfacts-quorum.timer
+[Unit]
+Description=agent-facts quorum + bot (W4, not enabled)
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/apps/agent-facts
+ExecStart=/bin/sh -c '%h/apps/agent-facts/.venv/bin/agentfacts quorum run && %h/apps/agent-facts/.venv/bin/agentfacts bot publish'
+Nice=10
+TimeoutStartSec=1800

@@ -1,0 +1,13 @@
+# One probe tick (spec 04): due probes only, at most 50, results to var/results.jsonl.
+# Kill switch: `touch %h/apps/agent-facts/ops/KILL` (or AGENTFACTS_KILL=1) → the tick exits before
+# its first request. Probe keys are injected by the runner itself, by name (spec 04).
+[Unit]
+Description=agent-facts probe tick (vantage illouminus)
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/apps/agent-facts
+ExecStart=%h/apps/agent-facts/.venv/bin/agentfacts probe run --due --max 50 --vantage illouminus --root %h/apps/agent-facts
+Nice=10
+TimeoutStartSec=840
