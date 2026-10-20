@@ -1,0 +1,8 @@
+id: af:stripe:probe:deleted-customer
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: GET, path: /v1/customers/cus_deleted_fixture}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.deleted, equals: true}

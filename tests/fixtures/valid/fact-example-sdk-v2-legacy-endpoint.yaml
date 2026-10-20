@@ -1,0 +1,20 @@
+id: af:example:sdk-v2-legacy-endpoint
+service: example
+kind: deprecation
+target:
+  surface: sdk
+  sdk: {package: example-sdk, ecosystem: pypi, versions: ">=2,<3"}
+claim: >
+  example-sdk 2.x calls the v1 endpoints, which stop accepting requests on 2027-01-01.
+dimensions:
+  env: prod
+fixes:
+  - {action: upgrade_sdk, package: example-sdk, ecosystem: pypi, min_version: 3.0.0}
+status: official
+evidence:
+  first_seen: 2026-10-20T12:00:00Z
+  official_url: https://docs.example.com/sdk/migration-v3
+provenance:
+  source: producer
+  author: producer:example
+  created: 2026-10-20

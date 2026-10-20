@@ -13,11 +13,19 @@ PROBLEM_LINE = re.compile(r"^.+:\d+: [a-z_]+ .+$")
 runner = CliRunner()
 
 
+def _valid_summary() -> str:
+    """`N files (a fact, b probe, c service)` for tests/fixtures/valid, named `<type>-*.yaml`."""
+    files = sorted((FIXTURES / "valid").glob("*.yaml"))
+    types = ("fact", "probe", "service")
+    kinds = ", ".join(f"{sum(f.name.startswith(f'{t}-') for f in files)} {t}" for t in types)
+    return f"{len(files)} files ({kinds})"
+
+
 def test_valid_fixtures_exit_0():
     result = runner.invoke(app, ["validate", str(FIXTURES / "valid")])
     assert result.exit_code == 0, result.output
     assert result.stdout == ""
-    assert "ok: 3 files (1 fact, 1 probe, 1 service)" in result.stderr
+    assert f"ok: {_valid_summary()}" in result.stderr
 
 
 def test_invalid_fixtures_exit_1_with_one_problem_per_line():
@@ -26,7 +34,10 @@ def test_invalid_fixtures_exit_1_with_one_problem_per_line():
     lines = result.stdout.splitlines()
     assert len(lines) >= 5
     assert all(PROBLEM_LINE.match(line) for line in lines), lines
-    assert "problems in 5 of 8 files" in result.stderr
+    total = len(list((FIXTURES / "valid").glob("*.yaml"))) + len(
+        list((FIXTURES / "invalid").glob("*.yaml"))
+    )
+    assert f"problems in 5 of {total} files" in result.stderr
 
 
 def test_missing_path_is_a_usage_error():

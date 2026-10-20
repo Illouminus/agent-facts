@@ -1,0 +1,19 @@
+# Fictional second service (reserved example.com domain): an sdk-surface, official fact.
+key: example
+name: Example API
+hosts: [api.example.com]
+doc_hosts: [docs.example.com]
+surfaces:
+  http:
+    base_url: https://api.example.com
+    templates:
+      - {method: GET, path: /v1/items}
+  sdk:
+    - {ecosystem: pypi, package: example-sdk}
+dimensions:
+  env: {prod: https://api.example.com}
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://example.com/terms
