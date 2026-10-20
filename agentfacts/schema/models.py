@@ -6,8 +6,9 @@ same verdicts on every fixture. Numbers and booleans are strict, as in JSON Sche
 integer).
 """
 
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, ClassVar, Literal
+from typing import Annotated, Any, ClassVar, Literal
 
 from pydantic import (
     BaseModel,
@@ -467,6 +468,39 @@ class SleepStep(_Closed):
     seconds: Annotated[Number, Field(gt=0, le=300)]
 
 
+# The runner injects credentials; a probe never carries them or redirects the request elsewhere.
+FORBIDDEN_PROBE_HEADERS = frozenset({"authorization", "proxy-authorization", "cookie", "host"})
+# A prod probe is read-only: no body and no way to turn a GET into a write.
+METHOD_OVERRIDE_HEADERS = frozenset(
+    {"x-http-method-override", "x-http-method", "x-method-override"}
+)
+METHOD_OVERRIDE_PARAMS = frozenset({"_method"})
+READ_ONLY_METHODS = frozenset({"GET", "HEAD"})
+
+
+def http_step_violations(step: Mapping[str, Any], env: str) -> list[tuple[str, str, str]]:
+    """Rules on one http step that JSON Schema cannot state case-insensitively.
+
+    Returns `(field, code, message)` triples; shared by `Probe` and `agentfacts validate`.
+    """
+    found: list[tuple[str, str, str]] = []
+    headers = {str(name).lower() for name in (step.get("headers") or {})}
+    for name in sorted(headers & FORBIDDEN_PROBE_HEADERS):
+        found.append(("headers", "forbidden_header", f"probes may not set {name}; the runner does"))
+    if env == Env.prod:
+        if step.get("method") not in READ_ONLY_METHODS:
+            found.append(("method", "prod_probe_not_readonly", "prod probes may only GET or HEAD"))
+        for body in ("form", "json"):
+            if step.get(body) is not None:
+                found.append((body, "prod_probe_not_readonly", f"prod probes may not send {body}"))
+        for name in sorted(headers & METHOD_OVERRIDE_HEADERS):
+            found.append(("headers", "prod_probe_not_readonly", f"method override header {name}"))
+        params = {str(name).lower() for name in (step.get("query") or {})}
+        for name in sorted(params & METHOD_OVERRIDE_PARAMS):
+            found.append(("query", "prod_probe_not_readonly", f"method override parameter {name}"))
+    return found
+
+
 Step = Annotated[HttpStep | SleepStep, Field(discriminator="do")]
 StepRef = Annotated[StrictInt, Field(ge=1)]
 
@@ -547,11 +581,15 @@ class Probe(_Closed):
     )
 
     @model_validator(mode="after")
-    def _prod_is_read_only(self) -> "Probe":
-        if self.env is Env.prod:
-            for step in self.steps:
-                if isinstance(step, HttpStep) and step.method not in ("GET", "HEAD"):
-                    raise ValueError("a probe with env prod may only use GET or HEAD")
+    def _step_rules(self) -> "Probe":
+        for i, step in enumerate(self.steps, 1):
+            if isinstance(step, HttpStep):
+                data = step.model_dump(by_alias=True, exclude_none=True)
+                for field, code, message in http_step_violations(data, self.env):
+                    raise ValueError(f"steps[{i}].{field}: {code}: {message}")
+        for a in self.assertions:
+            if a.step > len(self.steps):
+                raise ValueError(f"assertion references step {a.step} of {len(self.steps)}")
         return self
 
 

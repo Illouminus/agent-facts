@@ -134,15 +134,15 @@
       },
       "allOf": [
         {
-          "if": {"required": ["kind"], "properties": {"kind": {"enum": ["bearer", "basic", "header", "query"]}}},
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["bearer", "basic", "header", "query"]}}},
           "then": {"required": ["key_name", "env"]}
         },
         {
-          "if": {"required": ["kind"], "properties": {"kind": {"const": "header"}}},
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "header"}}},
           "then": {"required": ["header_name"]}
         },
         {
-          "if": {"required": ["kind"], "properties": {"kind": {"const": "query"}}},
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "query"}}},
           "then": {"required": ["param_name"]}
         }
       ]

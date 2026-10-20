@@ -1,0 +1,37 @@
+id: af:stripe:invalid-free-text-fix      # stable; af:<service>:<slug>
+service: stripe                                            # key of services/stripe.yaml
+kind: error_meaning                                        # enum below
+target:
+  surface: http                                            # http | sdk | cli
+  method: POST
+  path_template: /v1/payment_intents                       # from the service's registered templates
+  sdk: {package: stripe, ecosystem: pypi, versions: ">=7,<13"}   # optional, when surface=sdk
+signal:                                                    # what the agent observes
+  status: 400
+  error_code: idempotency_error                            # vendor code if any
+  error_string: "Keys for idempotent requests can only be used with the same parameters they were first used with."
+  normalized: "keys for idempotent requests can only be used with the same parameters they were first used with"
+claim: >                                                   # ONE sentence, declarative, no advice
+  Reusing an Idempotency-Key with a different request body returns HTTP 400 idempotency_error
+  for 24 hours after the first request.
+dimensions:
+  env: prod                                                # prod | sandbox
+  plan: any                                                # vendor plan name or any
+  region: any
+  account_state: any                                       # enum defined per service
+fixes:                                                     # typed only, see 02-fix-vocabulary.md
+  - "Regenerate the idempotency key for every new request."
+status: verified:server:prod                               # see table
+evidence:
+  probe: af:stripe:probe:idempotency-key-reuse             # probes/stripe/idempotency-key-reuse.yaml
+  first_seen: 2026-10-22T09:14:00Z
+  last_confirmed: 2026-10-22T09:14:00Z
+  confirmations: 1
+  vantages: [illouminus]
+  official_url: https://docs.stripe.com/api/idempotent_requests    # optional; status official needs it
+  observations: 0                                          # distinct reporter networks that hit this
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-22
+  history: [{date: 2026-10-22, change: created, by: bot}]

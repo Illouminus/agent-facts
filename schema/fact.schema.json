@@ -58,19 +58,19 @@
   },
   "allOf": [
     {
-      "if": {"required": ["status"], "properties": {"status": {"const": "verified:server:prod"}}},
+      "if": {"type": "object", "required": ["status"], "properties": {"status": {"const": "verified:server:prod"}}},
       "then": {"properties": {"dimensions": {"properties": {"env": {"const": "prod", "x-error-codes": {"const": "status_env_mismatch"}}}}}}
     },
     {
-      "if": {"required": ["status"], "properties": {"status": {"const": "verified:server:sandbox"}}},
+      "if": {"type": "object", "required": ["status"], "properties": {"status": {"const": "verified:server:sandbox"}}},
       "then": {"properties": {"dimensions": {"properties": {"env": {"const": "sandbox", "x-error-codes": {"const": "status_env_mismatch"}}}}}}
     },
     {
-      "if": {"required": ["status"], "properties": {"status": {"enum": ["verified:server:prod", "verified:server:sandbox", "verified:client"]}}},
+      "if": {"type": "object", "required": ["status"], "properties": {"status": {"enum": ["verified:server:prod", "verified:server:sandbox", "verified:client"]}}},
       "then": {"properties": {"evidence": {"required": ["probe"], "x-error-codes": {"required": "verified_needs_probe"}}}}
     },
     {
-      "if": {"required": ["status"], "properties": {"status": {"const": "official"}}},
+      "if": {"type": "object", "required": ["status"], "properties": {"status": {"const": "official"}}},
       "then": {"properties": {"evidence": {"required": ["official_url"], "x-error-codes": {"required": "official_needs_url"}}}}
     }
   ],
@@ -108,8 +108,8 @@
         }
       },
       "allOf": [
-        {"if": {"required": ["surface"], "properties": {"surface": {"const": "http"}}}, "then": {"required": ["method", "path_template"]}},
-        {"if": {"required": ["surface"], "properties": {"surface": {"const": "sdk"}}}, "then": {"required": ["sdk"]}}
+        {"if": {"type": "object", "required": ["surface"], "properties": {"surface": {"const": "http"}}}, "then": {"required": ["method", "path_template"]}},
+        {"if": {"type": "object", "required": ["surface"], "properties": {"surface": {"const": "sdk"}}}, "then": {"required": ["sdk"]}}
       ]
     },
     "signal": {
