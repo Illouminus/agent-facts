@@ -3,7 +3,7 @@
 from datetime import UTC, date, datetime
 
 import pytest
-from conftest import quorum_rows, row
+from quorum_fixtures import quorum_rows, row
 
 from agentfacts.quorum.group import group_observations, load_observations, period_window
 

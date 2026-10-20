@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from conftest import quorum_rows, row
+from quorum_fixtures import quorum_rows, row
 
 from agentfacts.probe.budget import BudgetState
 from agentfacts.probe.runner import TickOptions, run_tick

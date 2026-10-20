@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from conftest import quorum_rows
+from quorum_fixtures import quorum_rows
 
 from agentfacts.probe.loader import LoadedFact, LoadedProbe
 from agentfacts.quorum.draft import covering_fact, matching_probe

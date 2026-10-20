@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from conftest import quorum_rows
+from quorum_fixtures import quorum_rows
 from typer.testing import CliRunner
 
 from agentfacts.cli import app
