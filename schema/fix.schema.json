@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facts.baillot.dev/schema/v0/fix.schema.json",
+  "title": "Fix",
+  "description": "One typed fix from the closed vocabulary (docs/specs/02-fix-vocabulary.md). A discriminated union on `action`: each action has its own parameters and nothing else; no free text, no shell, no foreign URLs.",
+  "type": "object",
+  "required": ["action"],
+  "properties": {
+    "action": {
+      "enum": [
+        "retry_after_header",
+        "backoff_exponential",
+        "set_header",
+        "set_param",
+        "remove_param",
+        "use_endpoint",
+        "paginate_with",
+        "pin_sdk_version",
+        "upgrade_sdk",
+        "switch_env",
+        "request_scope",
+        "wait_for_state",
+        "enable_in_dashboard",
+        "reduce_payload",
+        "encode_as",
+        "none_known"
+      ],
+      "x-error-codes": {"enum": "unknown_fix_action"}
+    }
+  },
+  "allOf": [
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "retry_after_header"}}}, "then": {"$ref": "#/$defs/retry_after_header"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "backoff_exponential"}}}, "then": {"$ref": "#/$defs/backoff_exponential"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "set_header"}}}, "then": {"$ref": "#/$defs/set_header"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "set_param"}}}, "then": {"$ref": "#/$defs/set_param"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "remove_param"}}}, "then": {"$ref": "#/$defs/remove_param"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "use_endpoint"}}}, "then": {"$ref": "#/$defs/use_endpoint"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "paginate_with"}}}, "then": {"$ref": "#/$defs/paginate_with"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "pin_sdk_version"}}}, "then": {"$ref": "#/$defs/pin_sdk_version"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "upgrade_sdk"}}}, "then": {"$ref": "#/$defs/upgrade_sdk"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "switch_env"}}}, "then": {"$ref": "#/$defs/switch_env"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "request_scope"}}}, "then": {"$ref": "#/$defs/request_scope"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "wait_for_state"}}}, "then": {"$ref": "#/$defs/wait_for_state"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "enable_in_dashboard"}}}, "then": {"$ref": "#/$defs/enable_in_dashboard"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "reduce_payload"}}}, "then": {"$ref": "#/$defs/reduce_payload"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "encode_as"}}}, "then": {"$ref": "#/$defs/encode_as"}},
+    {"if": {"type": "object", "required": ["action"], "properties": {"action": {"const": "none_known"}}}, "then": {"$ref": "#/$defs/none_known"}}
+  ],
+  "$defs": {
+    "header_name": {"type": "string", "pattern": "^[A-Za-z0-9-]{1,128}(?!\\n)$"},
+    "identifier": {
+      "description": "A parameter, field or setting name; JSON-path-like characters allowed, no whitespace.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}(?!\\n)$"
+    },
+    "value_source": {
+      "description": "literal:<v> (no whitespace, no ':'), a fresh UUID per request or per distinct request, or an account setting.",
+      "type": "string",
+      "pattern": "^(new_uuid_per_request|new_uuid_per_distinct_request|literal:[A-Za-z0-9._/+=,-]{1,128}|account_setting:[A-Za-z0-9_.-]{1,64})(?!\\n)$"
+    },
+    "location": {"enum": ["query", "body", "header"]},
+    "http_method": {"enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]},
+    "path_template": {"type": "string", "pattern": "^/[^\\s?#]{0,255}(?!\\n)$"},
+    "ecosystem": {"enum": ["pypi", "npm"]},
+    "package": {"type": "string", "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}(?!\\n)$"},
+    "version_constraint": {"type": "string", "pattern": "^[A-Za-z0-9.,<>=!~^*|+-]{1,64}(?!\\n)$"},
+    "version": {"type": "string", "pattern": "^[A-Za-z0-9.+-]{1,64}(?!\\n)$"},
+    "env": {"enum": ["prod", "sandbox"]},
+    "https_url": {"type": "string", "pattern": "^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[^\\s]*)?(?!\\n)$", "maxLength": 512},
+    "attempts": {"type": "integer", "minimum": 1, "maximum": 20},
+
+    "retry_after_header": {
+      "type": "object",
+      "required": ["action", "unit", "max_attempts"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "retry_after_header"},
+        "header": {"$ref": "#/$defs/header_name", "default": "Retry-After"},
+        "unit": {"enum": ["s", "ms"]},
+        "max_attempts": {"$ref": "#/$defs/attempts"}
+      }
+    },
+    "backoff_exponential": {
+      "type": "object",
+      "required": ["action", "base_ms", "factor", "max_ms", "max_attempts", "jitter"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "backoff_exponential"},
+        "base_ms": {"type": "integer", "minimum": 1, "maximum": 600000},
+        "factor": {"type": "number", "exclusiveMinimum": 1, "maximum": 10},
+        "max_ms": {"type": "integer", "minimum": 1, "maximum": 3600000},
+        "max_attempts": {"$ref": "#/$defs/attempts"},
+        "jitter": {"type": "boolean"}
+      }
+    },
+    "set_header": {
+      "type": "object",
+      "required": ["action", "name", "value_source"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "set_header"},
+        "name": {"$ref": "#/$defs/header_name"},
+        "value_source": {"$ref": "#/$defs/value_source"}
+      }
+    },
+    "set_param": {
+      "type": "object",
+      "required": ["action", "name", "value_source"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "set_param"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "value_source": {"$ref": "#/$defs/value_source"},
+        "location": {"$ref": "#/$defs/location"}
+      }
+    },
+    "remove_param": {
+      "type": "object",
+      "required": ["action", "name", "location"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "remove_param"},
+        "name": {"$ref": "#/$defs/identifier"},
+        "location": {"$ref": "#/$defs/location"}
+      }
+    },
+    "use_endpoint": {
+      "description": "path_template must also be a registered template of the fact's service (checked by agentfacts validate).",
+      "type": "object",
+      "required": ["action", "method", "path_template"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "use_endpoint"},
+        "method": {"$ref": "#/$defs/http_method"},
+        "path_template": {"$ref": "#/$defs/path_template"}
+      }
+    },
+    "paginate_with": {
+      "type": "object",
+      "required": ["action", "cursor_field", "param_name", "page_size_max"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "paginate_with"},
+        "cursor_field": {"$ref": "#/$defs/identifier"},
+        "param_name": {"$ref": "#/$defs/identifier"},
+        "page_size_max": {"type": "integer", "minimum": 1, "maximum": 100000}
+      }
+    },
+    "pin_sdk_version": {
+      "type": "object",
+      "required": ["action", "package", "ecosystem", "constraint"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "pin_sdk_version"},
+        "package": {"$ref": "#/$defs/package"},
+        "ecosystem": {"$ref": "#/$defs/ecosystem"},
+        "constraint": {"$ref": "#/$defs/version_constraint"}
+      }
+    },
+    "upgrade_sdk": {
+      "type": "object",
+      "required": ["action", "package", "ecosystem", "min_version"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "upgrade_sdk"},
+        "package": {"$ref": "#/$defs/package"},
+        "ecosystem": {"$ref": "#/$defs/ecosystem"},
+        "min_version": {"$ref": "#/$defs/version"}
+      }
+    },
+    "switch_env": {
+      "type": "object",
+      "required": ["action", "to", "reason_kind"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "switch_env"},
+        "to": {"$ref": "#/$defs/env"},
+        "reason_kind": {"enum": ["feature_missing", "state_unreachable"]}
+      }
+    },
+    "request_scope": {
+      "description": "A scope that is a URL must be on the vendor's domain (checked by agentfacts validate).",
+      "type": "object",
+      "required": ["action", "scope"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "request_scope"},
+        "scope": {"type": "string", "pattern": "^[A-Za-z0-9._:/-]{1,128}(?!\\n)$"}
+      }
+    },
+    "wait_for_state": {
+      "type": "object",
+      "required": ["action", "account_state", "typical_delay_s"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "wait_for_state"},
+        "account_state": {"type": "string", "pattern": "^[a-z0-9_-]{1,64}(?!\\n)$"},
+        "typical_delay_s": {"type": "integer", "minimum": 0, "maximum": 2592000}
+      }
+    },
+    "enable_in_dashboard": {
+      "description": "vendor_doc_url must be on the vendor's domain (checked by agentfacts validate).",
+      "type": "object",
+      "required": ["action", "setting_key", "vendor_doc_url"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "enable_in_dashboard"},
+        "setting_key": {"$ref": "#/$defs/identifier"},
+        "vendor_doc_url": {"$ref": "#/$defs/https_url"}
+      }
+    },
+    "reduce_payload": {
+      "type": "object",
+      "required": ["action", "field"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "reduce_payload"},
+        "field": {"$ref": "#/$defs/identifier"},
+        "max_bytes": {"type": "integer", "minimum": 1},
+        "max_items": {"type": "integer", "minimum": 1}
+      },
+      "oneOf": [{"required": ["max_bytes"]}, {"required": ["max_items"]}]
+    },
+    "encode_as": {
+      "type": "object",
+      "required": ["action", "field", "encoding"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "encode_as"},
+        "field": {"$ref": "#/$defs/identifier"},
+        "encoding": {"enum": ["base64", "url", "json_string", "rfc3339"]}
+      }
+    },
+    "none_known": {
+      "type": "object",
+      "required": ["action", "reason_kind"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {"const": "none_known"},
+        "reason_kind": {"enum": ["vendor_side", "investigating", "by_design"]}
+      }
+    }
+  }
+}

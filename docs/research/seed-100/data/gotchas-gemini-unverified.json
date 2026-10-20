@@ -1,0 +1,893 @@
+{
+ "source": "Gemini 3.8 flash-high via agy, 2026-10-20, from model knowledge only, UNVERIFIED hints",
+ "services": 60,
+ "items": 97,
+ "confidence": {
+  "high": 89,
+  "medium": 8
+ },
+ "data": [
+  {
+   "service": "stripe",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: Keys for idempotent requests cannot be reused with differing parameters",
+     "claim": "Reusing an Idempotency-Key header with a mutated request payload causes immediate rejection instead of returning the original result.",
+     "fix_hint": "Generate a unique UUID per distinct request payload rather than caching keys across mutation attempts.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Stripe-Signature timestamp verification failure",
+     "claim": "Stripe webhook verification rejects payloads if the server clock drifts more than 300 seconds from Stripe's timestamp.",
+     "fix_hint": "Synchronize host system clocks via NTP and allow a small tolerance window in signature verification code.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "github",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: Request forbidden by administrative rules. Please make sure your request has a User-Agent header",
+     "claim": "GitHub API unconditionally rejects requests lacking a User-Agent header.",
+     "fix_hint": "Set a descriptive User-Agent header with your app or username on every HTTP request.",
+     "confidence": "high"
+    },
+    {
+     "signal": "403 Forbidden: You have exceeded a secondary rate limit",
+     "claim": "Rapid concurrent requests trigger secondary rate limits even when primary hourly quotas are nearly untouched.",
+     "fix_hint": "Serialize write requests and implement exponential backoff honoring the Retry-After header.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "slack",
+   "gotchas": [
+    {
+     "signal": "Events API handshake challenge",
+     "claim": "Slack drops Event Subscriptions if the endpoint does not echo back the challenge parameter in plaintext or JSON within 3 seconds.",
+     "fix_hint": "Respond immediately with the raw challenge value upon receiving url_verification events.",
+     "confidence": "high"
+    },
+    {
+     "signal": "200 OK with {\"ok\": false, \"error\": \"not_in_channel\"}",
+     "claim": "Slack returns HTTP 200 with an error object inside the body when the bot attempts actions in channels it has not joined.",
+     "fix_hint": "Inspect the ok boolean in response bodies and invoke conversations.join before posting.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "openai",
+   "gotchas": [
+    {
+     "signal": "data: [DONE]",
+     "claim": "OpenAI Server-Sent Events streams terminate with a non-JSON data: [DONE] string that breaks standard JSON decoders.",
+     "fix_hint": "Check for the [DONE] sentinel string before passing stream chunk buffers to JSON.parse.",
+     "confidence": "high"
+    },
+    {
+     "signal": "429 Too Many Requests: rate_limit_exceeded (TPM vs RPM)",
+     "claim": "Tokens-per-minute (TPM) limits are frequently exhausted by large prompt contexts before requests-per-minute (RPM) limits are hit.",
+     "fix_hint": "Track estimated prompt and completion tokens client-side and throttle requests based on TPM.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "anthropic",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: anthropic-version header missing",
+     "claim": "Anthropic API rejects requests that do not specify the anthropic-version header.",
+     "fix_hint": "Add anthropic-version: 2023-06-01 to your default request headers.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: messages: each tool_result block must have a corresponding tool_use block",
+     "claim": "Submitting a tool_result with an invalid, out-of-order, or missing tool_use_id fails validation immediately.",
+     "fix_hint": "Ensure tool_result blocks strictly mirror preceding assistant tool_use IDs in consecutive sequence.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "google-gemini",
+   "gotchas": [
+    {
+     "signal": "finishReason: \"SAFETY\" with empty candidates[0].content.parts",
+     "claim": "When safety filters trigger, Gemini returns HTTP 200 with no text parts, causing IndexError or null pointer exceptions in client code.",
+     "fix_hint": "Inspect candidates[0].finishReason before accessing content parts.",
+     "confidence": "high"
+    },
+    {
+     "signal": "finishReason: \"RECITATION\"",
+     "claim": "Gemini silently blocks generation when the model attempts to emit copyrighted or verbatim source training text.",
+     "fix_hint": "Catch RECITATION finish reasons and prompt the model to synthesize or summarize instead of quoting.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "notion",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: body failed validation: ... length should be <= 2000",
+     "claim": "Notion rejects any rich text object whose text content exceeds 2000 characters.",
+     "fix_hint": "Split long text strings into chunks of 2000 characters across multiple rich text objects.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: children.length should be <= 100",
+     "claim": "Appending block children in Notion fails if more than 100 blocks are submitted in a single request.",
+     "fix_hint": "Batch block creation into slices of 100 blocks maximum.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "hubspot",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests: TEN_SECOND_ROLLING limit exceeded",
+     "claim": "HubSpot enforces a burst limit of 100 requests per 10 seconds alongside daily quotas.",
+     "fix_hint": "Implement a token bucket rate limiter to smooth bursts below 10 requests per second.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: Property names must be lowercase",
+     "claim": "HubSpot custom property API names are strictly lowercase even if created with mixed casing in the UI.",
+     "fix_hint": "Normalize all HubSpot property internal names to lowercase in API requests.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "salesforce",
+   "gotchas": [
+    {
+     "signal": "401 Unauthorized: INVALID_SESSION_ID",
+     "claim": "Salesforce access tokens expire independently of active user sessions without prior HTTP warning.",
+     "fix_hint": "Refresh the OAuth token automatically upon encountering INVALID_SESSION_ID and replay the call.",
+     "confidence": "high"
+    },
+    {
+     "signal": "nextRecordsUrl pagination path",
+     "claim": "Salesforce SOQL query pagination returns relative URLs in nextRecordsUrl rather than absolute URLs.",
+     "fix_hint": "Prepend your Salesforce instance base URL to nextRecordsUrl when retrieving remaining records.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "twilio",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: Error 21212 / Error 21608 (unverified number)",
+     "claim": "Trial accounts cannot send SMS to arbitrary numbers until the destination number is verified in the console.",
+     "fix_hint": "Verify recipient phone numbers in the Twilio console or upgrade to a paid account.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Silent SMS split / UCS-2 encoding cost spike",
+     "claim": "Including a single emoji switches SMS encoding from GSM-7 (160 chars) to UCS-2 (70 chars), multiplying segment counts silently.",
+     "fix_hint": "Strip non-GSM characters or calculate segment boundaries prior to dispatch.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "sendgrid",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: The from address does not match a verified Sender Identity",
+     "claim": "SendGrid blocks outgoing mail if the sender email domain or address is not explicitly verified.",
+     "fix_hint": "Complete Single Sender Verification or Domain Authentication before calling /v3/mail/send.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Silent suppression drop (HTTP 202 accepted)",
+     "claim": "SendGrid returns 202 Accepted even if the recipient is on an internal bounce or unsubscribe suppression list.",
+     "fix_hint": "Check the suppression list APIs or consume Event Webhooks to detect undelivered messages.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "resend",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: You can only send testing emails to your own email address",
+     "claim": "Resend sandbox API keys with onboarding domains can only deliver mail to the account owner's email.",
+     "fix_hint": "Verify a custom domain in Resend before targeting external recipient addresses.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "discord",
+   "gotchas": [
+    {
+     "signal": "10062: Unknown interaction",
+     "claim": "Discord interaction webhooks expire after 3 seconds if not acknowledged with an initial deferred or immediate response.",
+     "fix_hint": "Send an interaction response type 5 (deferred channel message) within 3000ms before doing heavy work.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Empty message content on gateway",
+     "claim": "Bots receive empty strings for message text unless the Message Content Privileged Intent is enabled.",
+     "fix_hint": "Toggle the Message Content Intent under your bot's Developer Portal settings.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "telegram",
+   "gotchas": [
+    {
+     "signal": "409 Conflict: can't use getUpdates method while webhook is active",
+     "claim": "Calling getUpdates while a webhook is registered immediately fails with HTTP 409.",
+     "fix_hint": "Call deleteWebhook before attempting long-polling with getUpdates.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: can't parse entities",
+     "claim": "Telegram MarkdownV2 mode requires escaping special characters including periods, dashes, and parentheses.",
+     "fix_hint": "Escape all reserved MarkdownV2 punctuation or switch to HTML parse_mode.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "supabase",
+   "gotchas": [
+    {
+     "signal": "200 OK with empty array [] despite existing records",
+     "claim": "Row Level Security (RLS) silently hides matching rows when active without matching SELECT policies, returning empty arrays instead of 403.",
+     "fix_hint": "Add an RLS SELECT policy for the authenticated/anon role or query with service_role secret.",
+     "confidence": "high"
+    },
+    {
+     "signal": "PGRST204: Could not find a relationship",
+     "claim": "PostgREST schema cache remains stale after running direct SQL migrations until reloaded.",
+     "fix_hint": "Notify pgrst via NOTIFY pgrst, 'reload schema' or reboot the Supabase project schema cache.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "firebase",
+   "gotchas": [
+    {
+     "signal": "FirebaseError: Missing or insufficient permissions",
+     "claim": "Firestore client SDK throws permission errors for missing documents if the security rule condition evaluates to false on null data.",
+     "fix_hint": "Guard security rules with resource != null before checking nested resource attributes.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Firestore transaction write-after-read constraint",
+     "claim": "Firestore transactions throw runtime exceptions if any read operation is attempted after a write operation in the same transaction block.",
+     "fix_hint": "Structure transaction blocks so all get() calls execute before any set(), update(), or delete() calls.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "cloudflare",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: Invalid request headers (Bearer vs X-Auth-Key)",
+     "claim": "Using Authorization: Bearer with a Global API Key or X-Auth-Key with an API Token results in 403 errors.",
+     "fix_hint": "Use Authorization: Bearer only for scoped API tokens, and X-Auth-Email plus X-Auth-Key for global keys.",
+     "confidence": "high"
+    },
+    {
+     "signal": "200 OK with success: true on nonexistent cache purge",
+     "claim": "Cloudflare cache purge calls return success: true even if none of the specified URLs were in cache.",
+     "fix_hint": "Do not rely on cache purge responses to verify URL existence or cache state.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "vercel",
+   "gotchas": [
+    {
+     "signal": "504 Gateway Timeout: FUNCTION_INVOCATION_TIMEOUT",
+     "claim": "Serverless functions terminating past maximum execution duration are abruptly killed without returning execution error logs.",
+     "fix_hint": "Increase maxDuration in vercel.json or delegate long-running tasks to background workers.",
+     "confidence": "high"
+    },
+    {
+     "signal": "413 Payload Too Large: FUNCTION_PAYLOAD_TOO_LARGE",
+     "claim": "Vercel serverless function requests and responses fail if the body payload exceeds 4.5 MB.",
+     "fix_hint": "Upload large files directly to object storage via presigned URLs instead of through Vercel functions.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "aws-s3",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: SignatureDoesNotMatch on presigned URL",
+     "claim": "Uploading to a presigned S3 URL fails if the client adds headers not specified when the URL was generated.",
+     "fix_hint": "Match HTTP headers and Content-Type exactly between presigning and client upload requests.",
+     "confidence": "high"
+    },
+    {
+     "signal": "XML response body with status 200 on multipart completion failure",
+     "claim": "S3 completeMultipartUpload can return HTTP 200 with an internal XML error payload if an error occurs mid-assembly.",
+     "fix_hint": "Inspect the XML response body for <Error> tags even when receiving HTTP 200 OK.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "google-sheets",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests: RESOURCE_EXHAUSTED",
+     "claim": "Google Sheets API enforces a strict quota of 60 requests per minute per user / 300 per project.",
+     "fix_hint": "Batch updates using spreadsheets.values.batchUpdate rather than single-cell calls.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: Unable to parse range",
+     "claim": "Sheet names containing spaces or symbols fail range parsing unless enclosed in single quotes.",
+     "fix_hint": "Enclose sheet names in single quotes when constructing A1 notation strings.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "google-calendar",
+   "gotchas": [
+    {
+     "signal": "410 Gone: Sync token is expired",
+     "claim": "Incremental calendar synchronization fails with 410 when the syncToken expires or becomes invalid.",
+     "fix_hint": "Discard the stored syncToken and initiate a full calendar resync from scratch.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "gmail",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: Invalid raw email string",
+     "claim": "Gmail API requires raw emails to be base64url-encoded rather than standard base64.",
+     "fix_hint": "Replace + with -, / with _, and strip trailing = padding in the base64 string.",
+     "confidence": "high"
+    },
+    {
+     "signal": "404 Not Found on users.history.list",
+     "claim": "Querying history changes with an outdated historyId returns 404 once history records are purged.",
+     "fix_hint": "Perform a complete messages.list synchronization when historyId lookup fails with 404.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "microsoft-graph",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: Authorization_RequestDenied",
+     "claim": "Application permissions in Microsoft Entra ID fail at runtime until an administrator grants tenant-wide consent.",
+     "fix_hint": "Have a tenant admin perform Grant Admin Consent in the Azure portal for the app registration.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: Batch request limit exceeded",
+     "claim": "Microsoft Graph $batch requests fail if the requests array contains more than 20 individual operations.",
+     "fix_hint": "Chunk batch payloads into groups of 20 or fewer operations.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "jira",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: ADF format required for description",
+     "claim": "Jira REST API v3 rejects plain text or markdown in rich text fields such as description.",
+     "fix_hint": "Provide content in Atlassian Document Format (ADF) JSON or use the v2 REST API.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Silent truncation of search results at 100 issues",
+     "claim": "The JQL search endpoint limits maxResults to 100 regardless of higher requested values.",
+     "fix_hint": "Paginate JQL results using startAt offsets up to the total count.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "linear",
+   "gotchas": [
+    {
+     "signal": "200 OK with errors array on GraphQL mutations",
+     "claim": "Linear GraphQL mutations return HTTP 200 with validation failures embedded inside the errors payload.",
+     "fix_hint": "Check the response errors property before assuming successful mutation completion.",
+     "confidence": "high"
+    },
+    {
+     "signal": "X-Complexity rate limiting",
+     "claim": "Linear limits API usage based on GraphQL query complexity points rather than simple request counts.",
+     "fix_hint": "Reduce nested relation selections in GraphQL queries to conserve complexity credits.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "airtable",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests: 30-second lockout",
+     "claim": "Exceeding Airtable's 5 requests per second rate limit triggers an automatic 30-second penalty lockout window.",
+     "fix_hint": "Queue requests with a minimum 200ms delay between consecutive API invocations.",
+     "confidence": "high"
+    },
+    {
+     "signal": "422 Unprocessable Entity: Value is not an array of record IDs",
+     "claim": "Setting linked record fields requires an array of record ID strings rather than record names or single strings.",
+     "fix_hint": "Wrap record IDs in an array like [\"recXXXXXXXXXXXXXX\"] when updating linked fields.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "shopify",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests: X-Shopify-Shop-Api-Call-Limit reached",
+     "claim": "Shopify REST API throttles clients using a leaky bucket algorithm once the call limit bucket fills.",
+     "fix_hint": "Read the X-Shopify-Shop-Api-Call-Limit header and sleep when current calls approach the bucket capacity.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Webhook HMAC verification failure with parsed JSON",
+     "claim": "Validating X-Shopify-Hmac-Sha256 fails if computed against a JSON-re-encoded string instead of the raw request buffer.",
+     "fix_hint": "Calculate the HMAC directly against the raw unparsed request body buffer.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "paypal",
+   "gotchas": [
+    {
+     "signal": "422 Unprocessable Entity: ORDER_NOT_APPROVED",
+     "claim": "Attempting to capture an order before the customer completes authentication via the redirect URL throws ORDER_NOT_APPROVED.",
+     "fix_hint": "Ensure the payer has authorized the order and returned to your return_url before calling capture.",
+     "confidence": "high"
+    },
+    {
+     "signal": "401 Unauthorized: Invalid client credentials in wrong environment",
+     "claim": "Sandbox client credentials fail with 401 when used against the production api-m.paypal.com endpoint.",
+     "fix_hint": "Toggle between api-m.sandbox.paypal.com and api-m.paypal.com based on credential environment.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "plaid",
+   "gotchas": [
+    {
+     "signal": "ITEM_LOGIN_REQUIRED",
+     "claim": "Plaid items frequently enter ITEM_LOGIN_REQUIRED when institutions invalidate sessions or require MFA.",
+     "fix_hint": "Trigger Plaid Link in update mode with a new link_token to allow users to re-authenticate.",
+     "confidence": "high"
+    },
+    {
+     "signal": "PRODUCT_NOT_READY on transactions fetch",
+     "claim": "Calling /transactions/get immediately after Link exchange fails if initial transaction syncing is still in progress.",
+     "fix_hint": "Listen for the SYNC_UPDATES_AVAILABLE or HISTORICAL_UPDATE webhook before pulling transactions.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "coingecko",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests on public free tier",
+     "claim": "CoinGecko enforces an aggressive rate limit of 10-30 calls per minute on free public tier endpoints.",
+     "fix_hint": "Cache cryptocurrency price data locally for at least 60 seconds per asset.",
+     "confidence": "high"
+    },
+    {
+     "signal": "404 Not Found: Could not find coin with the given id",
+     "claim": "CoinGecko endpoints require unique coin slugs (e.g. 'bitcoin') rather than ticker symbols (e.g. 'BTC').",
+     "fix_hint": "Map ticker symbols to CoinGecko IDs using the /coins/list endpoint before querying prices.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "etherscan",
+   "gotchas": [
+    {
+     "signal": "200 OK with {\"status\": \"0\", \"message\": \"NOTOK\", \"result\": \"Max rate limit reached\"}",
+     "claim": "Etherscan returns HTTP 200 with an embedded status: 0 error string when the 5 calls/sec rate limit is exceeded.",
+     "fix_hint": "Inspect the status and message properties inside the 200 OK body before parsing result.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "alchemy",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests: Your app has exceeded its compute units per second capacity",
+     "claim": "Alchemy rates calls by Compute Units (CUs) rather than raw request counts, so heavy RPC calls trigger 429 quickly.",
+     "fix_hint": "Limit block range widths in eth_getLogs queries to reduce CU burn per call.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "openweathermap",
+   "gotchas": [
+    {
+     "signal": "401 Unauthorized: Invalid API key",
+     "claim": "Newly created OpenWeatherMap API keys take up to 2 hours to activate globally after registration.",
+     "fix_hint": "Wait 1 to 2 hours after key generation before dispatching weather requests.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "google-maps",
+   "gotchas": [
+    {
+     "signal": "200 OK with {\"status\": \"REQUEST_DENIED\", \"error_message\": \"You must enable Billing...\"}",
+     "claim": "Google Maps APIs return HTTP 200 with status REQUEST_DENIED if billing is not activated on the GCP project.",
+     "fix_hint": "Attach an active billing account to the GCP project in Google Cloud Console.",
+     "confidence": "high"
+    },
+    {
+     "signal": "200 OK with {\"status\": \"ZERO_RESULTS\"}",
+     "claim": "Geocoding searches yielding no matches return HTTP 200 with ZERO_RESULTS rather than HTTP 404.",
+     "fix_hint": "Check the status field in the JSON payload before reading results array entries.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "nominatim",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: Missing User-Agent or default script header",
+     "claim": "Nominatim unconditionally blocks generic User-Agents such as python-requests, curl, or empty headers.",
+     "fix_hint": "Set a custom User-Agent identifying your specific application and contact email.",
+     "confidence": "high"
+    },
+    {
+     "signal": "status 429 (wording unsure)",
+     "claim": "Sending more than 1 request per second to public Nominatim results in immediate temporary IP ban.",
+     "fix_hint": "Throttle calls strictly to at least 1100ms between requests.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "open-meteo",
+   "gotchas": [
+    {
+     "signal": "Parallel array data format",
+     "claim": "Open-Meteo returns time series as separate parallel arrays (time: [], temperature: []) rather than an array of objects.",
+     "fix_hint": "Zip the time array and metric arrays together by matching index client-side.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "tavily",
+   "gotchas": [
+    {
+     "signal": "2x credit consumption on advanced search",
+     "claim": "Setting search_depth to 'advanced' silently consumes 2 API credits per query instead of 1.",
+     "fix_hint": "Default search_depth to 'basic' unless deep research content extraction is strictly needed.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "exa",
+   "gotchas": [
+    {
+     "signal": "401 Unauthorized: x-api-key header required",
+     "claim": "Exa requires authentication via the x-api-key header rather than Authorization: Bearer.",
+     "fix_hint": "Pass API credentials in the x-api-key header.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Empty text results unless contents is specified",
+     "claim": "Exa search endpoints return only URLs and metadata by default unless contents: { text: true } is explicitly passed.",
+     "fix_hint": "Include contents: { text: true } in the request payload to retrieve article contents.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "firecrawl",
+   "gotchas": [
+    {
+     "signal": "Asynchronous job polling requirement on /crawl",
+     "claim": "The crawl endpoint returns a job ID immediately rather than parsed web content.",
+     "fix_hint": "Poll the crawl status endpoint until status equals 'completed' before retrieving pages.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "serpapi",
+   "gotchas": [
+    {
+     "signal": "200 OK with {\"error\": \"Google hasn't returned any results\"}",
+     "claim": "SerpApi returns HTTP 200 with an error attribute for empty or failed search results.",
+     "fix_hint": "Check for the error key in response JSON before accessing organic_results.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "apify",
+   "gotchas": [
+    {
+     "signal": "Actor run returns RUNNING status before dataset is populated",
+     "claim": "Triggering an Apify Actor returns execution metadata immediately without waiting for items to be scraped.",
+     "fix_hint": "Append waitForFinish parameter or poll the dataset endpoint after actor completion.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "pinecone",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: Vector dimension does not match index dimension",
+     "claim": "Upserting vectors with dimensional lengths differing from index initialization parameters fails outright.",
+     "fix_hint": "Verify your embedding model output dimensions match the Pinecone index dimension setting.",
+     "confidence": "high"
+    },
+    {
+     "signal": "Namespace lazy creation",
+     "claim": "Pinecone namespaces cannot be created via the control plane and only exist once vectors are upserted into them.",
+     "fix_hint": "Write vectors directly to the desired namespace name to instantiate it.",
+     "confidence": "medium"
+    }
+   ]
+  },
+  {
+   "service": "qdrant",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: Index required for payload schema filtering",
+     "claim": "Filtering large collections by payload keys fails or degrades severely unless a payload index is created on that key.",
+     "fix_hint": "Create a payload index on frequently queried metadata fields before running filtered searches.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "weaviate",
+   "gotchas": [
+    {
+     "signal": "422 Unprocessable Entity: Class name must start with an uppercase letter",
+     "claim": "Weaviate schemas enforce that collection and class names begin with a capital letter.",
+     "fix_hint": "Capitalize the first letter of all class/collection names in schema definitions.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "elevenlabs",
+   "gotchas": [
+    {
+     "signal": "401 Unauthorized: quota_exceeded",
+     "claim": "ElevenLabs counts all characters including whitespace and punctuation toward quota, cutting off requests instantly when zeroed.",
+     "fix_hint": "Track character length client-side and verify subscription balance before dispatching voice synthesis.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "deepgram",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: Bad audio encoding parameters",
+     "claim": "Supplying encoding or sample_rate query parameters when uploading pre-encoded container formats like MP3 causes rejection.",
+     "fix_hint": "Omit encoding and sample_rate parameters when sending containerized audio like MP3 or WAV.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "replicate",
+   "gotchas": [
+    {
+     "signal": "Async prediction polling requirement",
+     "claim": "Creating a prediction returns status 'starting' and requires polling urls.get unless a webhook is configured.",
+     "fix_hint": "Poll the prediction status URL or supply a webhook parameter for asynchronous notification.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "huggingface",
+   "gotchas": [
+    {
+     "signal": "503 Service Unavailable: Model ... is currently loading",
+     "claim": "Inference API calls on cold models return 503 with an estimated_time wait duration.",
+     "fix_hint": "Inspect estimated_time, sleep for the suggested interval, or pass x-wait-for-model: true header.",
+     "confidence": "high"
+    },
+    {
+     "signal": "403 Forbidden: Access to model is restricted",
+     "claim": "Gated models (e.g. Llama) reject API tokens until license terms are accepted on the web UI.",
+     "fix_hint": "Visit the Hugging Face model repository page and accept the licensing terms.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "mistral",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request: Invalid message alternation for tool calls",
+     "claim": "Mistral rejects conversation payloads where assistant tool_calls are not followed immediately by matching tool role messages.",
+     "fix_hint": "Format tool execution outputs with role: 'tool' directly following the assistant tool_calls message.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "groq",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests: Rate limit reached for model ... on tokens per minute (TPM)",
+     "claim": "Extremely fast generation speeds cause rapid exhaustion of TPM allowances before RPM limits are approached.",
+     "fix_hint": "Implement client-side rate limit queues based on response token counts.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "youtube-data",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: quotaExceeded",
+     "claim": "Default quota is 10,000 units/day, and search.list consumes 100 units per call, exhausting the quota in 100 calls.",
+     "fix_hint": "Cache search results aggressively and prefer low-cost methods like videos.list (1 unit).",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "reddit",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests / 403 Forbidden on missing custom User-Agent",
+     "claim": "Reddit API blocks requests using generic User-Agents or standard HTTP client defaults.",
+     "fix_hint": "Set User-Agent to <platform>:<app_id>:<version> (by /u/<username>) format.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "meta-graph",
+   "gotchas": [
+    {
+     "signal": "400 Bad Request with error_subcode 463: Session has expired",
+     "claim": "User access tokens expire silently without refresh token grant flows, requiring re-authorization.",
+     "fix_hint": "Exchange short-lived tokens for 60-day long-lived tokens via oauth/access_token.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "zendesk",
+   "gotchas": [
+    {
+     "signal": "401 Unauthorized on API token auth without /token suffix",
+     "claim": "Using API tokens in Zendesk Basic Auth requires appending /token to the username email.",
+     "fix_hint": "Pass credentials as username@example.com/token:<api_token> in the Authorization header.",
+     "confidence": "high"
+    },
+    {
+     "signal": "422 Unprocessable Entity: Pagination limit exceeded",
+     "claim": "Standard offset pagination in Zendesk search stops working beyond 1,000 records.",
+     "fix_hint": "Switch to cursor-based pagination for datasets exceeding 1,000 entries.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "intercom",
+   "gotchas": [
+    {
+     "signal": "Intercom-Version header mismatch",
+     "claim": "Omitting the Intercom-Version header causes the API to default to legacy workspace schema versions.",
+     "fix_hint": "Explicitly pass Intercom-Version: 2.11 in all API request headers.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "mailchimp",
+   "gotchas": [
+    {
+     "signal": "401 Unauthorized / Connection error from wrong datacenter domain",
+     "claim": "Mailchimp API calls fail if directed to the wrong datacenter subdomain prefix.",
+     "fix_hint": "Extract the datacenter prefix from the API key suffix (e.g. us19) and use <dc>.api.mailchimp.com.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: Member In Compliance State",
+     "claim": "Re-subscribing an unsubscribed email address directly via API fails for user compliance reasons.",
+     "fix_hint": "Set status to 'pending' to trigger a double opt-in confirmation email.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "docusign",
+   "gotchas": [
+    {
+     "signal": "Base URI discovery failure",
+     "claim": "Hardcoding DocuSign production base endpoints fails because accounts are hosted on dynamic regional base URIs.",
+     "fix_hint": "Call /oauth/userinfo after authentication to dynamically retrieve the account's base_uri.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "sentry",
+   "gotchas": [
+    {
+     "signal": "429 Too Many Requests: X-Sentry-Rate-Limit header",
+     "claim": "Sentry rate limits ingestion per category (error, transaction, session) using custom header rate limits.",
+     "fix_hint": "Parse X-Sentry-Rate-Limit to identify which specific event category must back off.",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "datadog",
+   "gotchas": [
+    {
+     "signal": "403 Forbidden: Missing DD-APPLICATION-KEY header",
+     "claim": "Many Datadog endpoints require both DD-API-KEY and DD-APPLICATION-KEY headers and reject calls with only an API key.",
+     "fix_hint": "Supply both DD-API-KEY and DD-APPLICATION-KEY headers on administrative endpoints.",
+     "confidence": "high"
+    },
+    {
+     "signal": "403 Forbidden from wrong site domain",
+     "claim": "Directing API requests to datadoghq.com for EU or US5 hosted accounts results in 403 Forbidden.",
+     "fix_hint": "Set API hostname to match the account site (e.g. api.datadoghq.eu or api.us5.datadoghq.com).",
+     "confidence": "high"
+    }
+   ]
+  },
+  {
+   "service": "pagerduty",
+   "gotchas": [
+    {
+     "signal": "Authorization: Token token= format requirement",
+     "claim": "PagerDuty REST API v2 rejects standard Bearer token formatting for account API tokens.",
+     "fix_hint": "Format the Authorization header strictly as 'Token token=<API_KEY>'.",
+     "confidence": "high"
+    },
+    {
+     "signal": "400 Bad Request: Missing From header",
+     "claim": "Creating or modifying incidents via the REST API fails without a From header containing a valid user email.",
+     "fix_hint": "Include a From header set to the email address of a registered PagerDuty user.",
+     "confidence": "high"
+    }
+   ]
+  }
+ ]
+}

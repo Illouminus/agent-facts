@@ -1,0 +1,273 @@
+rank,service,vendor,category,probe_class,tos,score,score_raw,downloads_month,stars,so_count,mcp_servers,pypi,npm,github_repo,so_tag,pypi_status,npm_status,gh_status,so_status
+1,aws,AWS,cloud,key_free,ok,0.8788,0.925,2446343352,9915,158599,80,boto3,@aws-sdk/client-s3,boto/boto3,amazon-web-services,200,200,200,200
+2,stripe,Stripe,payments,sandbox,ok,0.8006,0.8006,94606198,2054,12545,143,stripe,stripe,stripe/stripe-python,stripe-payments,200,200,200,200
+3,azure,Microsoft,cloud,key_free,ok,0.8006,0.8428,116706385,5621,144929,54,azure-identity,@azure/identity,Azure/azure-sdk-for-python,azure,200,200,200,200
+4,google-calendar,Google,productivity,key_free,ok,0.7909,0.8325,125164927,12270,7209,261,google-api-python-client,googleapis,googleapis/google-api-nodejs-client,google-calendar-api,200,200,200,200
+5,pypi,PSF,package-registry,keyless,ok,0.7806,0.7806,407369404,4170,1853,67,pip,,pypi/warehouse,pypi,200,,200,200
+6,github,GitHub,devtools,keyless,ok,0.7794,0.7794,83100745,666,3762,311,PyGithub,@octokit/rest,octokit/rest.js,github-api,200,200,200,200
+7,gcp,Google,cloud,key_free,ok,0.7709,0.8115,149775469,5411,50292,31,google-cloud-storage,@google-cloud/storage,googleapis/google-cloud-python,google-cloud-platform,200,200,200,200
+8,github-actions,GitHub,devtools,keyless,ok,0.7467,0.7467,62483888,5888,11208,16,,@actions/core,actions/toolkit,github-actions,,200,200,200
+9,google-workspace,Google,productivity,key_free,ok,0.7467,0.786,125164927,8949,19830,22,google-api-python-client,googleapis,googleapis/google-api-python-client,google-api,200,200,200,200
+10,postgresql,PostgreSQL,database,local,ok,0.7381,0.8684,252821415,2511,178777,97,psycopg,pg,psycopg/psycopg,postgresql,200,200,200,200
+11,solana,Solana,crypto,keyless,ok,0.7318,0.7318,12026781,2778,1345,271,solana,@solana/web3.js,solana-foundation/solana-web3.js,solana,200,200,200,200
+12,firebase,Google,database,key_free,ok,0.7274,0.7657,39221318,1748,143111,11,firebase-admin,firebase-admin,firebase/firebase-admin-node,firebase,200,200,200,200
+13,google-sheets,Google,productivity,key_free,ok,0.7263,0.7645,31567500,7511,6153,82,gspread,google-spreadsheet,burnash/gspread,google-sheets-api,200,200,200,200
+14,salesforce,Salesforce,crm,sandbox,ok,0.7228,0.7228,19688155,1469,10301,34,simple-salesforce,jsforce,jsforce/jsforce,salesforce,200,200,200,200
+15,telegram,Telegram,messaging,key_free,ok,0.7134,0.751,6764113,29527,5033,103,python-telegram-bot,telegraf,python-telegram-bot/python-telegram-bot,telegram-bot,200,200,200,200
+16,google-gemini,Google,llm,key_free,ok,0.7132,0.7508,137607856,4034,376,184,google-genai,@google/genai,googleapis/python-genai,google-gemini,200,200,200,200
+17,slack,Salesforce,messaging,key_free,ok,0.7131,0.7506,73939872,4017,2905,59,slack-sdk,@slack/web-api,slackapi/python-slack-sdk,slack-api,200,200,200,200
+18,playwright,Microsoft,devtools,local,ok,0.7032,0.8273,445668745,98124,3502,51,playwright,playwright,microsoft/playwright,playwright,200,200,200,200
+19,huggingface,Hugging Face,llm,keyless,ok,0.7006,0.7006,232552563,3991,900,8,huggingface-hub,@huggingface/inference,huggingface/huggingface_hub,huggingface,200,200,200,200
+20,redis,Redis,database,local,ok,0.7006,0.8242,200407660,13653,25405,45,redis,redis,redis/redis-py,redis,200,200,200,200
+21,supabase,Supabase,database,key_free,ok,0.698,0.7348,123962007,4592,2135,25,supabase,@supabase/supabase-js,supabase/supabase-js,supabase,200,200,200,200
+22,twilio,Twilio,messaging,sandbox,ok,0.6979,0.6979,26057921,2085,10514,8,twilio,twilio,twilio/twilio-python,twilio,200,200,200,200
+23,kubernetes,CNCF,devtools,local,ok,0.6968,0.8197,73439249,7684,57706,58,kubernetes,@kubernetes/client-node,kubernetes-client/python,kubernetes,200,200,200,200
+24,docker-hub,Docker,package-registry,keyless,ok,0.6939,0.6939,129892206,7220,1730,4,docker,dockerode,docker/docker-py,docker-registry,200,200,200,200
+25,mongodb,MongoDB,database,local,ok,0.6929,0.8152,64665876,10170,175156,19,pymongo,mongodb,mongodb/node-mongodb-native,mongodb,200,200,200,200
+26,google-drive,Google,productivity,key_free,ok,0.6907,0.727,125164927,0,15083,212,google-api-python-client,googleapis,,google-drive-api,200,200,,200
+27,discord,Discord,messaging,key_free,ok,0.6906,0.7269,5436169,6518,17136,37,discord.py,discord.js,discord/discord-api-docs,discord.js,200,200,200,200
+28,cloudflare,Cloudflare,cloud,key_free,ok,0.674,0.7095,13220824,511,3313,115,cloudflare,cloudflare,cloudflare/cloudflare-python,cloudflare,200,200,200,200
+29,sentry,Sentry,observability,key_free,ok,0.6641,0.6991,156250681,2216,1549,9,sentry-sdk,@sentry/node,getsentry/sentry-python,sentry,200,200,200,200
+30,langchain,LangChain,llm,local,ok,0.6632,0.7802,170457766,148111,1972,23,langchain,langchain,langchain-ai/langchain,langchain,200,200,200,200
+31,gitlab,GitLab,devtools,keyless,ok,0.6602,0.6602,11743773,2478,716,30,python-gitlab,@gitbeaker/rest,python-gitlab/python-gitlab,gitlab-api,200,200,200,200
+32,microsoft-graph,Microsoft,productivity,key_free,ok,0.6584,0.6931,9423560,633,14366,22,msgraph-sdk,@microsoft/microsoft-graph-client,microsoftgraph/msgraph-sdk-python,microsoft-graph-api,200,200,200,200
+33,jira,Atlassian,productivity,key_free,ok,0.6579,0.6925,17659713,2138,1501,45,jira,jira.js,pycontribs/jira,jira-rest-api,200,200,200,200
+34,modal,Modal,cloud,key_free,ok,0.6554,0.6899,47839937,526,12008,6,modal,,modal-labs/modal-client,modal,200,,200,200
+35,shopify,Shopify,commerce,sandbox,ok,0.6552,0.6552,2523209,954,753,130,ShopifyAPI,@shopify/shopify-api,Shopify/shopify-api-js,shopify-api,200,200,200,200
+36,gmail,Google,productivity,key_free,ok,0.6421,0.6759,125164927,0,4317,80,google-api-python-client,googleapis,,gmail-api,200,200,,200
+37,vercel,Vercel,cloud,key_free,ok,0.6399,0.6736,2009860,16414,3295,25,,@vercel/sdk,vercel/vercel,vercel,,200,200,200
+38,prometheus,CNCF,observability,local,ok,0.637,0.7494,135537106,4384,6965,16,prometheus-client,prom-client,prometheus/client_python,prometheus,200,200,200,200
+39,sendgrid,Twilio,email,key_free,ok,0.6345,0.6679,19478339,1630,3352,9,sendgrid,@sendgrid/mail,sendgrid/sendgrid-python,sendgrid,200,200,200,200
+40,docker-engine,Docker,devtools,local,ok,0.6311,0.7425,129892206,7220,138902,0,docker,dockerode,docker/docker-py,docker,200,200,200,200
+41,google-maps,Google,maps,trial,ok,0.6302,0.7878,3973606,4982,65782,195,googlemaps,@googlemaps/google-maps-services-js,googlemaps/google-maps-services-python,google-maps,200,200,200,200
+42,puppeteer,Google,devtools,local,ok,0.6298,0.7409,47307296,95728,8001,5,,puppeteer,puppeteer/puppeteer,puppeteer,,200,200,200
+43,prisma,Prisma,database,local,ok,0.6264,0.7369,75904551,47699,3707,8,,prisma,prisma/prisma,prisma,,200,200,200
+44,google-search-console,Google,analytics,key_free,ok,0.6222,0.655,125164927,0,1280,94,google-api-python-client,googleapis,,google-search-console,200,200,,200
+45,youtube-data,Google,social,key_free,ok,0.6179,0.6504,125164927,0,11537,13,google-api-python-client,googleapis,,youtube-api,200,200,,200
+46,opentelemetry,CNCF,observability,local,ok,0.6057,0.7126,260403097,2680,1408,10,opentelemetry-sdk,@opentelemetry/sdk-node,open-telemetry/opentelemetry-python,open-telemetry,200,200,200,200
+47,notion,Notion,productivity,key_free,ok,0.6042,0.636,7812577,5678,298,22,notion-client,@notionhq/client,makenotion/notion-sdk-js,notion-api,200,200,200,200
+48,spotify,Spotify,social,key_free,ok,0.5925,0.6237,277096,5479,3974,26,spotipy,@spotify/web-api-ts-sdk,spotipy-dev/spotipy,spotify,200,200,200,200
+49,mailgun,Sinch,email,sandbox,ok,0.5899,0.5899,4432509,552,1555,4,,mailgun.js,mailgun/mailgun.js,mailgun,,200,200,200
+50,binance,Binance,crypto,sandbox,ok,0.5858,0.5858,313530,7211,1002,14,python-binance,binance,sammchardy/python-binance,binance,200,200,200,200
+51,ollama,Ollama,llm,local,ok,0.5854,0.6887,13275724,183906,256,24,ollama,ollama,ollama/ollama,ollama,200,200,200,200
+52,paypal,PayPal,payments,sandbox,ok,0.5841,0.5841,598659,28,21028,9,paypal-server-sdk,@paypal/paypal-server-sdk,paypal/PayPal-Python-Server-SDK,paypal,200,200,200,200
+53,lets-encrypt,ISRG,other,sandbox,ok,0.5837,0.5837,1723878,33279,2014,0,acme,,certbot/certbot,lets-encrypt,200,,200,200
+54,keycloak,Keycloak,auth,local,ok,0.5831,0.686,4137837,37440,7894,7,python-keycloak,,keycloak/keycloak,keycloak,200,,200,200
+55,confluence,Atlassian,productivity,key_free,ok,0.5792,0.6097,7886031,1680,269,15,atlassian-python-api,,atlassian-api/atlassian-python-api,confluence-rest-api,200,,200,200
+56,bitbucket,Atlassian,devtools,key_free,ok,0.5787,0.6092,7886031,1680,422,10,atlassian-python-api,,atlassian-api/atlassian-python-api,bitbucket-api,200,,200,200
+57,clerk,Clerk,auth,key_free,ok,0.5749,0.6051,22094622,1767,256,5,clerk-backend-api,@clerk/backend,clerk/javascript,clerk,200,200,200,200
+58,openai,OpenAI,llm,paid,ok,0.5723,0.8176,295856631,31891,2538,108,openai,openai,openai/openai-python,openai-api,200,200,200,200
+59,plaid,Plaid,finance-data,sandbox,ok,0.571,0.571,4787450,521,389,6,plaid-python,plaid,plaid/plaid-python,plaid,200,200,200,200
+60,mapbox,Mapbox,maps,key_free,ok,0.5705,0.6006,1471961,771,6490,4,mapbox,@mapbox/mapbox-sdk,mapbox/mapbox-sdk-js,mapbox,200,200,200,200
+61,apify,Apify,scraping,key_free,ok,0.5696,0.5996,2274981,104,207,131,apify-client,apify-client,apify/apify-client-python,apify,200,200,200,200
+62,google-analytics-data,Google,analytics,key_free,ok,0.5667,0.5965,4593713,162,4267,4,google-analytics-data,@google-analytics/data,googleapis/python-analytics-data,google-analytics-api,200,200,200,200
+63,auth0,Okta,auth,key_free,ok,0.5649,0.5946,8335020,578,3201,1,auth0-python,auth0,auth0/auth0-python,auth0,200,200,200,200
+64,mcp-sdk,Anthropic / MCP,devtools,local,ok,0.563,0.6623,256832284,13618,171,3,mcp,@modelcontextprotocol/sdk,modelcontextprotocol/typescript-sdk,model-context-protocol,200,200,200,200
+65,dropbox,Dropbox,storage,key_free,ok,0.5629,0.5925,1542245,985,2370,6,dropbox,dropbox,dropbox/dropbox-sdk-python,dropbox-api,200,200,200,200
+66,google-ads,Google,analytics,trial,ok,0.5615,0.7018,13512229,758,2444,89,google-ads,google-ads-api,googleads/google-ads-python,google-ads-api,200,200,200,200
+67,ebay,eBay,commerce,sandbox,ok,0.5597,0.5597,118586,857,1105,29,ebaysdk,ebay-api,timotheus/ebaysdk-python,ebay-api,200,200,200,200
+68,square,Square,payments,sandbox,ok,0.5568,0.5568,1470355,114,656,13,squareup,square,square/square-python-sdk,square,200,200,200,200
+69,docusign,Docusign,productivity,sandbox,ok,0.5529,0.5529,1634525,98,6268,1,docusign-esign,docusign-esign,docusign/docusign-esign-python-client,docusignapi,200,200,200,200
+70,box,Box,storage,key_free,ok,0.5505,0.5795,993149,55,1087,42,box-sdk-gen,box-node-sdk,box/box-python-sdk-gen,box-api,200,200,200,200
+71,pgvector,pgvector,database,local,ok,0.5481,0.6448,31134981,23416,91,13,pgvector,pgvector,pgvector/pgvector,pgvector,200,200,200,200
+72,braintree,Braintree,payments,sandbox,ok,0.5475,0.5475,1787917,248,1525,2,braintree,braintree,braintree/braintree_python,braintree,200,200,200,200
+73,segment,Twilio,analytics,key_free,ok,0.547,0.5758,10374264,254,68,24,segment-analytics-python,@segment/analytics-node,segmentio/analytics-python,segment-io,200,200,200,200
+74,firecrawl,Firecrawl,scraping,key_free,ok,0.5448,0.5735,5339910,193182,5,11,firecrawl-py,@mendable/firecrawl-js,mendableai/firecrawl,firecrawl,200,200,200,200
+75,airtable,Airtable,productivity,key_free,ok,0.5445,0.5731,4161591,890,263,8,pyairtable,airtable,gtalarico/pyairtable,airtable,200,200,200,200
+76,next-auth,Auth.js,auth,local,ok,0.544,0.6399,26685909,28365,2127,0,,next-auth,nextauthjs/next-auth,next-auth,,200,200,200
+77,postmark,ActiveCampaign,email,sandbox,ok,0.5439,0.5439,4698677,361,132,6,postmarker,postmark,ActiveCampaign/postmark.js,postmark,200,200,200,200
+78,pusher,Pusher,messaging,key_free,ok,0.5437,0.5724,4542264,393,1513,2,pusher,pusher,pusher/pusher-http-python,pusher,200,200,200,200
+79,qdrant,Qdrant,database,key_free,ok,0.5388,0.5672,12034960,1374,60,7,qdrant-client,@qdrant/js-client-rest,qdrant/qdrant-client,qdrant,200,200,200,200
+80,bluesky,Bluesky,social,keyless,ok,0.5388,0.5388,709082,9699,10,39,atproto,@atproto/api,bluesky-social/atproto,bluesky,200,200,200,200
+81,elevenlabs,ElevenLabs,llm,key_free,ok,0.5358,0.564,9073441,3147,22,12,elevenlabs,@elevenlabs/elevenlabs-js,elevenlabs/elevenlabs-python,elevenlabs,200,200,200,200
+82,mixpanel,Mixpanel,analytics,key_free,ok,0.5357,0.5639,6198024,108,539,6,mixpanel,mixpanel,mixpanel/mixpanel-python,mixpanel,200,200,200,200
+83,langsmith,LangChain,observability,key_free,ok,0.5348,0.563,77233437,1081,15,4,langsmith,langsmith,langchain-ai/langsmith-sdk,langsmith,200,200,200,200
+84,azure-openai,Microsoft,llm,paid,ok,0.5346,0.7638,295856631,5621,523,108,openai,openai,Azure/azure-sdk-for-python,azure-openai,200,200,200,200
+85,kaggle,Google,science,key_free,ok,0.5345,0.5626,652790,7613,1151,2,kaggle,,Kaggle/kaggle-api,kaggle,200,,200,200
+86,groq,Groq,llm,key_free,ok,0.5334,0.5615,16795477,621,95,4,groq,groq-sdk,groq/groq-python,groq,200,200,200,200
+87,drizzle,Drizzle,database,local,ok,0.5319,0.6258,110189342,36096,222,0,,drizzle-orm,drizzle-team/drizzle-orm,drizzle,,200,200,200
+88,wandb,Weights & Biases,observability,key_free,ok,0.5318,0.5597,14514596,11303,139,0,wandb,@wandb/sdk,wandb/wandb,wandb,200,200,200,200
+89,asana,Asana,productivity,key_free,ok,0.5297,0.5575,2932186,338,522,5,asana,asana,Asana/python-asana,asana,200,200,200,200
+90,mailchimp,Intuit,email,key_free,ok,0.5274,0.5551,867995,121,2393,6,mailchimp-marketing,@mailchimp/mailchimp_marketing,mailchimp/mailchimp-marketing-python,mailchimp,200,200,200,200
+91,hubspot,HubSpot,crm,key_free,ok,0.5253,0.5529,6349615,435,47,15,hubspot-api-client,@hubspot/api-client,HubSpot/hubspot-api-python,hubspot-api,200,200,200,200
+92,weaviate,Weaviate,database,sandbox,ok,0.5249,0.5249,9835248,228,160,1,weaviate-client,weaviate-client,weaviate/weaviate-python-client,weaviate,200,200,200,200
+93,zapier,Zapier,productivity,key_free,ok,0.5239,0.5515,522539,562,1140,7,,zapier-platform-core,zapier/zapier-platform,zapier,,200,200,200
+94,coinbase,Coinbase,crypto,sandbox,ok,0.5231,0.5231,145545,363,668,13,coinbase-advanced-py,,coinbase/coinbase-advanced-py,coinbase-api,200,,200,200
+95,netlify,Netlify,cloud,key_free,ok,0.5188,0.5461,1385003,1928,2198,0,,netlify,netlify/cli,netlify,,200,200,200
+96,us-census,US Census,gov-open-data,key_free,ok,0.5158,0.5429,177405,682,182,52,census,,datamade/census,census,200,,200,200
+97,litellm,BerriAI,llm,local,ok,0.5155,0.6065,92239101,61625,9,4,litellm,,BerriAI/litellm,litellm,200,,200,200
+98,yfinance,community (Yahoo),finance-data,keyless,restricted,0.5132,0.6415,18639048,25564,606,3,yfinance,,ranaroussi/yfinance,yfinance,200,,200,200
+99,hashicorp-vault,HashiCorp,devtools,local,ok,0.513,0.6036,19982650,1321,1256,1,hvac,node-vault,hvac/hvac,hashicorp-vault,200,200,200,200
+100,cloudinary,Cloudinary,storage,key_free,ok,0.5117,0.5386,4109000,262,1667,0,cloudinary,cloudinary,cloudinary/pycloudinary,cloudinary,200,200,200,200
+101,posthog,PostHog,analytics,key_free,ok,0.5113,0.5382,53239669,61,24,6,posthog,posthog-node,PostHog/posthog-python,posthog,200,200,200,200
+102,vercel-ai-sdk,Vercel,llm,local,ok,0.5073,0.5968,118618237,27412,24,1,,ai,vercel/ai,vercel-ai,,200,200,200
+103,mux,Mux,storage,key_free,ok,0.5067,0.5334,1888539,182,608,3,mux_python,@mux/mux-node,muxinc/mux-node-sdk,mux,200,200,200,200
+104,coingecko,CoinGecko,crypto,keyless,ok,0.5048,0.5048,223946,1091,67,17,pycoingecko,,man-c/pycoingecko,coingecko,200,,200,200
+105,ethers,ethers.js,crypto,local,ok,0.5041,0.593,15238392,8719,777,0,,ethers,ethers-io/ethers.js,ethers.js,,200,200,200
+106,llama-index,LlamaIndex,llm,local,ok,0.5025,0.5912,2937852,52573,320,2,llama-index,llamaindex,run-llama/llama_index,llama-index,200,200,200,200
+107,n8n,n8n,productivity,local,ok,0.5016,0.5901,467680,208092,77,19,,n8n,n8n-io/n8n,n8n,,200,200,200
+108,chroma,Chroma,database,local,ok,0.4984,0.5863,6525454,29536,266,1,chromadb,chromadb,chroma-core/chroma,chromadb,200,200,200,200
+109,langfuse,Langfuse,observability,key_free,ok,0.4977,0.5239,23563200,36061,0,4,langfuse,langfuse,langfuse/langfuse,langfuse,200,200,200,200
+110,convex,Convex,database,key_free,ok,0.4946,0.5207,6656366,375,144,1,,convex,get-convex/convex-js,convex,,200,200,200
+111,reddit,Reddit,social,key_free,restricted,0.4945,0.6507,1189125,4288,606,117,praw,snoowrap,praw-dev/praw,praw,200,200,200,200
+112,mastodon,Mastodon,social,keyless,ok,0.4945,0.4945,243903,959,67,11,Mastodon.py,masto,halcy/Mastodon.py,mastodon,200,200,200,200
+113,linear,Linear,productivity,key_free,ok,0.4903,0.5161,11458322,1639,0,27,,@linear/sdk,linear/linear,linear-app,,200,200,200
+114,amazon-sp-api,Amazon,commerce,sandbox,ok,0.4898,0.4898,361247,688,256,2,python-amazon-sp-api,amazon-sp-api,saleweaver/python-amazon-sp-api,amazon-selling-partner-api,200,200,200,200
+115,aws-bedrock,AWS,llm,paid,ok,0.4878,0.6968,2446343352,9915,163,2,boto3,@aws-sdk/client-bedrock-runtime,boto/boto3,amazon-bedrock,200,200,200,200
+116,stream-chat,Stream,messaging,key_free,ok,0.4859,0.5115,2331106,73,701,1,stream-chat,stream-chat,GetStream/stream-chat-python,getstream-io,200,200,200,200
+117,twitch,Amazon,social,key_free,ok,0.482,0.5073,338328,293,183,11,twitchAPI,@twurple/api,Teekeks/pyTwitchAPI,twitch-api,200,200,200,200
+118,pinecone,Pinecone,database,key_free,ok,0.4819,0.5073,3879257,453,116,1,pinecone,@pinecone-database/pinecone,pinecone-io/pinecone-python-client,pinecone,200,200,200,200
+119,trello,Atlassian,productivity,key_free,ok,0.4784,0.5036,57575,955,571,9,py-trello,,sarumont/py-trello,trello,200,,200,200
+120,datadog,Datadog,observability,trial,ok,0.4783,0.5979,18438013,167,1102,4,datadog-api-client,@datadog/datadog-api-client,DataDog/datadog-api-client-python,datadog,200,200,200,200
+121,mistral,Mistral AI,llm,key_free,ok,0.4782,0.5034,31277503,774,0,10,mistralai,@mistralai/mistralai,mistralai/client-python,mistral,200,200,200,200
+122,nominatim,OSM Foundation,maps,keyless,restricted,0.4778,0.5972,10715841,4522,261,4,geopy,,osm-search/Nominatim,nominatim,200,,200,200
+123,alpha-vantage,Alpha Vantage,finance-data,key_free,ok,0.4777,0.5029,123156,4933,232,4,alpha_vantage,,RomelTorres/alpha_vantage,alpha-vantage,200,,200,200
+124,npm-registry,npm / GitHub,package-registry,keyless,ok,0.4758,0.4758,55096415,498,0,2,,npm-registry-fetch,npm/registry,,,200,200,
+125,web3py,Ethereum Foundation,crypto,local,ok,0.4726,0.556,4718755,5546,551,0,web3,,ethereum/web3.py,web3py,200,,200,200
+126,upstash,Upstash,database,key_free,ok,0.4701,0.4948,21589300,980,2,3,upstash-redis,@upstash/redis,upstash/upstash-redis,upstash,200,200,200,200
+127,turso,Turso,database,key_free,ok,0.4692,0.4939,14163906,577,5,3,libsql-client,@libsql/client,tursodatabase/libsql-client-ts,turso,200,200,200,200
+128,amplitude,Amplitude,analytics,key_free,ok,0.469,0.4937,7325032,38,56,3,amplitude-analytics,@amplitude/analytics-node,amplitude/Amplitude-Python,amplitude-analytics,200,200,200,200
+129,woocommerce,Automattic,commerce,local,ok,0.4681,0.5507,242774,216,940,25,woocommerce,@woocommerce/woocommerce-rest-api,woocommerce/wc-api-python,woocommerce-rest-api,200,200,200,200
+130,resend,Resend,email,key_free,ok,0.4653,0.4898,51796988,132,0,9,resend,resend,resend/resend-python,resend,200,200,200,200
+131,tavily,Tavily,search,key_free,ok,0.4641,0.4885,9588826,1424,0,11,tavily-python,@tavily/core,tavily-ai/tavily-python,tavily,200,200,200,200
+132,adyen,Adyen,payments,sandbox,ok,0.4638,0.4638,1024378,67,167,1,Adyen,@adyen/api-library,Adyen/adyen-python-api-library,adyen,200,200,200,200
+133,serpapi,SerpApi,search,key_free,ok,0.4612,0.4855,1625160,760,17,5,google-search-results,serpapi,serpapi/google-search-results-python,serpapi,200,200,200,200
+134,vertex-ai,Google,llm,paid,ok,0.4605,0.6579,89210830,910,985,6,google-cloud-aiplatform,@google-cloud/aiplatform,googleapis/python-aiplatform,google-cloud-vertex-ai,200,200,200,200
+135,mollie,Mollie,payments,sandbox,ok,0.4594,0.4594,522489,126,76,3,mollie-api-python,@mollie/api-client,mollie/mollie-api-python,mollie,200,200,200,200
+136,paddle,Paddle,payments,sandbox,ok,0.4582,0.4582,652313,104,31,6,paddle-python-sdk,@paddle/paddle-node-sdk,PaddleHQ/paddle-node-sdk,paddle,200,200,200,200
+137,pubmed-entrez,NCBI,science,keyless,restricted,0.4579,0.5724,4377509,5237,1363,0,biopython,,biopython/biopython,biopython,200,,200,200
+138,openweathermap,OpenWeather,maps,key_free,ok,0.4562,0.4802,106078,814,837,1,pyowm,,csparpa/pyowm,openweathermap,200,,200,200
+139,alchemy,Alchemy,crypto,key_free,ok,0.4557,0.4797,341980,457,146,3,,alchemy-sdk,alchemyplatform/alchemy-sdk-js,alchemy,,200,200,200
+140,vonage,Vonage,messaging,key_free,ok,0.4541,0.4781,533357,218,322,1,vonage,@vonage/server-sdk,Vonage/vonage-python-sdk,vonage,200,200,200,200
+141,e2b,E2B,devtools,key_free,ok,0.4535,0.4774,8175159,14457,0,2,e2b,e2b,e2b-dev/e2b,,200,200,200,
+142,milvus,Zilliz,database,local,ok,0.4524,0.5322,3698902,1417,208,1,pymilvus,@zilliz/milvus2-sdk-node,milvus-io/pymilvus,milvus,200,200,200,200
+143,neon,Neon,database,key_free,ok,0.4524,0.4762,18273344,550,0,6,,@neondatabase/serverless,neondatabase/serverless,neon-postgres,,200,200,200
+144,meta-marketing,Meta,analytics,trial,ok,0.4524,0.5655,4135356,1613,863,1,facebook-business,facebook-nodejs-business-sdk,facebook/facebook-python-business-sdk,facebook-ads-api,200,200,200,200
+145,sec-edgar,US SEC,gov-open-data,keyless,restricted,0.451,0.5638,842132,2801,37,60,edgartools,,dgunning/edgartools,sec,200,,200,200
+146,ably,Ably,messaging,key_free,ok,0.4506,0.4743,5144317,56,60,1,ably,ably,ably/ably-python,ably-realtime,200,200,200,200
+147,fred,St. Louis Fed,finance-data,key_free,ok,0.4501,0.4738,1090224,1661,0,35,fredapi,,mortada/fredapi,fred,200,,200,200
+148,open-meteo,Open-Meteo,maps,keyless,ok,0.4463,0.4463,243825,6411,0,21,openmeteo-requests,openmeteo,open-meteo/open-meteo,open-meteo,200,200,200,200
+149,easypost,EasyPost,commerce,sandbox,ok,0.4459,0.4459,350077,126,59,3,easypost,@easypost/api,EasyPost/easypost-python,easypost,200,200,200,200
+150,duckduckgo,DuckDuckGo,search,keyless,restricted,0.4419,0.5524,5263423,3025,36,8,ddgs,,deedy5/ddgs,duckduckgo,200,,200,200
+151,zendesk,Zendesk,support,trial,ok,0.4412,0.5515,3075359,369,184,9,zenpy,node-zendesk,facetoe/zenpy,zendesk-api,200,200,200,200
+152,wikipedia,Wikimedia,science,keyless,restricted,0.4401,0.5501,4224829,0,1089,28,wikipedia-api,,,wikipedia-api,200,,,200
+153,shippo,Shippo,commerce,sandbox,ok,0.4332,0.4332,254801,18,67,6,shippo,shippo,goshippo/shippo-python-sdk,shippo,200,200,200,200
+154,brevo,Brevo,email,key_free,ok,0.4329,0.4557,1493904,35,112,1,brevo-python,@getbrevo/brevo,getbrevo/brevo-python,sendinblue,200,200,200,200
+155,arxiv,arXiv,science,keyless,restricted,0.4326,0.5407,5204262,1552,2,57,arxiv,,lukasschwab/arxiv.py,arxiv,200,,200,200
+156,exa,Exa,search,key_free,ok,0.4318,0.4545,5406331,234,0,11,exa-py,exa-js,exa-labs/exa-py,,200,200,200,
+157,anthropic,Anthropic,llm,paid,ok,0.4292,0.6131,182448122,3980,2,34,anthropic,@anthropic-ai/sdk,anthropics/anthropic-sdk-python,anthropic,200,200,200,200
+158,deepgram,Deepgram,llm,key_free,ok,0.4274,0.4499,3949712,469,6,1,deepgram-sdk,@deepgram/sdk,deepgram/deepgram-python-sdk,deepgram,200,200,200,200
+159,backblaze-b2,Backblaze,storage,key_free,ok,0.425,0.4473,554560,214,70,1,b2sdk,,Backblaze/b2-sdk-python,backblaze,200,,200,200
+160,polygon-io,Polygon.io,finance-data,key_free,ok,0.4233,0.4456,539909,1523,20,1,polygon-api-client,@polygon.io/client-js,polygon-io/client-python,polygon.io,200,200,200,200
+161,better-auth,Better Auth,auth,local,ok,0.4191,0.4931,44611654,30384,0,0,,better-auth,better-auth/better-auth,,,200,200,
+162,okta,Okta,auth,trial,ok,0.4182,0.5228,1820325,271,1722,0,okta,@okta/okta-sdk-nodejs,okta/okta-sdk-python,okta,200,200,200,200
+163,cohere,Cohere,llm,key_free,ok,0.4166,0.4385,10340762,406,0,2,cohere,cohere-ai,cohere-ai/cohere-python,cohere,200,200,200,200
+164,browserbase,Browserbase,scraping,key_free,ok,0.4161,0.438,9904097,95,0,5,browserbase,@browserbasehq/sdk,browserbase/sdk-python,,200,200,200,
+165,intercom,Intercom,support,trial,ok,0.4127,0.5159,1763890,391,177,3,python-intercom,intercom-client,intercom/intercom-node,intercom,200,200,200,200
+166,todoist,Doist,productivity,key_free,ok,0.407,0.4285,150862,252,39,3,todoist-api-python,@doist/todoist-api-typescript,Doist/todoist-api-python,todoist,200,200,200,200
+167,gocardless,GoCardless,payments,sandbox,ok,0.4068,0.4068,295024,42,48,1,gocardless_pro,gocardless-nodejs,gocardless/gocardless-pro-python,gocardless,200,200,200,200
+168,unsplash,Unsplash,other,key_free,ok,0.4068,0.4282,979435,2195,0,5,,unsplash-js,unsplash/unsplash-js,unsplash,,200,200,200
+169,finnhub,Finnhub,finance-data,key_free,ok,0.4044,0.4257,185296,1092,8,4,finnhub-python,finnhub,Finnhub-Stock-API/finnhub-python,finnhub,200,200,200,200
+170,workos,WorkOS,auth,key_free,ok,0.3973,0.4182,13991657,109,0,1,workos,@workos-inc/node,workos/workos-python,workos,200,200,200,200
+171,overpass,OSM community,maps,keyless,restricted,0.3937,0.4921,96105,936,376,5,overpy,,drolbr/Overpass-API,overpass-api,200,,200,200
+172,lemonsqueezy,Lemon Squeezy,payments,sandbox,ok,0.3929,0.3929,514896,539,0,4,,@lemonsqueezy/lemonsqueezy.js,lmsqueezy/lemonsqueezy.js,lemon-squeezy,,200,200,200
+173,world-bank,World Bank,gov-open-data,keyless,ok,0.388,0.388,98518,178,0,25,wbgapi,,tgherzog/wbgapi,world-bank-api,200,,200,200
+174,openalex,OurResearch,science,keyless,ok,0.3877,0.3877,71687,426,0,21,pyalex,,J535D165/pyalex,openalex,200,,200,200
+175,composio,Composio,devtools,key_free,ok,0.3865,0.4069,123885,30644,0,3,composio-core,composio-core,ComposioHQ/composio,,200,200,200,
+176,replicate,Replicate,llm,paid,ok,0.3847,0.5495,2432677,918,298,4,replicate,replicate,replicate/replicate-python,replicate,200,200,200,200
+177,ipinfo,IPinfo,other,keyless,ok,0.384,0.384,325685,568,0,4,ipinfo,node-ipinfo,ipinfo/python,ipinfo,200,200,200,200
+178,heroku,Salesforce,cloud,paid,ok,0.3834,0.5477,51369,888,43246,1,,heroku,heroku/cli,heroku,,200,200,200
+179,loops,Loops,email,key_free,ok,0.3826,0.4027,1453790,7,0,22,,loops,Loops-so/loops-js,,,200,200,
+180,pagerduty,PagerDuty,observability,trial,ok,0.3788,0.4735,2201298,19,63,5,pagerduty,@pagerduty/pdjs,PagerDuty/python-pagerduty,pagerduty,200,200,200,200
+181,assemblyai,AssemblyAI,llm,key_free,ok,0.3732,0.3928,2797588,213,0,1,assemblyai,assemblyai,AssemblyAI/assemblyai-python-sdk,assemblyai,200,200,200,200
+182,virustotal,Google,other,key_free,ok,0.3698,0.3893,276176,788,0,5,vt-py,,VirusTotal/vt-py,virustotal,200,,200,200
+183,pipedrive,Pipedrive,crm,trial,ok,0.3692,0.4615,247457,234,61,6,,pipedrive,pipedrive/client-nodejs,pipedrive-api,,200,200,200
+184,crossref,Crossref,science,keyless,ok,0.3685,0.3685,46640,252,0,18,habanero,,sckott/habanero,crossref,200,,200,200
+185,shodan,Shodan,other,paid,ok,0.3625,0.5178,480267,3338,45,12,shodan,,achillean/shodan-python,shodan,200,,200,200
+186,terraform,HashiCorp,devtools,local,ok,0.3555,0.4182,0,49986,20188,21,,,hashicorp/terraform,terraform,,,200,200
+187,stytch,Stytch,auth,key_free,ok,0.3538,0.3724,1239899,67,3,0,stytch,stytch,stytchauth/stytch-python,stytch,200,200,200,200
+188,openrouter,OpenRouter,llm,paid,ok,0.3528,0.5039,12901756,691,0,23,,@openrouter/ai-sdk-provider,OpenRouterTeam/ai-sdk-provider,,,200,200,
+189,digitalocean,DigitalOcean,cloud,paid,ok,0.3516,0.5022,182556,141,3961,1,pydo,,digitalocean/pydo,digital-ocean,200,,200,200
+190,open-food-facts,Open Food Facts,gov-open-data,keyless,ok,0.351,0.351,27739,472,0,10,openfoodfacts,openfoodfacts-nodejs,openfoodfacts/openfoodfacts-python,openfoodfacts,200,200,200,200
+191,semantic-scholar,Allen AI,science,key_free,ok,0.3491,0.3674,53910,484,0,11,semanticscholar,,danielnsilva/semanticscholar,semantic-scholar,200,,200,200
+192,stackexchange,Stack Exchange,social,keyless,ok,0.3445,0.3445,7343,0,288,4,stackapi,,,stackexchange-api,200,,,200
+193,planetscale,PlanetScale,database,paid,ok,0.3428,0.4897,1788140,1206,60,1,,@planetscale/database,planetscale/database-js,planetscale,,200,200,200
+194,nuget,Microsoft,package-registry,keyless,ok,0.3423,0.3423,0,1649,12011,8,,,NuGet/NuGetGallery,nuget,,,200,200
+195,1password,1Password,devtools,paid,ok,0.3354,0.4792,3181632,111,34,3,onepassword-sdk,@1password/sdk,1Password/onepassword-sdk-js,1password,200,200,200,200
+196,monday,monday.com,productivity,trial,ok,0.3287,0.4108,612518,0,45,7,,@mondaydotcomorg/api,mondaycom/monday-api-node,monday.com,,200,gh: Not Found (HTTP 404),200
+197,censys,Censys,other,key_free,ok,0.327,0.3442,102545,469,0,2,censys,,censys/censys-python,censys,200,,200,200
+198,rubygems,Ruby Central,package-registry,keyless,ok,0.3256,0.3256,0,2439,17015,2,,,rubygems/rubygems.org,rubygems,,,200,200
+199,xai,xAI,llm,paid,ok,0.3168,0.4526,4773444,588,0,7,xai-sdk,,xai-org/xai-sdk-python,,200,,200,
+200,grafana,Grafana Labs,observability,local,ok,0.3158,0.3715,0,77397,5841,7,,,grafana/grafana,grafana,,,200,200
+201,crisp,Crisp,support,key_free,ok,0.309,0.3253,132612,34,0,3,crisp-api,crisp-api,crisp-im/python-crisp-api,crisp,200,200,200,200
+202,linode,Akamai,cloud,paid,ok,0.3042,0.4345,148402,142,440,0,linode_api4,,linode/linode_api4-python,linode,200,,200,200
+203,eurostat,Eurostat,gov-open-data,keyless,ok,0.3029,0.3029,83565,0,0,12,eurostat,,eurostat/eurostat-python,eurostat,200,,gh: Not Found (HTTP 404),200
+204,hetzner,Hetzner,cloud,paid,ok,0.3012,0.4303,248981,401,11,5,hcloud,,hetznercloud/hcloud-python,hetzner-cloud,200,,200,200
+205,together,Together AI,llm,paid,ok,0.3007,0.4296,1503145,81,0,20,together,together-ai,togethercomputer/together-python,,200,200,200,
+206,checkout-com,Checkout.com,payments,sandbox,ok,0.2955,0.2955,108526,18,0,1,checkout-sdk,checkout-sdk-node,checkout/checkout-sdk-python,,200,200,200,
+207,hacker-news,Y Combinator,social,keyless,ok,0.2822,0.2822,0,13361,32,35,,,HackerNews/API,hacker-news-api,,,200,200
+208,customer-io,Customer.io,email,paid,ok,0.279,0.3986,2319490,66,0,4,customerio,customerio-node,customerio/customerio-python,customer.io,200,200,200,200
+209,scrapingbee,ScrapingBee,scraping,key_free,ok,0.2771,0.2917,307324,0,0,2,scrapingbee,scrapingbee,,scrapingbee,200,200,,200
+210,tailscale,Tailscale,devtools,key_free,ok,0.2426,0.2554,0,37795,27,8,,,tailscale/tailscale,tailscale,,,200,200
+211,packagist,Packagist,package-registry,keyless,ok,0.2375,0.2375,0,1824,283,2,,,composer/packagist,packagist,,,200,200
+212,meta-graph,Meta,social,key_free,ok,0.2327,0.245,0,0,34972,2,,,,facebook-graph-api,,,,200
+213,render,Render,cloud,key_free,ok,0.2297,0.2418,0,0,159,188,,,,render.com,,,,200
+214,here,HERE,maps,key_free,ok,0.2247,0.2365,0,0,3313,13,,,,here-api,,,,200
+215,fireworks,Fireworks AI,llm,paid,ok,0.2161,0.3087,1157786,0,0,1,fireworks-ai,,fw-ai/fireworks-ai-python,,200,,gh: Not Found (HTTP 404),
+216,weather-gov,NOAA / NWS,maps,keyless,ok,0.2013,0.2013,0,311,563,0,,,weather-gov/api,weather-api,,,200,200
+217,zoom,Zoom,productivity,key_free,ok,0.1953,0.2055,0,0,338,25,,,,zoom-sdk,,,,200
+218,railway,Railway,cloud,trial,ok,0.1827,0.2284,0,622,143,5,,,railwayapp/cli,railway,,,200,200
+219,zenodo,CERN,science,keyless,ok,0.18,0.18,0,1048,16,3,,,zenodo/zenodo,zenodo,,,200,200
+220,figma,Figma,productivity,key_free,ok,0.1759,0.1851,0,0,48,54,,,,figma-api,,,,200
+221,tiktok,TikTok,social,key_free,restricted,0.1743,0.2294,0,0,67,230,,,,tiktok-api,,,,200
+222,open-library,Internet Archive,science,keyless,ok,0.1707,0.1707,0,6769,0,10,,,internetarchive/openlibrary,openlibrary,,,200,200
+223,wikidata,Wikimedia,science,keyless,restricted,0.1697,0.2121,0,0,931,14,,,,wikidata,,,,200
+224,instagram-graph,Meta,social,key_free,ok,0.1661,0.1749,0,0,617,4,,,,instagram-graph-api,,,,200
+225,maven-central,Sonatype,package-registry,keyless,ok,0.1518,0.1518,0,0,267,3,,,,maven-central,,,,200
+226,frankfurter,Frankfurter,finance-data,keyless,ok,0.1505,0.1505,0,2001,0,8,,,lineofflight/frankfurter,frankfurter,,,200,200
+227,etherscan,Etherscan,crypto,key_free,ok,0.1462,0.1539,0,0,177,5,,,,etherscan,,,,200
+228,umami,Umami,analytics,local,ok,0.1459,0.1717,0,39479,0,4,,,umami-software/umami,umami,,,200,200
+229,browserless,Browserless,scraping,key_free,ok,0.1453,0.153,0,13829,0,3,,,browserless/browserless,browserless,,,200,200
+230,dev-to,Forem,social,key_free,ok,0.144,0.1516,0,22802,0,2,,,forem/forem,dev.to,,,200,200
+231,cal-com,Cal.com,productivity,key_free,ok,0.1429,0.1504,0,49167,0,1,,,calcom/cal.com,,,,200,
+232,rdap,ICANN / registries,other,keyless,ok,0.1426,0.1426,0,0,9,37,,,,rdap,,,,200
+233,threads,Meta,social,key_free,ok,0.1425,0.15,0,0,2,130,,,,threads-api,,,,200
+234,jina-reader,Jina AI,scraping,keyless,ok,0.1333,0.1333,0,12175,0,1,,,jina-ai/reader,,,,200,
+235,whatsapp-cloud,Meta,messaging,sandbox,ok,0.1308,0.1308,0,0,232,1,,,,whatsapp-cloud-api,,,,200
+236,ecb-data,ECB,finance-data,keyless,ok,0.1308,0.1308,0,0,139,2,,,,ecb,,,,200
+237,coinmarketcap,CoinMarketCap,crypto,key_free,ok,0.1245,0.131,0,0,73,4,,,,coinmarketcap,,,,200
+238,calendly,Calendly,productivity,key_free,ok,0.1236,0.1301,0,0,93,3,,,,calendly,,,,200
+239,freshdesk,Freshworks,support,trial,ok,0.1218,0.1522,0,0,113,7,,,,freshdesk,,,,200
+240,plausible,Plausible,analytics,paid,ok,0.1136,0.1623,0,29565,0,3,,,plausible/analytics,plausible,,,200,200
+241,restcountries,REST Countries,other,keyless,ok,0.1128,0.1128,0,2273,0,1,,,apilayer/restcountries,rest-countries,,,200,200
+242,fly-io,Fly.io,cloud,key_free,ok,0.1039,0.1093,0,1717,0,1,,,superfly/flyctl,fly.io,,,200,200
+243,deepseek,DeepSeek,llm,paid,ok,0.0991,0.1416,0,0,18,21,,,,deepseek,,,,200
+244,crates-io,Rust Foundation,package-registry,keyless,restricted,0.0951,0.1188,0,3720,0,1,,,rust-lang/crates.io,crates.io,,,200,200
+245,orcid,ORCID,science,keyless,ok,0.0951,0.0951,0,0,12,4,,,,orcid,,,,200
+246,nager-date,Nager,other,keyless,ok,0.089,0.089,0,1427,0,0,,,nager/Nager.Date,,,,200,
+247,ssl-labs,Qualys,other,keyless,restricted,0.0878,0.1097,0,1768,0,1,,,ssllabs/ssllabs-scan,ssllabs,,,200,200
+248,eu-vies,European Commission,gov-open-data,keyless,ok,0.0861,0.0861,0,0,0,26,,,,vies,,,,200
+249,companies-house,UK Companies House,gov-open-data,key_free,ok,0.0818,0.0861,0,0,0,26,,,,companies-house,,,,200
+250,urlscan,urlscan.io,other,key_free,ok,0.0817,0.086,0,0,15,2,,,,urlscan,,,,200
+251,perplexity,Perplexity,llm,paid,ok,0.0779,0.1113,0,0,0,70,,,,perplexity-api,,,,200
+252,nasa-api,NASA,science,key_free,ok,0.0736,0.0774,0,556,0,0,,,nasa/api-docs,nasa-api,,,200,200
+253,etsy,Etsy,commerce,key_free,ok,0.0688,0.0724,0,0,0,15,,,,etsy-api,,,,200
+254,cloudflare-doh,Cloudflare,other,keyless,ok,0.0619,0.0619,0,0,19,0,,,,dns-over-https,,,,200
+255,data-gouv-fr,Etalab,gov-open-data,keyless,ok,0.0602,0.0602,0,135,0,0,,,datagouv/data.gouv.fr,,,,200,
+256,clickup,ClickUp,productivity,key_free,ok,0.0571,0.0601,0,0,0,9,,,,clickup,,,,200
+257,infura,Consensys,crypto,key_free,ok,0.0556,0.0586,0,0,16,0,,,,infura,,,,200
+258,unpaywall,OurResearch,science,keyless,ok,0.0508,0.0508,0,0,0,6,,,,unpaywall,,,,200
+259,opencorporates,OpenCorporates,gov-open-data,key_free,ok,0.0488,0.0514,0,0,4,1,,,,opencorporates,,,,200
+260,serper,Serper,search,key_free,ok,0.0399,0.042,0,0,0,4,,,,serper,,,,200
+261,brave-search,Brave,search,key_free,ok,0.0399,0.042,0,0,0,4,,,,brave-search-api,,,,200
+262,abuseipdb,AbuseIPDB,other,key_free,ok,0.0344,0.0362,0,0,0,3,,,,abuseipdb,,,,200
+263,ip-api,ip-api.com,other,keyless,restricted,0.0336,0.042,0,0,0,4,,,,ip-api,,,,200
+264,exchangerate-api,ExchangeRate-API,finance-data,key_free,ok,0.0172,0.0181,0,0,0,1,,,,exchangerate-api,,,,200
+265,crt-sh,Sectigo,other,keyless,restricted,0.0145,0.0181,0,0,0,1,,,,crt.sh,,,,200
+266,haveibeenpwned,HIBP,other,paid,ok,0.0127,0.0181,0,0,0,1,,,,haveibeenpwned,,,,200
+267,imf-data,IMF,gov-open-data,keyless,ok,0.0,0.0,0,0,0,0,,,,imf,,,,200
+268,insee-sirene,INSEE,gov-open-data,key_free,ok,0.0,0.0,0,0,0,0,,,,insee,,,,200
+269,api-adresse-ban,IGN / DINUM,gov-open-data,keyless,ok,0.0,0.0,0,0,0,0,,,,ban,,,,200
+270,legifrance-piste,DILA,gov-open-data,key_free,ok,0.0,0.0,0,0,0,0,,,,legifrance,,,,200
+271,x-twitter,X Corp,social,paid,prohibited,0.0,0.7464,2920062,11188,24895,75,tweepy,twitter-api-v2,tweepy/tweepy,twitter-api,200,200,200,200
+272,linkedin,Microsoft,social,key_free,prohibited,0.0,0.3205,0,0,5223,243,,,,linkedin-api,,,,200

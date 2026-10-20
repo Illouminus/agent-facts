@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facts.baillot.dev/schema/v0/probe.schema.json",
+  "title": "Probe",
+  "description": "probes/<service>/<slug>.yaml: declarative steps and assertions (docs/specs/01-fact-schema.md, 04-probe-runner.md). No code per probe. A probe with env prod is read-only: GET/HEAD, no body; agentfacts validate also rejects method-override headers/params and credential headers (case-insensitive).",
+  "type": "object",
+  "required": ["id", "service", "env", "steps", "assert"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"$ref": "fact.schema.json#/$defs/probe_id"},
+    "service": {"$ref": "fact.schema.json#/$defs/slug"},
+    "env": {"enum": ["prod", "sandbox"]},
+    "account_state": {"$ref": "fact.schema.json#/$defs/dimension_value"},
+    "steps": {"type": "array", "minItems": 1, "maxItems": 10, "items": {"$ref": "#/$defs/step"}},
+    "assert": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"$ref": "#/$defs/assertion"}}
+  },
+  "allOf": [
+    {
+      "if": {"type": "object", "required": ["env"], "properties": {"env": {"const": "prod"}}},
+      "then": {
+        "properties": {
+          "steps": {
+            "items": {
+              "properties": {
+                "method": {"enum": ["GET", "HEAD"], "x-error-codes": {"enum": "prod_probe_not_readonly"}},
+                "form": {"not": {}, "x-error-codes": {"not": "prod_probe_not_readonly"}},
+                "json": {"not": {}, "x-error-codes": {"not": "prod_probe_not_readonly"}}
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "scalar": {"type": ["string", "number", "boolean"], "maxLength": 1024},
+    "scalar_map": {
+      "type": "object",
+      "propertyNames": {"$ref": "fix.schema.json#/$defs/identifier"},
+      "additionalProperties": {"$ref": "#/$defs/scalar"}
+    },
+    "step": {
+      "type": "object",
+      "required": ["do"],
+      "properties": {"do": {"enum": ["http", "sleep"]}},
+      "allOf": [
+        {"if": {"type": "object", "required": ["do"], "properties": {"do": {"const": "http"}}}, "then": {"$ref": "#/$defs/http_step"}},
+        {"if": {"type": "object", "required": ["do"], "properties": {"do": {"const": "sleep"}}}, "then": {"$ref": "#/$defs/sleep_step"}}
+      ]
+    },
+    "http_step": {
+      "type": "object",
+      "required": ["do", "method", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "do": {"const": "http"},
+        "method": {"$ref": "fix.schema.json#/$defs/http_method"},
+        "path": {
+          "description": "An instance of a registered template; {{run_uuid}}, {{now_rfc3339}} and {{step[N].json.<path>}} may fill segments.",
+          "$ref": "fix.schema.json#/$defs/path_template"
+        },
+        "query": {"$ref": "#/$defs/scalar_map"},
+        "form": {"$ref": "#/$defs/scalar_map"},
+        "json": {"type": ["object", "array"]},
+        "headers": {
+          "type": "object",
+          "propertyNames": {"$ref": "fix.schema.json#/$defs/header_name"},
+          "additionalProperties": {"type": "string", "maxLength": 1024}
+        },
+        "auth": {"enum": ["service", "none"], "default": "service"},
+        "expect_rate_limit": {"type": "boolean"}
+      }
+    },
+    "sleep_step": {
+      "type": "object",
+      "required": ["do", "seconds"],
+      "additionalProperties": false,
+      "properties": {
+        "do": {"const": "sleep"},
+        "seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 300}
+      }
+    },
+    "step_ref": {"description": "1-based index into steps.", "type": "integer", "minimum": 1},
+    "assertion": {
+      "description": "Exactly one subject key (status, header, json_path, body_contains, latency_ms, schema_fingerprint) per assertion.",
+      "type": "object",
+      "required": ["step"],
+      "oneOf": [
+        {"$ref": "#/$defs/assert_status"},
+        {"$ref": "#/$defs/assert_header"},
+        {"$ref": "#/$defs/assert_json_path"},
+        {"$ref": "#/$defs/assert_body_contains"},
+        {"$ref": "#/$defs/assert_latency"},
+        {"$ref": "#/$defs/assert_schema_fingerprint"}
+      ]
+    },
+    "assert_status": {
+      "type": "object",
+      "required": ["step", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {"$ref": "#/$defs/step_ref"},
+        "status": {"type": "integer", "minimum": 100, "maximum": 599}
+      }
+    },
+    "assert_header": {
+      "type": "object",
+      "required": ["step", "header"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {"$ref": "#/$defs/step_ref"},
+        "header": {"$ref": "fix.schema.json#/$defs/header_name"},
+        "present": {"type": "boolean"},
+        "equals": {"type": "string", "maxLength": 1024},
+        "matches": {"type": "string", "maxLength": 256}
+      },
+      "oneOf": [{"required": ["present"]}, {"required": ["equals"]}, {"required": ["matches"]}]
+    },
+    "assert_json_path": {
+      "type": "object",
+      "required": ["step", "json_path"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {"$ref": "#/$defs/step_ref"},
+        "json_path": {"type": "string", "pattern": "^\\$[^\\s]{0,255}(?!\\n)$"},
+        "equals": {"type": ["string", "number", "boolean", "null"], "maxLength": 1024},
+        "contains": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "exists": {"type": "boolean"}
+      },
+      "oneOf": [{"required": ["equals"]}, {"required": ["contains"]}, {"required": ["exists"]}]
+    },
+    "assert_body_contains": {
+      "type": "object",
+      "required": ["step", "body_contains"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {"$ref": "#/$defs/step_ref"},
+        "body_contains": {"type": "string", "minLength": 1, "maxLength": 1024}
+      }
+    },
+    "assert_latency": {
+      "type": "object",
+      "required": ["step", "latency_ms"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {"$ref": "#/$defs/step_ref"},
+        "latency_ms": {
+          "type": "object",
+          "required": ["lt"],
+          "additionalProperties": false,
+          "properties": {"lt": {"type": "integer", "minimum": 1, "maximum": 60000}}
+        }
+      }
+    },
+    "assert_schema_fingerprint": {
+      "type": "object",
+      "required": ["step", "schema_fingerprint"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {"$ref": "#/$defs/step_ref"},
+        "schema_fingerprint": {
+          "description": "sha256 (hex) of the sorted top-level keys of the JSON body.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}(?!\\n)$"
+        }
+      }
+    }
+  }
+}

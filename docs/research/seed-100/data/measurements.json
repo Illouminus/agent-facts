@@ -1,0 +1,4105 @@
+{
+ "openai": {
+  "service": "openai",
+  "measured_at": "2026-10-20T07:22:59Z",
+  "pypi_month": 295856631,
+  "pypi_status": 200,
+  "npm_month": 171943663,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 146,
+   "pushed_at": "2026-10-20T06:13:41Z",
+   "stars": 31891
+  },
+  "gh_status": 200,
+  "so_count": 2538,
+  "so_status": 200,
+  "so_quota": 298
+ },
+ "anthropic": {
+  "service": "anthropic",
+  "measured_at": "2026-10-20T07:23:20Z",
+  "pypi_month": 150199657,
+  "pypi_status": 200,
+  "npm_month": 182448122,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 211,
+   "pushed_at": "2026-10-15T19:45:15Z",
+   "stars": 3980
+  },
+  "gh_status": 200,
+  "so_count": 2,
+  "so_status": 200,
+  "so_quota": 297
+ },
+ "google-gemini": {
+  "service": "google-gemini",
+  "measured_at": "2026-10-20T07:23:39Z",
+  "pypi_month": 137607856,
+  "pypi_status": 200,
+  "npm_month": 100645678,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 369,
+   "pushed_at": "2026-10-20T00:36:18Z",
+   "stars": 4034
+  },
+  "gh_status": 200,
+  "so_count": 376,
+  "so_status": 200,
+  "so_quota": 296
+ },
+ "azure-openai": {
+  "service": "azure-openai",
+  "measured_at": "2026-10-20T07:23:50Z",
+  "pypi_month": 295856631,
+  "pypi_status": 200,
+  "npm_month": 171943663,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1161,
+   "pushed_at": "2026-10-20T06:32:26Z",
+   "stars": 5621
+  },
+  "gh_status": 200,
+  "so_count": 523,
+  "so_status": 200,
+  "so_quota": 295
+ },
+ "aws-bedrock": {
+  "service": "aws-bedrock",
+  "measured_at": "2026-10-20T07:24:06Z",
+  "pypi_month": 2446343352,
+  "pypi_status": 200,
+  "npm_month": 60373803,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 174,
+   "pushed_at": "2026-10-19T19:17:55Z",
+   "stars": 9915
+  },
+  "gh_status": 200,
+  "so_count": 163,
+  "so_status": 200,
+  "so_quota": 294
+ },
+ "vertex-ai": {
+  "service": "vertex-ai",
+  "measured_at": "2026-10-20T07:24:16Z",
+  "pypi_month": 89210830,
+  "pypi_status": 200,
+  "npm_month": 1666338,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 328,
+   "pushed_at": "2026-10-20T00:11:55Z",
+   "stars": 910
+  },
+  "gh_status": 200,
+  "so_count": 985,
+  "so_status": 200,
+  "so_quota": 293
+ },
+ "mistral": {
+  "service": "mistral",
+  "measured_at": "2026-10-20T07:24:32Z",
+  "pypi_month": 16185864,
+  "pypi_status": 200,
+  "npm_month": 31277503,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 38,
+   "pushed_at": "2026-10-19T16:30:09Z",
+   "stars": 774
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 292
+ },
+ "cohere": {
+  "service": "cohere",
+  "measured_at": "2026-10-20T07:25:39Z",
+  "pypi_month": 10340762,
+  "pypi_status": 200,
+  "npm_month": 2002495,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 21,
+   "pushed_at": "2026-09-29T20:00:18Z",
+   "stars": 406
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 291
+ },
+ "groq": {
+  "service": "groq",
+  "measured_at": "2026-10-20T07:25:55Z",
+  "pypi_month": 16795477,
+  "pypi_status": 200,
+  "npm_month": 3678585,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-09-04T20:45:45Z",
+   "stars": 621
+  },
+  "gh_status": 200,
+  "so_count": 95,
+  "so_status": 200,
+  "so_quota": 290
+ },
+ "together": {
+  "service": "together",
+  "measured_at": "2026-10-20T07:26:37Z",
+  "pypi_month": 1503145,
+  "pypi_status": 200,
+  "npm_month": 373511,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 8,
+   "pushed_at": "2026-10-10T07:36:22Z",
+   "stars": 81
+  },
+  "gh_status": 200
+ },
+ "fireworks": {
+  "service": "fireworks",
+  "measured_at": "2026-10-20T07:27:49Z",
+  "pypi_month": 1157786,
+  "pypi_status": 200,
+  "gh": null,
+  "gh_status": "gh: Not Found (HTTP 404)"
+ },
+ "openrouter": {
+  "service": "openrouter",
+  "measured_at": "2026-10-20T07:28:02Z",
+  "npm_month": 12901756,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 46,
+   "pushed_at": "2026-09-19T14:14:53Z",
+   "stars": 691
+  },
+  "gh_status": 200
+ },
+ "xai": {
+  "service": "xai",
+  "measured_at": "2026-10-20T07:28:14Z",
+  "pypi_month": 4773444,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 54,
+   "pushed_at": "2026-09-28T14:25:38Z",
+   "stars": 588
+  },
+  "gh_status": 200
+ },
+ "deepseek": {
+  "service": "deepseek",
+  "measured_at": "2026-10-20T07:28:28Z",
+  "so_count": 18,
+  "so_status": 200,
+  "so_quota": 289
+ },
+ "replicate": {
+  "service": "replicate",
+  "measured_at": "2026-10-20T07:29:15Z",
+  "pypi_month": 1526037,
+  "pypi_status": 200,
+  "npm_month": 2432677,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 73,
+   "pushed_at": "2025-08-26T17:18:17Z",
+   "stars": 918
+  },
+  "gh_status": 200,
+  "so_count": 298,
+  "so_status": 200,
+  "so_quota": 286
+ },
+ "ollama": {
+  "service": "ollama",
+  "measured_at": "2026-10-20T07:29:15Z",
+  "pypi_month": 13275724,
+  "pypi_status": 200,
+  "npm_month": 3018373,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 4364,
+   "pushed_at": "2026-10-20T01:51:51Z",
+   "stars": 183906
+  },
+  "gh_status": 200,
+  "so_count": 256,
+  "so_status": 200,
+  "so_quota": 285
+ },
+ "deepgram": {
+  "service": "deepgram",
+  "measured_at": "2026-10-20T07:29:15Z",
+  "pypi_month": 3166523,
+  "pypi_status": 200,
+  "npm_month": 3949712,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 20,
+   "pushed_at": "2026-10-19T12:49:04Z",
+   "stars": 469
+  },
+  "gh_status": 200,
+  "so_count": 6,
+  "so_status": 200,
+  "so_quota": 285
+ },
+ "elevenlabs": {
+  "service": "elevenlabs",
+  "measured_at": "2026-10-20T07:29:15Z",
+  "pypi_month": 9073441,
+  "pypi_status": 200,
+  "npm_month": 3824909,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 46,
+   "pushed_at": "2026-10-17T14:04:50Z",
+   "stars": 3147
+  },
+  "gh_status": 200,
+  "so_count": 22,
+  "so_status": 200,
+  "so_quota": 285
+ },
+ "litellm": {
+  "service": "litellm",
+  "measured_at": "2026-10-20T07:29:37Z",
+  "pypi_month": 92239101,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 5532,
+   "pushed_at": "2026-10-20T07:27:28Z",
+   "stars": 61625
+  },
+  "gh_status": 200,
+  "so_count": 9,
+  "so_status": 200,
+  "so_quota": 280
+ },
+ "llama-index": {
+  "service": "llama-index",
+  "measured_at": "2026-10-20T07:29:39Z",
+  "pypi_month": 2937852,
+  "pypi_status": 200,
+  "npm_month": 569878,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 995,
+   "pushed_at": "2026-10-20T07:12:17Z",
+   "stars": 52573
+  },
+  "gh_status": 200,
+  "so_count": 320,
+  "so_status": 200,
+  "so_quota": 279
+ },
+ "assemblyai": {
+  "service": "assemblyai",
+  "measured_at": "2026-10-20T07:29:31Z",
+  "pypi_month": 2797588,
+  "pypi_status": 200,
+  "npm_month": 2153374,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 17,
+   "pushed_at": "2026-10-19T20:57:04Z",
+   "stars": 213
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 281
+ },
+ "perplexity": {
+  "service": "perplexity",
+  "measured_at": "2026-10-20T07:29:15Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 287
+ },
+ "huggingface": {
+  "service": "huggingface",
+  "measured_at": "2026-10-20T07:29:15Z",
+  "pypi_month": 232552563,
+  "pypi_status": 200,
+  "npm_month": 1640703,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 190,
+   "pushed_at": "2026-10-20T03:02:08Z",
+   "stars": 3991
+  },
+  "gh_status": 200,
+  "so_count": 900,
+  "so_status": 200,
+  "so_quota": 285
+ },
+ "mcp-sdk": {
+  "service": "mcp-sdk",
+  "measured_at": "2026-10-20T07:30:22Z",
+  "pypi_month": 235193557,
+  "pypi_status": 200,
+  "npm_month": 256832284,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 600,
+   "pushed_at": "2026-10-20T00:17:05Z",
+   "stars": 13618
+  },
+  "gh_status": 200,
+  "so_count": 171,
+  "so_status": 200,
+  "so_quota": 276
+ },
+ "langchain": {
+  "service": "langchain",
+  "measured_at": "2026-10-20T07:29:39Z",
+  "pypi_month": 170457766,
+  "pypi_status": 200,
+  "npm_month": 12279365,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 672,
+   "pushed_at": "2026-10-20T04:27:43Z",
+   "stars": 148111
+  },
+  "gh_status": 200,
+  "so_count": 1972,
+  "so_status": 200,
+  "so_quota": 279
+ },
+ "pinecone": {
+  "service": "pinecone",
+  "measured_at": "2026-10-20T07:30:41Z",
+  "pypi_month": 3879257,
+  "pypi_status": 200,
+  "npm_month": 3333184,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 63,
+   "pushed_at": "2026-10-07T13:55:07Z",
+   "stars": 453
+  },
+  "gh_status": 200,
+  "so_count": 116,
+  "so_status": 200,
+  "so_quota": 272
+ },
+ "langfuse": {
+  "service": "langfuse",
+  "measured_at": "2026-10-20T07:30:35Z",
+  "pypi_month": 23563200,
+  "pypi_status": 200,
+  "npm_month": 7679111,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1079,
+   "pushed_at": "2026-10-20T07:25:07Z",
+   "stars": 36061
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 274
+ },
+ "langsmith": {
+  "service": "langsmith",
+  "measured_at": "2026-10-20T07:30:24Z",
+  "pypi_month": 77233437,
+  "pypi_status": 200,
+  "npm_month": 28418967,
+  "npm_status": 200,
+  "gh": {
+   "archived": true,
+   "open_issues": 227,
+   "pushed_at": "2026-10-16T17:24:02Z",
+   "stars": 1081
+  },
+  "gh_status": 200,
+  "so_count": 15,
+  "so_status": 200,
+  "so_quota": 275
+ },
+ "wandb": {
+  "service": "wandb",
+  "measured_at": "2026-10-20T07:30:37Z",
+  "pypi_month": 14514596,
+  "pypi_status": 200,
+  "npm_month": 38054,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1005,
+   "pushed_at": "2026-10-20T05:54:19Z",
+   "stars": 11303
+  },
+  "gh_status": 200,
+  "so_count": 139,
+  "so_status": 200,
+  "so_quota": 273
+ },
+ "vercel-ai-sdk": {
+  "service": "vercel-ai-sdk",
+  "measured_at": "2026-10-20T07:32:06Z",
+  "npm_month": 118618237,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1370,
+   "pushed_at": "2026-10-20T05:25:47Z",
+   "stars": 27412
+  },
+  "gh_status": 200,
+  "so_count": 24,
+  "so_status": 200,
+  "so_quota": 265
+ },
+ "milvus": {
+  "service": "milvus",
+  "measured_at": "2026-10-20T07:32:06Z",
+  "pypi_month": 3698902,
+  "pypi_status": 200,
+  "npm_month": 636152,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 395,
+   "pushed_at": "2026-10-16T02:45:42Z",
+   "stars": 1417
+  },
+  "gh_status": 200,
+  "so_count": 208,
+  "so_status": 200,
+  "so_quota": 265
+ },
+ "pgvector": {
+  "service": "pgvector",
+  "measured_at": "2026-10-20T07:32:06Z",
+  "pypi_month": 31134981,
+  "pypi_status": 200,
+  "npm_month": 2366062,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 18,
+   "pushed_at": "2026-10-18T12:20:41Z",
+   "stars": 23416
+  },
+  "gh_status": 200,
+  "so_count": 91,
+  "so_status": 200,
+  "so_quota": 265
+ },
+ "chroma": {
+  "service": "chroma",
+  "measured_at": "2026-10-20T07:32:06Z",
+  "pypi_month": 6525454,
+  "pypi_status": 200,
+  "npm_month": 1037760,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 952,
+   "pushed_at": "2026-10-20T03:43:25Z",
+   "stars": 29536
+  },
+  "gh_status": 200,
+  "so_count": 266,
+  "so_status": 200,
+  "so_quota": 265
+ },
+ "weaviate": {
+  "service": "weaviate",
+  "measured_at": "2026-10-20T07:32:06Z",
+  "pypi_month": 9835248,
+  "pypi_status": 200,
+  "npm_month": 1487005,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 86,
+   "pushed_at": "2026-10-19T13:41:08Z",
+   "stars": 228
+  },
+  "gh_status": 200,
+  "so_count": 160,
+  "so_status": 200,
+  "so_quota": 265
+ },
+ "serper": {
+  "service": "serper",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 265
+ },
+ "qdrant": {
+  "service": "qdrant",
+  "measured_at": "2026-10-20T07:32:06Z",
+  "pypi_month": 12034960,
+  "pypi_status": 200,
+  "npm_month": 3662604,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 228,
+   "pushed_at": "2026-10-17T05:02:22Z",
+   "stars": 1374
+  },
+  "gh_status": 200,
+  "so_count": 60,
+  "so_status": 200,
+  "so_quota": 265
+ },
+ "brave-search": {
+  "service": "brave-search",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 258
+ },
+ "jina-reader": {
+  "service": "jina-reader",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 36,
+   "pushed_at": "2026-05-22T02:56:46Z",
+   "stars": 12175
+  },
+  "gh_status": 200
+ },
+ "exa": {
+  "service": "exa",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "pypi_month": 5406331,
+  "pypi_status": 200,
+  "npm_month": 3851454,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 48,
+   "pushed_at": "2026-10-19T18:59:56Z",
+   "stars": 234
+  },
+  "gh_status": 200
+ },
+ "serpapi": {
+  "service": "serpapi",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "pypi_month": 1625160,
+  "pypi_status": 200,
+  "npm_month": 605096,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 20,
+   "pushed_at": "2026-08-18T10:37:28Z",
+   "stars": 760
+  },
+  "gh_status": 200,
+  "so_count": 17,
+  "so_status": 200,
+  "so_quota": 257
+ },
+ "tavily": {
+  "service": "tavily",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "pypi_month": 9588826,
+  "pypi_status": 200,
+  "npm_month": 1553626,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 25,
+   "pushed_at": "2026-10-06T15:04:43Z",
+   "stars": 1424
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 257
+ },
+ "browserless": {
+  "service": "browserless",
+  "measured_at": "2026-10-20T07:32:08Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 16,
+   "pushed_at": "2026-10-20T05:44:37Z",
+   "stars": 13829
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 257
+ },
+ "firecrawl": {
+  "service": "firecrawl",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "pypi_month": 5339910,
+  "pypi_status": 200,
+  "npm_month": 4928054,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 635,
+   "pushed_at": "2026-10-20T07:18:21Z",
+   "stars": 193182
+  },
+  "gh_status": 200,
+  "so_count": 5,
+  "so_status": 200,
+  "so_quota": 257
+ },
+ "apify": {
+  "service": "apify",
+  "measured_at": "2026-10-20T07:32:07Z",
+  "pypi_month": 2274981,
+  "pypi_status": 200,
+  "npm_month": 1703905,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 13,
+   "pushed_at": "2026-10-20T07:17:20Z",
+   "stars": 104
+  },
+  "gh_status": 200,
+  "so_count": 207,
+  "so_status": 200,
+  "so_quota": 257
+ },
+ "wikipedia": {
+  "service": "wikipedia",
+  "measured_at": "2026-10-20T07:32:09Z",
+  "pypi_month": 4224829,
+  "pypi_status": 200,
+  "so_count": 1089,
+  "so_status": 200,
+  "so_quota": 257
+ },
+ "wikidata": {
+  "service": "wikidata",
+  "measured_at": "2026-10-20T07:32:10Z",
+  "so_count": 931,
+  "so_status": 200,
+  "so_quota": 251
+ },
+ "puppeteer": {
+  "service": "puppeteer",
+  "measured_at": "2026-10-20T07:32:09Z",
+  "npm_month": 47307296,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 267,
+   "pushed_at": "2026-10-19T12:49:26Z",
+   "stars": 95728
+  },
+  "gh_status": 200,
+  "so_count": 8001,
+  "so_status": 200,
+  "so_quota": 251
+ },
+ "scrapingbee": {
+  "service": "scrapingbee",
+  "measured_at": "2026-10-20T07:32:09Z",
+  "pypi_month": 307324,
+  "pypi_status": 200,
+  "npm_month": 130271,
+  "npm_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 251
+ },
+ "playwright": {
+  "service": "playwright",
+  "measured_at": "2026-10-20T07:32:09Z",
+  "pypi_month": 97001677,
+  "pypi_status": 200,
+  "npm_month": 445668745,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 179,
+   "pushed_at": "2026-10-20T02:59:45Z",
+   "stars": 98124
+  },
+  "gh_status": 200,
+  "so_count": 3502,
+  "so_status": 200,
+  "so_quota": 251
+ },
+ "browserbase": {
+  "service": "browserbase",
+  "measured_at": "2026-10-20T07:32:09Z",
+  "pypi_month": 3109554,
+  "pypi_status": 200,
+  "npm_month": 9904097,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 26,
+   "pushed_at": "2026-10-14T07:16:42Z",
+   "stars": 95
+  },
+  "gh_status": 200
+ },
+ "duckduckgo": {
+  "service": "duckduckgo",
+  "measured_at": "2026-10-20T07:32:10Z",
+  "pypi_month": 5263423,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 33,
+   "pushed_at": "2026-08-26T21:52:09Z",
+   "stars": 3025
+  },
+  "gh_status": 200,
+  "so_count": 36,
+  "so_status": 200,
+  "so_quota": 247
+ },
+ "paypal": {
+  "service": "paypal",
+  "measured_at": "2026-10-20T07:32:10Z",
+  "pypi_month": 30749,
+  "pypi_status": 200,
+  "npm_month": 598659,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 0,
+   "pushed_at": "2026-08-21T15:39:13Z",
+   "stars": 28
+  },
+  "gh_status": 200,
+  "so_count": 21028,
+  "so_status": 200,
+  "so_quota": 247
+ },
+ "stripe": {
+  "service": "stripe",
+  "measured_at": "2026-10-20T07:32:10Z",
+  "pypi_month": 37229330,
+  "pypi_status": 200,
+  "npm_month": 94606198,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 23,
+   "pushed_at": "2026-10-20T00:03:51Z",
+   "stars": 2054
+  },
+  "gh_status": 200,
+  "so_count": 12545,
+  "so_status": 200,
+  "so_quota": 247
+ },
+ "lemonsqueezy": {
+  "service": "lemonsqueezy",
+  "measured_at": "2026-10-20T07:32:10Z",
+  "npm_month": 514896,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 15,
+   "pushed_at": "2024-11-05T20:40:14Z",
+   "stars": 539
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 243
+ },
+ "paddle": {
+  "service": "paddle",
+  "measured_at": "2026-10-20T07:32:10Z",
+  "pypi_month": 133434,
+  "pypi_status": 200,
+  "npm_month": 652313,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 20,
+   "pushed_at": "2026-10-12T13:59:59Z",
+   "stars": 104
+  },
+  "gh_status": 200,
+  "so_count": 31,
+  "so_status": 200,
+  "so_quota": 243
+ },
+ "mollie": {
+  "service": "mollie",
+  "measured_at": "2026-10-20T07:32:11Z",
+  "pypi_month": 74956,
+  "pypi_status": 200,
+  "npm_month": 522489,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 13,
+   "pushed_at": "2026-08-03T08:16:05Z",
+   "stars": 126
+  },
+  "gh_status": 200,
+  "so_count": 76,
+  "so_status": 200,
+  "so_quota": 241
+ },
+ "gocardless": {
+  "service": "gocardless",
+  "measured_at": "2026-10-20T07:32:11Z",
+  "pypi_month": 295024,
+  "pypi_status": 200,
+  "npm_month": 201384,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 4,
+   "pushed_at": "2026-10-12T11:56:28Z",
+   "stars": 42
+  },
+  "gh_status": 200,
+  "so_count": 48,
+  "so_status": 200,
+  "so_quota": 241
+ },
+ "square": {
+  "service": "square",
+  "measured_at": "2026-10-20T07:32:12Z",
+  "pypi_month": 256685,
+  "pypi_status": 200,
+  "npm_month": 1470355,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 2,
+   "pushed_at": "2026-09-15T21:00:53Z",
+   "stars": 114
+  },
+  "gh_status": 200,
+  "so_count": 656,
+  "so_status": 200,
+  "so_quota": 241
+ },
+ "braintree": {
+  "service": "braintree",
+  "measured_at": "2026-10-20T07:32:12Z",
+  "pypi_month": 1787917,
+  "pypi_status": 200,
+  "npm_month": 744295,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 18,
+   "pushed_at": "2026-10-19T15:08:42Z",
+   "stars": 248
+  },
+  "gh_status": 200,
+  "so_count": 1525,
+  "so_status": 200,
+  "so_quota": 241
+ },
+ "checkout-com": {
+  "service": "checkout-com",
+  "measured_at": "2026-10-20T07:32:12Z",
+  "pypi_month": 71226,
+  "pypi_status": 200,
+  "npm_month": 108526,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 3,
+   "pushed_at": "2026-10-19T07:59:31Z",
+   "stars": 18
+  },
+  "gh_status": 200
+ },
+ "plaid": {
+  "service": "plaid",
+  "measured_at": "2026-10-20T07:32:12Z",
+  "pypi_month": 2851165,
+  "pypi_status": 200,
+  "npm_month": 4787450,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 16,
+   "pushed_at": "2026-10-19T22:03:24Z",
+   "stars": 521
+  },
+  "gh_status": 200,
+  "so_count": 389,
+  "so_status": 200,
+  "so_quota": 241
+ },
+ "resend": {
+  "service": "resend",
+  "measured_at": "2026-10-20T07:32:13Z",
+  "pypi_month": 11191987,
+  "pypi_status": 200,
+  "npm_month": 51796988,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 8,
+   "pushed_at": "2026-10-16T19:53:24Z",
+   "stars": 132
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 236
+ },
+ "mailgun": {
+  "service": "mailgun",
+  "measured_at": "2026-10-20T07:32:14Z",
+  "npm_month": 4432509,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 17,
+   "pushed_at": "2026-10-11T16:56:14Z",
+   "stars": 552
+  },
+  "gh_status": 200,
+  "so_count": 1555,
+  "so_status": 200,
+  "so_quota": 236
+ },
+ "brevo": {
+  "service": "brevo",
+  "measured_at": "2026-10-20T07:32:14Z",
+  "pypi_month": 256073,
+  "pypi_status": 200,
+  "npm_month": 1493904,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 0,
+   "pushed_at": "2026-10-13T16:50:46Z",
+   "stars": 35
+  },
+  "gh_status": 200,
+  "so_count": 112,
+  "so_status": 200,
+  "so_quota": 236
+ },
+ "sendgrid": {
+  "service": "sendgrid",
+  "measured_at": "2026-10-20T07:32:13Z",
+  "pypi_month": 19478339,
+  "pypi_status": 200,
+  "npm_month": 18978426,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 66,
+   "pushed_at": "2026-06-25T23:24:08Z",
+   "stars": 1630
+  },
+  "gh_status": 200,
+  "so_count": 3352,
+  "so_status": 200,
+  "so_quota": 233
+ },
+ "postmark": {
+  "service": "postmark",
+  "measured_at": "2026-10-20T07:32:14Z",
+  "pypi_month": 851209,
+  "pypi_status": 200,
+  "npm_month": 4698677,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 18,
+   "pushed_at": "2026-07-10T14:54:12Z",
+   "stars": 361
+  },
+  "gh_status": 200,
+  "so_count": 132,
+  "so_status": 200,
+  "so_quota": 233
+ },
+ "mailchimp": {
+  "service": "mailchimp",
+  "measured_at": "2026-10-20T07:32:14Z",
+  "pypi_month": 516454,
+  "pypi_status": 200,
+  "npm_month": 867995,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-09-28T15:06:04Z",
+   "stars": 121
+  },
+  "gh_status": 200,
+  "so_count": 2393,
+  "so_status": 200,
+  "so_quota": 233
+ },
+ "customer-io": {
+  "service": "customer-io",
+  "measured_at": "2026-10-20T07:32:15Z",
+  "pypi_month": 1144591,
+  "pypi_status": 200,
+  "npm_month": 2319490,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 3,
+   "pushed_at": "2026-10-16T20:03:26Z",
+   "stars": 66
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 233
+ },
+ "whatsapp-cloud": {
+  "service": "whatsapp-cloud",
+  "measured_at": "2026-10-20T07:32:16Z",
+  "so_count": 232,
+  "so_status": 200,
+  "so_quota": 233
+ },
+ "loops": {
+  "service": "loops",
+  "measured_at": "2026-10-20T07:32:15Z",
+  "npm_month": 1453790,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 2,
+   "pushed_at": "2026-10-19T08:23:50Z",
+   "stars": 7
+  },
+  "gh_status": 200
+ },
+ "slack": {
+  "service": "slack",
+  "measured_at": "2026-10-20T07:32:15Z",
+  "pypi_month": 73939872,
+  "pypi_status": 200,
+  "npm_month": 54941847,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 58,
+   "pushed_at": "2026-10-16T19:29:24Z",
+   "stars": 4017
+  },
+  "gh_status": 200,
+  "so_count": 2905,
+  "so_status": 200,
+  "so_quota": 228
+ },
+ "twilio": {
+  "service": "twilio",
+  "measured_at": "2026-10-20T07:32:15Z",
+  "pypi_month": 19597269,
+  "pypi_status": 200,
+  "npm_month": 26057921,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 78,
+   "pushed_at": "2026-10-12T11:44:04Z",
+   "stars": 2085
+  },
+  "gh_status": 200,
+  "so_count": 10514,
+  "so_status": 200,
+  "so_quota": 228
+ },
+ "discord": {
+  "service": "discord",
+  "measured_at": "2026-10-20T07:32:15Z",
+  "pypi_month": 4854830,
+  "pypi_status": 200,
+  "npm_month": 5436169,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 299,
+   "pushed_at": "2026-10-19T21:47:29Z",
+   "stars": 6518
+  },
+  "gh_status": 200,
+  "so_count": 17136,
+  "so_status": 200,
+  "so_quota": 228
+ },
+ "telegram": {
+  "service": "telegram",
+  "measured_at": "2026-10-20T07:32:15Z",
+  "pypi_month": 6764113,
+  "pypi_status": 200,
+  "npm_month": 1193694,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 30,
+   "pushed_at": "2026-10-19T01:17:15Z",
+   "stars": 29527
+  },
+  "gh_status": 200,
+  "so_count": 5033,
+  "so_status": 200,
+  "so_quota": 228
+ },
+ "bitbucket": {
+  "service": "bitbucket",
+  "measured_at": "2026-10-20T07:32:32Z",
+  "pypi_month": 7886031,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 49,
+   "pushed_at": "2026-10-19T04:55:11Z",
+   "stars": 1680
+  },
+  "gh_status": 200,
+  "so_count": 422,
+  "so_status": 200,
+  "so_quota": 222
+ },
+ "crates-io": {
+  "service": "crates-io",
+  "measured_at": "2026-10-20T07:32:33Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 121,
+   "pushed_at": "2026-10-20T07:22:50Z",
+   "stars": 3720
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 222
+ },
+ "pypi": {
+  "service": "pypi",
+  "measured_at": "2026-10-20T07:32:33Z",
+  "pypi_month": 407369404,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 592,
+   "pushed_at": "2026-10-20T07:06:07Z",
+   "stars": 4170
+  },
+  "gh_status": 200,
+  "so_count": 1853,
+  "so_status": 200,
+  "so_quota": 216
+ },
+ "rubygems": {
+  "service": "rubygems",
+  "measured_at": "2026-10-20T07:32:33Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 98,
+   "pushed_at": "2026-10-20T04:17:30Z",
+   "stars": 2439
+  },
+  "gh_status": 200,
+  "so_count": 17015,
+  "so_status": 200,
+  "so_quota": 216
+ },
+ "maven-central": {
+  "service": "maven-central",
+  "measured_at": "2026-10-20T07:32:34Z",
+  "so_count": 267,
+  "so_status": 200,
+  "so_quota": 216
+ },
+ "packagist": {
+  "service": "packagist",
+  "measured_at": "2026-10-20T07:32:34Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 87,
+   "pushed_at": "2026-10-18T19:01:05Z",
+   "stars": 1824
+  },
+  "gh_status": 200,
+  "so_count": 283,
+  "so_status": 200,
+  "so_quota": 216
+ },
+ "nuget": {
+  "service": "nuget",
+  "measured_at": "2026-10-20T07:32:34Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 867,
+   "pushed_at": "2026-10-20T00:18:42Z",
+   "stars": 1649
+  },
+  "gh_status": 200,
+  "so_count": 12011,
+  "so_status": 200,
+  "so_quota": 216
+ },
+ "fly-io": {
+  "service": "fly-io",
+  "measured_at": "2026-10-20T07:32:49Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 246,
+   "pushed_at": "2026-10-19T19:06:13Z",
+   "stars": 1717
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 211
+ },
+ "railway": {
+  "service": "railway",
+  "measured_at": "2026-10-20T07:32:49Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 141,
+   "pushed_at": "2026-10-19T22:25:00Z",
+   "stars": 622
+  },
+  "gh_status": 200,
+  "so_count": 143,
+  "so_status": 200,
+  "so_quota": 209
+ },
+ "render": {
+  "service": "render",
+  "measured_at": "2026-10-20T07:32:50Z",
+  "so_count": 159,
+  "so_status": 200,
+  "so_quota": 209
+ },
+ "docker-hub": {
+  "service": "docker-hub",
+  "measured_at": "2026-10-20T07:32:33Z",
+  "pypi_month": 129892206,
+  "pypi_status": 200,
+  "npm_month": 34667155,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 576,
+   "pushed_at": "2026-10-14T10:36:44Z",
+   "stars": 7220
+  },
+  "gh_status": 200,
+  "so_count": 1730,
+  "so_status": 200,
+  "so_quota": 209
+ },
+ "digitalocean": {
+  "service": "digitalocean",
+  "measured_at": "2026-10-20T07:32:50Z",
+  "pypi_month": 182556,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 102,
+   "pushed_at": "2026-10-19T09:37:38Z",
+   "stars": 141
+  },
+  "gh_status": 200,
+  "so_count": 3961,
+  "so_status": 200,
+  "so_quota": 205
+ },
+ "hetzner": {
+  "service": "hetzner",
+  "measured_at": "2026-10-20T07:32:50Z",
+  "pypi_month": 248981,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 12,
+   "pushed_at": "2026-10-16T18:53:40Z",
+   "stars": 401
+  },
+  "gh_status": 200,
+  "so_count": 11,
+  "so_status": 200,
+  "so_quota": 205
+ },
+ "linode": {
+  "service": "linode",
+  "measured_at": "2026-10-20T07:32:51Z",
+  "pypi_month": 148402,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 7,
+   "pushed_at": "2026-10-14T06:30:55Z",
+   "stars": 142
+  },
+  "gh_status": 200,
+  "so_count": 440,
+  "so_status": 200,
+  "so_quota": 201
+ },
+ "backblaze-b2": {
+  "service": "backblaze-b2",
+  "measured_at": "2026-10-20T07:32:51Z",
+  "pypi_month": 554560,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 63,
+   "pushed_at": "2026-10-15T20:30:51Z",
+   "stars": 214
+  },
+  "gh_status": 200,
+  "so_count": 70,
+  "so_status": 200,
+  "so_quota": 201
+ },
+ "heroku": {
+  "service": "heroku",
+  "measured_at": "2026-10-20T07:32:50Z",
+  "npm_month": 51369,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 44,
+   "pushed_at": "2026-10-19T17:18:36Z",
+   "stars": 888
+  },
+  "gh_status": 200,
+  "so_count": 43246,
+  "so_status": 200,
+  "so_quota": 199
+ },
+ "aws": {
+  "service": "aws",
+  "measured_at": "2026-10-20T07:32:51Z",
+  "pypi_month": 2446343352,
+  "pypi_status": 200,
+  "npm_month": 196050058,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 174,
+   "pushed_at": "2026-10-19T19:17:55Z",
+   "stars": 9915
+  },
+  "gh_status": 200,
+  "so_count": 158599,
+  "so_status": 200,
+  "so_quota": 198
+ },
+ "gcp": {
+  "service": "gcp",
+  "measured_at": "2026-10-20T07:32:51Z",
+  "pypi_month": 149775469,
+  "pypi_status": 200,
+  "npm_month": 75806097,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 610,
+   "pushed_at": "2026-10-20T00:52:41Z",
+   "stars": 5411
+  },
+  "gh_status": 200,
+  "so_count": 50292,
+  "so_status": 200,
+  "so_quota": 198
+ },
+ "neon": {
+  "service": "neon",
+  "measured_at": "2026-10-20T07:33:07Z",
+  "npm_month": 18273344,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 51,
+   "pushed_at": "2026-10-14T14:29:42Z",
+   "stars": 550
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 198
+ },
+ "azure": {
+  "service": "azure",
+  "measured_at": "2026-10-20T07:32:51Z",
+  "pypi_month": 116706385,
+  "pypi_status": 200,
+  "npm_month": 67320471,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1161,
+   "pushed_at": "2026-10-20T06:32:26Z",
+   "stars": 5621
+  },
+  "gh_status": 200,
+  "so_count": 144929,
+  "so_status": 200,
+  "so_quota": 198
+ },
+ "supabase": {
+  "service": "supabase",
+  "measured_at": "2026-10-20T07:32:52Z",
+  "pypi_month": 22924804,
+  "pypi_status": 200,
+  "npm_month": 123962007,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 119,
+   "pushed_at": "2026-10-20T07:24:34Z",
+   "stars": 4592
+  },
+  "gh_status": 200,
+  "so_count": 2135,
+  "so_status": 200,
+  "so_quota": 194
+ },
+ "planetscale": {
+  "service": "planetscale",
+  "measured_at": "2026-10-20T07:33:07Z",
+  "npm_month": 1788140,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 20,
+   "pushed_at": "2026-09-24T14:54:26Z",
+   "stars": 1206
+  },
+  "gh_status": 200,
+  "so_count": 60,
+  "so_status": 200,
+  "so_quota": 194
+ },
+ "mongodb": {
+  "service": "mongodb",
+  "measured_at": "2026-10-20T07:33:08Z",
+  "pypi_month": 64665876,
+  "pypi_status": 200,
+  "npm_month": 61989545,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 27,
+   "pushed_at": "2026-10-15T22:00:27Z",
+   "stars": 10170
+  },
+  "gh_status": 200,
+  "so_count": 175156,
+  "so_status": 200,
+  "so_quota": 191
+ },
+ "turso": {
+  "service": "turso",
+  "measured_at": "2026-10-20T07:33:08Z",
+  "pypi_month": 121327,
+  "pypi_status": 200,
+  "npm_month": 14163906,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 129,
+   "pushed_at": "2026-09-02T10:09:41Z",
+   "stars": 577
+  },
+  "gh_status": 200,
+  "so_count": 5,
+  "so_status": 200,
+  "so_quota": 191
+ },
+ "redis": {
+  "service": "redis",
+  "measured_at": "2026-10-20T07:33:08Z",
+  "pypi_month": 200407660,
+  "pypi_status": 200,
+  "npm_month": 58529229,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 95,
+   "pushed_at": "2026-10-19T15:44:48Z",
+   "stars": 13653
+  },
+  "gh_status": 200,
+  "so_count": 25405,
+  "so_status": 200,
+  "so_quota": 191
+ },
+ "upstash": {
+  "service": "upstash",
+  "measured_at": "2026-10-20T07:33:08Z",
+  "pypi_month": 898412,
+  "pypi_status": 200,
+  "npm_month": 21589300,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 20,
+   "pushed_at": "2026-10-14T08:19:54Z",
+   "stars": 980
+  },
+  "gh_status": 200,
+  "so_count": 2,
+  "so_status": 200,
+  "so_quota": 188
+ },
+ "prisma": {
+  "service": "prisma",
+  "measured_at": "2026-10-20T07:33:09Z",
+  "npm_month": 75904551,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 2784,
+   "pushed_at": "2026-10-20T07:29:34Z",
+   "stars": 47699
+  },
+  "gh_status": 200,
+  "so_count": 3707,
+  "so_status": 200,
+  "so_quota": 188
+ },
+ "postgresql": {
+  "service": "postgresql",
+  "measured_at": "2026-10-20T07:33:09Z",
+  "pypi_month": 133610177,
+  "pypi_status": 200,
+  "npm_month": 252821415,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 69,
+   "pushed_at": "2026-10-12T15:59:56Z",
+   "stars": 2511
+  },
+  "gh_status": 200,
+  "so_count": 178777,
+  "so_status": 200,
+  "so_quota": 188
+ },
+ "terraform": {
+  "service": "terraform",
+  "measured_at": "2026-10-20T07:33:15Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 1919,
+   "pushed_at": "2026-10-19T19:36:24Z",
+   "stars": 49986
+  },
+  "gh_status": 200,
+  "so_count": 20188,
+  "so_status": 200,
+  "so_quota": 188
+ },
+ "modal": {
+  "service": "modal",
+  "measured_at": "2026-10-20T07:33:16Z",
+  "pypi_month": 47839937,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 33,
+   "pushed_at": "2026-10-19T20:01:42Z",
+   "stars": 526
+  },
+  "gh_status": 200,
+  "so_count": 12008,
+  "so_status": 200,
+  "so_quota": 184
+ },
+ "drizzle": {
+  "service": "drizzle",
+  "measured_at": "2026-10-20T07:33:14Z",
+  "npm_month": 110189342,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 2169,
+   "pushed_at": "2026-10-19T22:16:00Z",
+   "stars": 36096
+  },
+  "gh_status": 200,
+  "so_count": 222,
+  "so_status": 200,
+  "so_quota": 183
+ },
+ "convex": {
+  "service": "convex",
+  "measured_at": "2026-10-20T07:33:15Z",
+  "npm_month": 6656366,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 111,
+   "pushed_at": "2026-10-16T17:00:40Z",
+   "stars": 375
+  },
+  "gh_status": 200,
+  "so_count": 144,
+  "so_status": 200,
+  "so_quota": 183
+ },
+ "tailscale": {
+  "service": "tailscale",
+  "measured_at": "2026-10-20T07:33:21Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 4747,
+   "pushed_at": "2026-10-19T23:39:25Z",
+   "stars": 37795
+  },
+  "gh_status": 200,
+  "so_count": 27,
+  "so_status": 200,
+  "so_quota": 183
+ },
+ "composio": {
+  "service": "composio",
+  "measured_at": "2026-10-20T07:33:17Z",
+  "pypi_month": 123885,
+  "pypi_status": 200,
+  "npm_month": 104464,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 138,
+   "pushed_at": "2026-10-20T06:40:30Z",
+   "stars": 30644
+  },
+  "gh_status": 200
+ },
+ "sentry": {
+  "service": "sentry",
+  "measured_at": "2026-10-20T07:33:24Z",
+  "pypi_month": 127673427,
+  "pypi_status": 200,
+  "npm_month": 156250681,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 372,
+   "pushed_at": "2026-10-19T14:52:22Z",
+   "stars": 2216
+  },
+  "gh_status": 200,
+  "so_count": 1549,
+  "so_status": 200,
+  "so_quota": 180
+ },
+ "datadog": {
+  "service": "datadog",
+  "measured_at": "2026-10-20T07:33:26Z",
+  "pypi_month": 18438013,
+  "pypi_status": 200,
+  "npm_month": 12458970,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 52,
+   "pushed_at": "2026-10-20T06:56:49Z",
+   "stars": 167
+  },
+  "gh_status": 200,
+  "so_count": 1102,
+  "so_status": 200,
+  "so_quota": 179
+ },
+ "pagerduty": {
+  "service": "pagerduty",
+  "measured_at": "2026-10-20T07:33:28Z",
+  "pypi_month": 2201298,
+  "pypi_status": 200,
+  "npm_month": 687782,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 0,
+   "pushed_at": "2026-09-08T20:20:02Z",
+   "stars": 19
+  },
+  "gh_status": 200,
+  "so_count": 63,
+  "so_status": 200,
+  "so_quota": 178
+ },
+ "grafana": {
+  "service": "grafana",
+  "measured_at": "2026-10-20T07:33:30Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 3332,
+   "pushed_at": "2026-10-20T07:33:23Z",
+   "stars": 77397
+  },
+  "gh_status": 200,
+  "so_count": 5841,
+  "so_status": 200,
+  "so_quota": 178
+ },
+ "docker-engine": {
+  "service": "docker-engine",
+  "measured_at": "2026-10-20T07:33:15Z",
+  "pypi_month": 129892206,
+  "pypi_status": 200,
+  "npm_month": 34667155,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 576,
+   "pushed_at": "2026-10-14T10:36:44Z",
+   "stars": 7220
+  },
+  "gh_status": 200,
+  "so_count": 138902,
+  "so_status": 200,
+  "so_quota": 176
+ },
+ "kubernetes": {
+  "service": "kubernetes",
+  "measured_at": "2026-10-20T07:33:15Z",
+  "pypi_month": 73439249,
+  "pypi_status": 200,
+  "npm_month": 12776216,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 74,
+   "pushed_at": "2026-10-19T02:02:42Z",
+   "stars": 7684
+  },
+  "gh_status": 200,
+  "so_count": 57706,
+  "so_status": 200,
+  "so_quota": 176
+ },
+ "prometheus": {
+  "service": "prometheus",
+  "measured_at": "2026-10-20T07:33:30Z",
+  "pypi_month": 135537106,
+  "pypi_status": 200,
+  "npm_month": 39861806,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 159,
+   "pushed_at": "2026-10-15T14:14:13Z",
+   "stars": 4384
+  },
+  "gh_status": 200,
+  "so_count": 6965,
+  "so_status": 200,
+  "so_quota": 176
+ },
+ "e2b": {
+  "service": "e2b",
+  "measured_at": "2026-10-20T07:33:16Z",
+  "pypi_month": 5857504,
+  "pypi_status": 200,
+  "npm_month": 8175159,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 101,
+   "pushed_at": "2026-10-19T19:14:23Z",
+   "stars": 14457
+  },
+  "gh_status": 200
+ },
+ "hashicorp-vault": {
+  "service": "hashicorp-vault",
+  "measured_at": "2026-10-20T07:33:21Z",
+  "pypi_month": 19982650,
+  "pypi_status": 200,
+  "npm_month": 1676927,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 188,
+   "pushed_at": "2026-01-06T02:34:01Z",
+   "stars": 1321
+  },
+  "gh_status": 200,
+  "so_count": 1256,
+  "so_status": 200,
+  "so_quota": 173
+ },
+ "1password": {
+  "service": "1password",
+  "measured_at": "2026-10-20T07:33:21Z",
+  "pypi_month": 3181632,
+  "pypi_status": 200,
+  "npm_month": 3175803,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 47,
+   "pushed_at": "2026-10-14T17:58:23Z",
+   "stars": 111
+  },
+  "gh_status": 200,
+  "so_count": 34,
+  "so_status": 200,
+  "so_quota": 173
+ },
+ "opentelemetry": {
+  "service": "opentelemetry",
+  "measured_at": "2026-10-20T07:33:31Z",
+  "pypi_month": 260403097,
+  "pypi_status": 200,
+  "npm_month": 80316440,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 412,
+   "pushed_at": "2026-10-19T12:25:21Z",
+   "stars": 2680
+  },
+  "gh_status": 200,
+  "so_count": 1408,
+  "so_status": 200,
+  "so_quota": 173
+ },
+ "auth0": {
+  "service": "auth0",
+  "measured_at": "2026-10-20T07:33:32Z",
+  "pypi_month": 6629233,
+  "pypi_status": 200,
+  "npm_month": 8335020,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 23,
+   "pushed_at": "2026-10-14T18:37:44Z",
+   "stars": 578
+  },
+  "gh_status": 200,
+  "so_count": 3201,
+  "so_status": 200,
+  "so_quota": 173
+ },
+ "keycloak": {
+  "service": "keycloak",
+  "measured_at": "2026-10-20T07:33:38Z",
+  "pypi_month": 4137837,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 3282,
+   "pushed_at": "2026-10-20T06:51:07Z",
+   "stars": 37440
+  },
+  "gh_status": 200,
+  "so_count": 7894,
+  "so_status": 200,
+  "so_quota": 169
+ },
+ "workos": {
+  "service": "workos",
+  "measured_at": "2026-10-20T07:33:38Z",
+  "pypi_month": 6663575,
+  "pypi_status": 200,
+  "npm_month": 13991657,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 7,
+   "pushed_at": "2026-10-19T22:26:23Z",
+   "stars": 109
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 168
+ },
+ "stytch": {
+  "service": "stytch",
+  "measured_at": "2026-10-20T07:33:38Z",
+  "pypi_month": 635587,
+  "pypi_status": 200,
+  "npm_month": 1239899,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 3,
+   "pushed_at": "2026-06-24T19:41:33Z",
+   "stars": 67
+  },
+  "gh_status": 200,
+  "so_count": 3,
+  "so_status": 200,
+  "so_quota": 168
+ },
+ "next-auth": {
+  "service": "next-auth",
+  "measured_at": "2026-10-20T07:33:39Z",
+  "npm_month": 26685909,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 604,
+   "pushed_at": "2026-07-22T19:42:19Z",
+   "stars": 28365
+  },
+  "gh_status": 200,
+  "so_count": 2127,
+  "so_status": 200,
+  "so_quota": 166
+ },
+ "pipedrive": {
+  "service": "pipedrive",
+  "measured_at": "2026-10-20T07:33:45Z",
+  "npm_month": 247457,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-10-13T07:49:27Z",
+   "stars": 234
+  },
+  "gh_status": 200,
+  "so_count": 61,
+  "so_status": 200,
+  "so_quota": 165
+ },
+ "salesforce": {
+  "service": "salesforce",
+  "measured_at": "2026-10-20T07:33:45Z",
+  "pypi_month": 19688155,
+  "pypi_status": 200,
+  "npm_month": 4512377,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 112,
+   "pushed_at": "2026-10-16T19:10:57Z",
+   "stars": 1469
+  },
+  "gh_status": 200,
+  "so_count": 10301,
+  "so_status": 200,
+  "so_quota": 165
+ },
+ "freshdesk": {
+  "service": "freshdesk",
+  "measured_at": "2026-10-20T07:33:49Z",
+  "so_count": 113,
+  "so_status": 200,
+  "so_quota": 163
+ },
+ "linear": {
+  "service": "linear",
+  "measured_at": "2026-10-20T07:33:49Z",
+  "npm_month": 11458322,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 17,
+   "pushed_at": "2026-10-20T00:25:28Z",
+   "stars": 1639
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 160
+ },
+ "jira": {
+  "service": "jira",
+  "measured_at": "2026-10-20T07:33:50Z",
+  "pypi_month": 17659713,
+  "pypi_status": 200,
+  "npm_month": 1810568,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 239,
+   "pushed_at": "2026-10-19T17:15:15Z",
+   "stars": 2138
+  },
+  "gh_status": 200,
+  "so_count": 1501,
+  "so_status": 200,
+  "so_quota": 159
+ },
+ "hubspot": {
+  "service": "hubspot",
+  "measured_at": "2026-10-20T07:33:45Z",
+  "pypi_month": 3544086,
+  "pypi_status": 200,
+  "npm_month": 6349615,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 22,
+   "pushed_at": "2026-02-24T12:16:50Z",
+   "stars": 435
+  },
+  "gh_status": 200,
+  "so_count": 47,
+  "so_status": 200,
+  "so_quota": 159
+ },
+ "confluence": {
+  "service": "confluence",
+  "measured_at": "2026-10-20T07:33:52Z",
+  "pypi_month": 7886031,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 49,
+   "pushed_at": "2026-10-19T04:55:11Z",
+   "stars": 1680
+  },
+  "gh_status": 200,
+  "so_count": 269,
+  "so_status": 200,
+  "so_quota": 157
+ },
+ "zendesk": {
+  "service": "zendesk",
+  "measured_at": "2026-10-20T07:33:47Z",
+  "pypi_month": 3075359,
+  "pypi_status": 200,
+  "npm_month": 785025,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 51,
+   "pushed_at": "2026-08-05T11:21:47Z",
+   "stars": 369
+  },
+  "gh_status": 200,
+  "so_count": 184,
+  "so_status": 200,
+  "so_quota": 157
+ },
+ "intercom": {
+  "service": "intercom",
+  "measured_at": "2026-10-20T07:33:47Z",
+  "pypi_month": 248819,
+  "pypi_status": 200,
+  "npm_month": 1763890,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 21,
+   "pushed_at": "2026-10-16T10:31:45Z",
+   "stars": 391
+  },
+  "gh_status": 200,
+  "so_count": 177,
+  "so_status": 200,
+  "so_quota": 155
+ },
+ "trello": {
+  "service": "trello",
+  "measured_at": "2026-10-20T07:33:54Z",
+  "pypi_month": 57575,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 65,
+   "pushed_at": "2024-06-11T16:31:07Z",
+   "stars": 955
+  },
+  "gh_status": 200,
+  "so_count": 571,
+  "so_status": 200,
+  "so_quota": 154
+ },
+ "clickup": {
+  "service": "clickup",
+  "measured_at": "2026-10-20T07:33:55Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 154
+ },
+ "monday": {
+  "service": "monday",
+  "measured_at": "2026-10-20T07:33:55Z",
+  "npm_month": 612518,
+  "npm_status": 200,
+  "gh": null,
+  "gh_status": "gh: Not Found (HTTP 404)",
+  "so_count": 45,
+  "so_status": 200,
+  "so_quota": 152
+ },
+ "todoist": {
+  "service": "todoist",
+  "measured_at": "2026-10-20T07:33:55Z",
+  "pypi_month": 150862,
+  "pypi_status": 200,
+  "npm_month": 143709,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 9,
+   "pushed_at": "2026-10-14T23:53:54Z",
+   "stars": 252
+  },
+  "gh_status": 200,
+  "so_count": 39,
+  "so_status": 200,
+  "so_quota": 151
+ },
+ "asana": {
+  "service": "asana",
+  "measured_at": "2026-10-20T07:33:53Z",
+  "pypi_month": 2932186,
+  "pypi_status": 200,
+  "npm_month": 1117892,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 17,
+   "pushed_at": "2026-10-02T20:24:50Z",
+   "stars": 338
+  },
+  "gh_status": 200,
+  "so_count": 522,
+  "so_status": 200,
+  "so_quota": 150
+ },
+ "gmail": {
+  "service": "gmail",
+  "measured_at": "2026-10-20T07:34:00Z",
+  "pypi_month": 125164927,
+  "pypi_status": 200,
+  "npm_month": 43500732,
+  "npm_status": 200,
+  "so_count": 4317,
+  "so_status": 200,
+  "so_quota": 149
+ },
+ "google-drive": {
+  "service": "google-drive",
+  "measured_at": "2026-10-20T07:34:02Z",
+  "pypi_month": 125164927,
+  "pypi_status": 200,
+  "npm_month": 43500732,
+  "npm_status": 200,
+  "so_count": 15083,
+  "so_status": 200,
+  "so_quota": 148
+ },
+ "crisp": {
+  "service": "crisp",
+  "measured_at": "2026-10-20T07:33:49Z",
+  "pypi_month": 11814,
+  "pypi_status": 200,
+  "npm_month": 132612,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 5,
+   "pushed_at": "2026-07-02T15:01:35Z",
+   "stars": 34
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 147
+ },
+ "microsoft-graph": {
+  "service": "microsoft-graph",
+  "measured_at": "2026-10-20T07:34:06Z",
+  "pypi_month": 5816938,
+  "pypi_status": 200,
+  "npm_month": 9423560,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 117,
+   "pushed_at": "2026-10-19T05:23:56Z",
+   "stars": 633
+  },
+  "gh_status": 200,
+  "so_count": 14366,
+  "so_status": 200,
+  "so_quota": 146
+ },
+ "notion": {
+  "service": "notion",
+  "measured_at": "2026-10-20T07:33:52Z",
+  "pypi_month": 3377623,
+  "pypi_status": 200,
+  "npm_month": 7812577,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 67,
+   "pushed_at": "2026-10-16T16:37:29Z",
+   "stars": 5678
+  },
+  "gh_status": 200,
+  "so_count": 298,
+  "so_status": 200,
+  "so_quota": 146
+ },
+ "google-sheets": {
+  "service": "google-sheets",
+  "measured_at": "2026-10-20T07:34:02Z",
+  "pypi_month": 31567500,
+  "pypi_status": 200,
+  "npm_month": 1629422,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 81,
+   "pushed_at": "2026-07-30T07:35:32Z",
+   "stars": 7511
+  },
+  "gh_status": 200,
+  "so_count": 6153,
+  "so_status": 200,
+  "so_quota": 144
+ },
+ "zoom": {
+  "service": "zoom",
+  "measured_at": "2026-10-20T07:34:09Z",
+  "so_count": 338,
+  "so_status": 200,
+  "so_quota": 144
+ },
+ "calendly": {
+  "service": "calendly",
+  "measured_at": "2026-10-20T07:34:09Z",
+  "so_count": 93,
+  "so_status": 200,
+  "so_quota": 144
+ },
+ "dropbox": {
+  "service": "dropbox",
+  "measured_at": "2026-10-20T07:34:08Z",
+  "pypi_month": 1542245,
+  "pypi_status": 200,
+  "npm_month": 980538,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 22,
+   "pushed_at": "2026-10-20T00:04:47Z",
+   "stars": 985
+  },
+  "gh_status": 200,
+  "so_count": 2370,
+  "so_status": 200,
+  "so_quota": 140
+ },
+ "cal-com": {
+  "service": "cal-com",
+  "measured_at": "2026-10-20T07:34:09Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 1514,
+   "pushed_at": "2026-10-19T18:46:00Z",
+   "stars": 49167
+  },
+  "gh_status": 200
+ },
+ "figma": {
+  "service": "figma",
+  "measured_at": "2026-10-20T07:34:10Z",
+  "so_count": 48,
+  "so_status": 200,
+  "so_quota": 140
+ },
+ "docusign": {
+  "service": "docusign",
+  "measured_at": "2026-10-20T07:34:10Z",
+  "pypi_month": 1634525,
+  "pypi_status": 200,
+  "npm_month": 1617123,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 18,
+   "pushed_at": "2026-07-02T01:15:09Z",
+   "stars": 98
+  },
+  "gh_status": 200,
+  "so_count": 6268,
+  "so_status": 200,
+  "so_quota": 138
+ },
+ "google-calendar": {
+  "service": "google-calendar",
+  "measured_at": "2026-10-20T07:33:57Z",
+  "pypi_month": 125164927,
+  "pypi_status": 200,
+  "npm_month": 43500732,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 228,
+   "pushed_at": "2026-10-19T22:29:39Z",
+   "stars": 12270
+  },
+  "gh_status": 200,
+  "so_count": 7209,
+  "so_status": 200,
+  "so_quota": 136
+ },
+ "mixpanel": {
+  "service": "mixpanel",
+  "measured_at": "2026-10-20T07:34:12Z",
+  "pypi_month": 6198024,
+  "pypi_status": 200,
+  "npm_month": 5406911,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 32,
+   "pushed_at": "2026-10-13T10:38:40Z",
+   "stars": 108
+  },
+  "gh_status": 200,
+  "so_count": 539,
+  "so_status": 200,
+  "so_quota": 136
+ },
+ "amplitude": {
+  "service": "amplitude",
+  "measured_at": "2026-10-20T07:34:13Z",
+  "pypi_month": 7325032,
+  "pypi_status": 200,
+  "npm_month": 4280283,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 6,
+   "pushed_at": "2026-10-15T20:47:44Z",
+   "stars": 38
+  },
+  "gh_status": 200,
+  "so_count": 56,
+  "so_status": 200,
+  "so_quota": 134
+ },
+ "posthog": {
+  "service": "posthog",
+  "measured_at": "2026-10-20T07:34:14Z",
+  "pypi_month": 39784959,
+  "pypi_status": 200,
+  "npm_month": 53239669,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 36,
+   "pushed_at": "2026-10-19T23:24:56Z",
+   "stars": 61
+  },
+  "gh_status": 200,
+  "so_count": 24,
+  "so_status": 200,
+  "so_quota": 134
+ },
+ "segment": {
+  "service": "segment",
+  "measured_at": "2026-10-20T07:34:14Z",
+  "pypi_month": 3521849,
+  "pypi_status": 200,
+  "npm_month": 10374264,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 9,
+   "pushed_at": "2026-09-29T19:00:02Z",
+   "stars": 254
+  },
+  "gh_status": 200,
+  "so_count": 68,
+  "so_status": 200,
+  "so_quota": 132
+ },
+ "google-analytics-data": {
+  "service": "google-analytics-data",
+  "measured_at": "2026-10-20T07:34:20Z",
+  "pypi_month": 4593713,
+  "pypi_status": 200,
+  "npm_month": 3746257,
+  "npm_status": 200,
+  "gh": {
+   "archived": true,
+   "open_issues": 0,
+   "pushed_at": "2023-10-31T20:00:20Z",
+   "stars": 162
+  },
+  "gh_status": 200,
+  "so_count": 4267,
+  "so_status": 200,
+  "so_quota": 132
+ },
+ "plausible": {
+  "service": "plausible",
+  "measured_at": "2026-10-20T07:34:21Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 58,
+   "pushed_at": "2026-10-20T07:30:49Z",
+   "stars": 29565
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 132
+ },
+ "umami": {
+  "service": "umami",
+  "measured_at": "2026-10-20T07:34:21Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 116,
+   "pushed_at": "2026-10-19T22:04:27Z",
+   "stars": 39479
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 129
+ },
+ "google-ads": {
+  "service": "google-ads",
+  "measured_at": "2026-10-20T07:34:22Z",
+  "pypi_month": 13512229,
+  "pypi_status": 200,
+  "npm_month": 1597132,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 6,
+   "pushed_at": "2026-10-19T13:38:42Z",
+   "stars": 758
+  },
+  "gh_status": 200,
+  "so_count": 2444,
+  "so_status": 200,
+  "so_quota": 128
+ },
+ "meta-marketing": {
+  "service": "meta-marketing",
+  "measured_at": "2026-10-20T07:34:22Z",
+  "pypi_month": 4135356,
+  "pypi_status": 200,
+  "npm_month": 1712025,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 146,
+   "pushed_at": "2026-09-21T05:49:23Z",
+   "stars": 1613
+  },
+  "gh_status": 200,
+  "so_count": 863,
+  "so_status": 200,
+  "so_quota": 128
+ },
+ "here": {
+  "service": "here",
+  "measured_at": "2026-10-20T07:34:24Z",
+  "so_count": 3313,
+  "so_status": 200,
+  "so_quota": 126
+ },
+ "zapier": {
+  "service": "zapier",
+  "measured_at": "2026-10-20T07:34:09Z",
+  "npm_month": 522539,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 16,
+   "pushed_at": "2026-10-20T06:31:16Z",
+   "stars": 562
+  },
+  "gh_status": 200,
+  "so_count": 1140,
+  "so_status": 200,
+  "so_quota": 124
+ },
+ "n8n": {
+  "service": "n8n",
+  "measured_at": "2026-10-20T07:34:10Z",
+  "npm_month": 467680,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1222,
+   "pushed_at": "2026-10-20T07:34:04Z",
+   "stars": 208092
+  },
+  "gh_status": 200,
+  "so_count": 77,
+  "so_status": 200,
+  "so_quota": 124
+ },
+ "nominatim": {
+  "service": "nominatim",
+  "measured_at": "2026-10-20T07:34:24Z",
+  "pypi_month": 10715841,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 104,
+   "pushed_at": "2026-10-19T18:26:25Z",
+   "stars": 4522
+  },
+  "gh_status": 200,
+  "so_count": 261,
+  "so_status": 200,
+  "so_quota": 124
+ },
+ "overpass": {
+  "service": "overpass",
+  "measured_at": "2026-10-20T07:34:26Z",
+  "pypi_month": 96105,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 224,
+   "pushed_at": "2026-02-19T18:17:06Z",
+   "stars": 936
+  },
+  "gh_status": 200,
+  "so_count": 376,
+  "so_status": 200,
+  "so_quota": 121
+ },
+ "openweathermap": {
+  "service": "openweathermap",
+  "measured_at": "2026-10-20T07:34:26Z",
+  "pypi_month": 106078,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 26,
+   "pushed_at": "2025-08-27T06:59:13Z",
+   "stars": 814
+  },
+  "gh_status": 200,
+  "so_count": 837,
+  "so_status": 200,
+  "so_quota": 121
+ },
+ "weather-gov": {
+  "service": "weather-gov",
+  "measured_at": "2026-10-20T07:34:27Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2024-05-08T18:52:05Z",
+   "stars": 311
+  },
+  "gh_status": 200,
+  "so_count": 563,
+  "so_status": 200,
+  "so_quota": 121
+ },
+ "ip-api": {
+  "service": "ip-api",
+  "measured_at": "2026-10-20T07:34:28Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 121
+ },
+ "nager-date": {
+  "service": "nager-date",
+  "measured_at": "2026-10-20T07:34:28Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 31,
+   "pushed_at": "2026-10-19T20:19:13Z",
+   "stars": 1427
+  },
+  "gh_status": 200
+ },
+ "ipinfo": {
+  "service": "ipinfo",
+  "measured_at": "2026-10-20T07:34:27Z",
+  "pypi_month": 325685,
+  "pypi_status": 200,
+  "npm_month": 180867,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 10,
+   "pushed_at": "2026-06-17T06:52:47Z",
+   "stars": 568
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 117
+ },
+ "restcountries": {
+  "service": "restcountries",
+  "measured_at": "2026-10-20T07:34:29Z",
+  "gh": {
+   "archived": true,
+   "open_issues": 50,
+   "pushed_at": "2023-11-27T06:33:03Z",
+   "stars": 2273
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 117
+ },
+ "exchangerate-api": {
+  "service": "exchangerate-api",
+  "measured_at": "2026-10-20T07:34:29Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 117
+ },
+ "frankfurter": {
+  "service": "frankfurter",
+  "measured_at": "2026-10-20T07:34:29Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 4,
+   "pushed_at": "2026-10-19T13:33:29Z",
+   "stars": 2001
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 114
+ },
+ "google-maps": {
+  "service": "google-maps",
+  "measured_at": "2026-10-20T07:34:23Z",
+  "pypi_month": 3144295,
+  "pypi_status": 200,
+  "npm_month": 3973606,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 73,
+   "pushed_at": "2026-10-06T15:58:22Z",
+   "stars": 4982
+  },
+  "gh_status": 200,
+  "so_count": 65782,
+  "so_status": 200,
+  "so_quota": 114
+ },
+ "mapbox": {
+  "service": "mapbox",
+  "measured_at": "2026-10-20T07:34:23Z",
+  "pypi_month": 150163,
+  "pypi_status": 200,
+  "npm_month": 1471961,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 73,
+   "pushed_at": "2026-09-10T20:11:02Z",
+   "stars": 771
+  },
+  "gh_status": 200,
+  "so_count": 6490,
+  "so_status": 200,
+  "so_quota": 114
+ },
+ "alpha-vantage": {
+  "service": "alpha-vantage",
+  "measured_at": "2026-10-20T07:34:30Z",
+  "pypi_month": 123156,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 3,
+   "pushed_at": "2026-07-26T20:31:57Z",
+   "stars": 4933
+  },
+  "gh_status": 200,
+  "so_count": 232,
+  "so_status": 200,
+  "so_quota": 114
+ },
+ "yfinance": {
+  "service": "yfinance",
+  "measured_at": "2026-10-20T07:34:30Z",
+  "pypi_month": 18639048,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 109,
+   "pushed_at": "2026-10-18T14:41:38Z",
+   "stars": 25564
+  },
+  "gh_status": 200,
+  "so_count": 606,
+  "so_status": 200,
+  "so_quota": 110
+ },
+ "ecb-data": {
+  "service": "ecb-data",
+  "measured_at": "2026-10-20T07:34:31Z",
+  "so_count": 139,
+  "so_status": 200,
+  "so_quota": 110
+ },
+ "fred": {
+  "service": "fred",
+  "measured_at": "2026-10-20T07:34:31Z",
+  "pypi_month": 1090224,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 36,
+   "pushed_at": "2026-01-28T02:23:56Z",
+   "stars": 1661
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 110
+ },
+ "imf-data": {
+  "service": "imf-data",
+  "measured_at": "2026-10-20T07:34:32Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 110
+ },
+ "world-bank": {
+  "service": "world-bank",
+  "measured_at": "2026-10-20T07:34:31Z",
+  "pypi_month": 98518,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 5,
+   "pushed_at": "2026-02-27T15:51:12Z",
+   "stars": 178
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 106
+ },
+ "eurostat": {
+  "service": "eurostat",
+  "measured_at": "2026-10-20T07:34:32Z",
+  "pypi_month": 83565,
+  "pypi_status": 200,
+  "gh": null,
+  "gh_status": "gh: Not Found (HTTP 404)",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 106
+ },
+ "open-meteo": {
+  "service": "open-meteo",
+  "measured_at": "2026-10-20T07:34:26Z",
+  "pypi_month": 243825,
+  "pypi_status": 200,
+  "npm_month": 152605,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 150,
+   "pushed_at": "2026-10-19T20:47:40Z",
+   "stars": 6411
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 106
+ },
+ "coinmarketcap": {
+  "service": "coinmarketcap",
+  "measured_at": "2026-10-20T07:34:33Z",
+  "so_count": 73,
+  "so_status": 200,
+  "so_quota": 106
+ },
+ "etherscan": {
+  "service": "etherscan",
+  "measured_at": "2026-10-20T07:34:33Z",
+  "so_count": 177,
+  "so_status": 200,
+  "so_quota": 106
+ },
+ "sec-edgar": {
+  "service": "sec-edgar",
+  "measured_at": "2026-10-20T07:34:32Z",
+  "pypi_month": 842132,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 51,
+   "pushed_at": "2026-10-20T01:56:44Z",
+   "stars": 2801
+  },
+  "gh_status": 200,
+  "so_count": 37,
+  "so_status": 200,
+  "so_quota": 101
+ },
+ "coingecko": {
+  "service": "coingecko",
+  "measured_at": "2026-10-20T07:34:33Z",
+  "pypi_month": 223946,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 15,
+   "pushed_at": "2024-11-13T00:34:47Z",
+   "stars": 1091
+  },
+  "gh_status": 200,
+  "so_count": 67,
+  "so_status": 200,
+  "so_quota": 101
+ },
+ "infura": {
+  "service": "infura",
+  "measured_at": "2026-10-20T07:34:34Z",
+  "so_count": 16,
+  "so_status": 200,
+  "so_quota": 101
+ },
+ "alchemy": {
+  "service": "alchemy",
+  "measured_at": "2026-10-20T07:34:33Z",
+  "npm_month": 341980,
+  "npm_status": 200,
+  "gh": {
+   "archived": true,
+   "open_issues": 27,
+   "pushed_at": "2026-02-07T16:36:54Z",
+   "stars": 457
+  },
+  "gh_status": 200,
+  "so_count": 146,
+  "so_status": 200,
+  "so_quota": 98
+ },
+ "web3py": {
+  "service": "web3py",
+  "measured_at": "2026-10-20T07:34:34Z",
+  "pypi_month": 4718755,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 175,
+   "pushed_at": "2026-09-29T16:23:04Z",
+   "stars": 5546
+  },
+  "gh_status": 200,
+  "so_count": 551,
+  "so_status": 200,
+  "so_quota": 98
+ },
+ "ethers": {
+  "service": "ethers",
+  "measured_at": "2026-10-20T07:34:34Z",
+  "npm_month": 15238392,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 669,
+   "pushed_at": "2026-06-18T05:08:13Z",
+   "stars": 8719
+  },
+  "gh_status": 200,
+  "so_count": 777,
+  "so_status": 200,
+  "so_quota": 98
+ },
+ "coinbase": {
+  "service": "coinbase",
+  "measured_at": "2026-10-20T07:34:35Z",
+  "pypi_month": 145545,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 29,
+   "pushed_at": "2026-10-19T06:24:58Z",
+   "stars": 363
+  },
+  "gh_status": 200,
+  "so_count": 668,
+  "so_status": 200,
+  "so_quota": 95
+ },
+ "insee-sirene": {
+  "service": "insee-sirene",
+  "measured_at": "2026-10-20T07:34:36Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 95
+ },
+ "api-adresse-ban": {
+  "service": "api-adresse-ban",
+  "measured_at": "2026-10-20T07:34:37Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 92
+ },
+ "legifrance-piste": {
+  "service": "legifrance-piste",
+  "measured_at": "2026-10-20T07:34:37Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 92
+ },
+ "data-gouv-fr": {
+  "service": "data-gouv-fr",
+  "measured_at": "2026-10-20T07:34:36Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 197,
+   "pushed_at": "2025-10-13T13:01:26Z",
+   "stars": 135
+  },
+  "gh_status": 200
+ },
+ "companies-house": {
+  "service": "companies-house",
+  "measured_at": "2026-10-20T07:34:37Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 92
+ },
+ "opencorporates": {
+  "service": "opencorporates",
+  "measured_at": "2026-10-20T07:34:37Z",
+  "so_count": 4,
+  "so_status": 200,
+  "so_quota": 92
+ },
+ "nasa-api": {
+  "service": "nasa-api",
+  "measured_at": "2026-10-20T07:34:37Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 61,
+   "pushed_at": "2026-10-05T21:47:50Z",
+   "stars": 556
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 88
+ },
+ "us-census": {
+  "service": "us-census",
+  "measured_at": "2026-10-20T07:34:37Z",
+  "pypi_month": 177405,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 43,
+   "pushed_at": "2026-05-15T19:42:07Z",
+   "stars": 682
+  },
+  "gh_status": 200,
+  "so_count": 182,
+  "so_status": 200,
+  "so_quota": 88
+ },
+ "eu-vies": {
+  "service": "eu-vies",
+  "measured_at": "2026-10-20T07:34:38Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 88
+ },
+ "open-library": {
+  "service": "open-library",
+  "measured_at": "2026-10-20T07:34:38Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 1002,
+   "pushed_at": "2026-10-20T07:18:14Z",
+   "stars": 6769
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 85
+ },
+ "open-food-facts": {
+  "service": "open-food-facts",
+  "measured_at": "2026-10-20T07:34:38Z",
+  "pypi_month": 27739,
+  "pypi_status": 200,
+  "npm_month": 1059,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 30,
+   "pushed_at": "2026-10-19T07:35:53Z",
+   "stars": 472
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 85
+ },
+ "arxiv": {
+  "service": "arxiv",
+  "measured_at": "2026-10-20T07:34:40Z",
+  "pypi_month": 5204262,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 5,
+   "pushed_at": "2026-10-05T17:52:45Z",
+   "stars": 1552
+  },
+  "gh_status": 200,
+  "so_count": 2,
+  "so_status": 200,
+  "so_quota": 83
+ },
+ "solana": {
+  "service": "solana",
+  "measured_at": "2026-10-20T07:34:35Z",
+  "pypi_month": 1230257,
+  "pypi_status": 200,
+  "npm_month": 12026781,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 4,
+   "pushed_at": "2026-10-19T20:26:26Z",
+   "stars": 2778
+  },
+  "gh_status": 200,
+  "so_count": 1345,
+  "so_status": 200,
+  "so_quota": 83
+ },
+ "crossref": {
+  "service": "crossref",
+  "measured_at": "2026-10-20T07:34:40Z",
+  "pypi_month": 46640,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 4,
+   "pushed_at": "2026-10-16T16:42:01Z",
+   "stars": 252
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 83
+ },
+ "openalex": {
+  "service": "openalex",
+  "measured_at": "2026-10-20T07:34:41Z",
+  "pypi_month": 71687,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 21,
+   "pushed_at": "2026-10-05T23:02:40Z",
+   "stars": 426
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "binance": {
+  "service": "binance",
+  "measured_at": "2026-10-20T07:34:35Z",
+  "pypi_month": 313530,
+  "pypi_status": 200,
+  "npm_month": 38525,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 533,
+   "pushed_at": "2026-06-08T11:48:57Z",
+   "stars": 7211
+  },
+  "gh_status": 200,
+  "so_count": 1002,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "pubmed-entrez": {
+  "service": "pubmed-entrez",
+  "measured_at": "2026-10-20T07:34:41Z",
+  "pypi_month": 4377509,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 633,
+   "pushed_at": "2026-10-19T19:44:09Z",
+   "stars": 5237
+  },
+  "gh_status": 200,
+  "so_count": 1363,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "unpaywall": {
+  "service": "unpaywall",
+  "measured_at": "2026-10-20T07:34:42Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "semantic-scholar": {
+  "service": "semantic-scholar",
+  "measured_at": "2026-10-20T07:34:41Z",
+  "pypi_month": 53910,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-08-01T01:22:24Z",
+   "stars": 484
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "orcid": {
+  "service": "orcid",
+  "measured_at": "2026-10-20T07:34:42Z",
+  "so_count": 12,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "zenodo": {
+  "service": "zenodo",
+  "measured_at": "2026-10-20T07:34:42Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 553,
+   "pushed_at": "2026-03-13T09:50:09Z",
+   "stars": 1048
+  },
+  "gh_status": 200,
+  "so_count": 16,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "youtube-data": {
+  "service": "youtube-data",
+  "measured_at": "2026-10-20T07:34:42Z",
+  "pypi_month": 125164927,
+  "pypi_status": 200,
+  "npm_month": 43500732,
+  "npm_status": 200,
+  "so_count": 11537,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "meta-graph": {
+  "service": "meta-graph",
+  "measured_at": "2026-10-20T07:34:43Z",
+  "so_count": 34972,
+  "so_status": 200,
+  "so_quota": 80
+ },
+ "instagram-graph": {
+  "service": "instagram-graph",
+  "measured_at": "2026-10-20T07:34:43Z",
+  "so_count": 617,
+  "so_status": 200,
+  "so_quota": 71
+ },
+ "threads": {
+  "service": "threads",
+  "measured_at": "2026-10-20T07:34:43Z",
+  "so_count": 2,
+  "so_status": 200,
+  "so_quota": 71
+ },
+ "tiktok": {
+  "service": "tiktok",
+  "measured_at": "2026-10-20T07:34:43Z",
+  "so_count": 67,
+  "so_status": 200,
+  "so_quota": 71
+ },
+ "linkedin": {
+  "service": "linkedin",
+  "measured_at": "2026-10-20T07:34:43Z",
+  "so_count": 5223,
+  "so_status": 200,
+  "so_quota": 71
+ },
+ "kaggle": {
+  "service": "kaggle",
+  "measured_at": "2026-10-20T07:34:42Z",
+  "pypi_month": 652790,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 147,
+   "pushed_at": "2026-10-16T17:55:26Z",
+   "stars": 7613
+  },
+  "gh_status": 200,
+  "so_count": 1151,
+  "so_status": 200,
+  "so_quota": 71
+ },
+ "reddit": {
+  "service": "reddit",
+  "measured_at": "2026-10-20T07:34:42Z",
+  "pypi_month": 1189125,
+  "pypi_status": 200,
+  "npm_month": 69118,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-10-19T20:18:47Z",
+   "stars": 4288
+  },
+  "gh_status": 200,
+  "so_count": 606,
+  "so_status": 200,
+  "so_quota": 66
+ },
+ "hacker-news": {
+  "service": "hacker-news",
+  "measured_at": "2026-10-20T07:34:44Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 5,
+   "pushed_at": "2025-01-01T07:55:30Z",
+   "stars": 13361
+  },
+  "gh_status": 200,
+  "so_count": 32,
+  "so_status": 200,
+  "so_quota": 66
+ },
+ "x-twitter": {
+  "service": "x-twitter",
+  "measured_at": "2026-10-20T07:34:43Z",
+  "pypi_month": 2920062,
+  "pypi_status": 200,
+  "npm_month": 1635615,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 107,
+   "pushed_at": "2026-07-02T19:10:57Z",
+   "stars": 11188
+  },
+  "gh_status": 200,
+  "so_count": 24895,
+  "so_status": 200,
+  "so_quota": 66
+ },
+ "bluesky": {
+  "service": "bluesky",
+  "measured_at": "2026-10-20T07:34:43Z",
+  "pypi_month": 332594,
+  "pypi_status": 200,
+  "npm_month": 709082,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 758,
+   "pushed_at": "2026-10-19T21:32:33Z",
+   "stars": 9699
+  },
+  "gh_status": 200,
+  "so_count": 10,
+  "so_status": 200,
+  "so_quota": 63
+ },
+ "stackexchange": {
+  "service": "stackexchange",
+  "measured_at": "2026-10-20T07:34:45Z",
+  "pypi_month": 7343,
+  "pypi_status": 200,
+  "so_count": 288,
+  "so_status": 200,
+  "so_quota": 63
+ },
+ "dev-to": {
+  "service": "dev-to",
+  "measured_at": "2026-10-20T07:34:45Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 166,
+   "pushed_at": "2026-10-19T22:34:52Z",
+   "stars": 22802
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 63
+ },
+ "spotify": {
+  "service": "spotify",
+  "measured_at": "2026-10-20T07:34:45Z",
+  "pypi_month": 277096,
+  "pypi_status": 200,
+  "npm_month": 144180,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 64,
+   "pushed_at": "2026-06-29T12:22:52Z",
+   "stars": 5479
+  },
+  "gh_status": 200,
+  "so_count": 3974,
+  "so_status": 200,
+  "so_quota": 57
+ },
+ "etsy": {
+  "service": "etsy",
+  "measured_at": "2026-10-20T07:34:52Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 57
+ },
+ "woocommerce": {
+  "service": "woocommerce",
+  "measured_at": "2026-10-20T07:34:46Z",
+  "pypi_month": 105595,
+  "pypi_status": 200,
+  "npm_month": 242774,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 34,
+   "pushed_at": "2026-08-24T18:43:37Z",
+   "stars": 216
+  },
+  "gh_status": 200,
+  "so_count": 940,
+  "so_status": 200,
+  "so_quota": 57
+ },
+ "shippo": {
+  "service": "shippo",
+  "measured_at": "2026-10-20T07:34:52Z",
+  "pypi_month": 84165,
+  "pypi_status": 200,
+  "npm_month": 254801,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 4,
+   "pushed_at": "2026-10-19T00:14:35Z",
+   "stars": 18
+  },
+  "gh_status": 200,
+  "so_count": 67,
+  "so_status": 200,
+  "so_quota": 52
+ },
+ "easypost": {
+  "service": "easypost",
+  "measured_at": "2026-10-20T07:34:52Z",
+  "pypi_month": 156041,
+  "pypi_status": 200,
+  "npm_month": 350077,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-10-16T20:59:57Z",
+   "stars": 126
+  },
+  "gh_status": 200,
+  "so_count": 59,
+  "so_status": 200,
+  "so_quota": 52
+ },
+ "rdap": {
+  "service": "rdap",
+  "measured_at": "2026-10-20T07:34:59Z",
+  "so_count": 9,
+  "so_status": 200,
+  "so_quota": 52
+ },
+ "mux": {
+  "service": "mux",
+  "measured_at": "2026-10-20T07:34:52Z",
+  "pypi_month": 1037312,
+  "pypi_status": 200,
+  "npm_month": 1888539,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-10-09T20:17:39Z",
+   "stars": 182
+  },
+  "gh_status": 200,
+  "so_count": 608,
+  "so_status": 200,
+  "so_quota": 52
+ },
+ "crt-sh": {
+  "service": "crt-sh",
+  "measured_at": "2026-10-20T07:34:59Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 48
+ },
+ "cloudinary": {
+  "service": "cloudinary",
+  "measured_at": "2026-10-20T07:34:52Z",
+  "pypi_month": 2658589,
+  "pypi_status": 200,
+  "npm_month": 4109000,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 18,
+   "pushed_at": "2026-10-04T15:53:35Z",
+   "stars": 262
+  },
+  "gh_status": 200,
+  "so_count": 1667,
+  "so_status": 200,
+  "so_quota": 48
+ },
+ "haveibeenpwned": {
+  "service": "haveibeenpwned",
+  "measured_at": "2026-10-20T07:34:59Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 48
+ },
+ "urlscan": {
+  "service": "urlscan",
+  "measured_at": "2026-10-20T07:35:00Z",
+  "so_count": 15,
+  "so_status": 200,
+  "so_quota": 48
+ },
+ "abuseipdb": {
+  "service": "abuseipdb",
+  "measured_at": "2026-10-20T07:35:00Z",
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 48
+ },
+ "cloudflare-doh": {
+  "service": "cloudflare-doh",
+  "measured_at": "2026-10-20T07:35:00Z",
+  "so_count": 19,
+  "so_status": 200,
+  "so_quota": 48
+ },
+ "virustotal": {
+  "service": "virustotal",
+  "measured_at": "2026-10-20T07:34:59Z",
+  "pypi_month": 276176,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 15,
+   "pushed_at": "2026-10-03T15:25:39Z",
+   "stars": 788
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 42
+ },
+ "shodan": {
+  "service": "shodan",
+  "measured_at": "2026-10-20T07:35:00Z",
+  "pypi_month": 480267,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 65,
+   "pushed_at": "2024-08-05T13:11:50Z",
+   "stars": 3338
+  },
+  "gh_status": 200,
+  "so_count": 45,
+  "so_status": 200,
+  "so_quota": 42
+ },
+ "ssl-labs": {
+  "service": "ssl-labs",
+  "measured_at": "2026-10-20T07:35:00Z",
+  "gh": {
+   "archived": false,
+   "open_issues": 294,
+   "pushed_at": "2024-08-05T18:08:22Z",
+   "stars": 1768
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 42
+ },
+ "censys": {
+  "service": "censys",
+  "measured_at": "2026-10-20T07:35:00Z",
+  "pypi_month": 102545,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 1,
+   "pushed_at": "2026-08-28T20:41:18Z",
+   "stars": 469
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 39
+ },
+ "lets-encrypt": {
+  "service": "lets-encrypt",
+  "measured_at": "2026-10-20T07:35:01Z",
+  "pypi_month": 1723878,
+  "pypi_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 188,
+   "pushed_at": "2026-10-19T21:15:19Z",
+   "stars": 33279
+  },
+  "gh_status": 200,
+  "so_count": 2014,
+  "so_status": 200,
+  "so_quota": 39
+ },
+ "amazon-sp-api": {
+  "service": "amazon-sp-api",
+  "measured_at": "2026-10-20T07:34:46Z",
+  "pypi_month": 361247,
+  "pypi_status": 200,
+  "npm_month": 111718,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 2,
+   "pushed_at": "2026-10-19T06:39:11Z",
+   "stars": 688
+  },
+  "gh_status": 200,
+  "so_count": 256,
+  "so_status": 200,
+  "so_quota": 37
+ },
+ "ebay": {
+  "service": "ebay",
+  "measured_at": "2026-10-20T07:34:47Z",
+  "pypi_month": 118586,
+  "pypi_status": 200,
+  "npm_month": 66416,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 165,
+   "pushed_at": "2023-05-14T13:39:33Z",
+   "stars": 857
+  },
+  "gh_status": 200,
+  "so_count": 1105,
+  "so_status": 200,
+  "so_quota": 37
+ },
+ "unsplash": {
+  "service": "unsplash",
+  "measured_at": "2026-10-20T07:34:59Z",
+  "npm_month": 979435,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 25,
+   "pushed_at": "2026-10-06T12:48:40Z",
+   "stars": 2195
+  },
+  "gh_status": 200,
+  "so_count": null,
+  "so_status": 200,
+  "so_quota": 35
+ },
+ "adyen": {
+  "service": "adyen",
+  "measured_at": "2026-10-20T07:36:33Z",
+  "pypi_month": 732351,
+  "pypi_status": 200,
+  "npm_month": 1024378,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 30,
+   "pushed_at": "2026-10-19T15:54:38Z",
+   "stars": 67
+  },
+  "gh_status": 200,
+  "so_count": 167,
+  "so_status": 200,
+  "so_quota": 34
+ },
+ "vonage": {
+  "service": "vonage",
+  "measured_at": "2026-10-20T07:36:35Z",
+  "pypi_month": 264731,
+  "pypi_status": 200,
+  "npm_month": 533357,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 12,
+   "pushed_at": "2026-10-06T14:23:46Z",
+   "stars": 218
+  },
+  "gh_status": 200,
+  "so_count": 322,
+  "so_status": 200,
+  "so_quota": 33
+ },
+ "pusher": {
+  "service": "pusher",
+  "measured_at": "2026-10-20T07:36:37Z",
+  "pypi_month": 2882921,
+  "pypi_status": 200,
+  "npm_month": 4542264,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 3,
+   "pushed_at": "2026-10-05T16:52:51Z",
+   "stars": 393
+  },
+  "gh_status": 200,
+  "so_count": 1513,
+  "so_status": 200,
+  "so_quota": 32
+ },
+ "ably": {
+  "service": "ably",
+  "measured_at": "2026-10-20T07:36:38Z",
+  "pypi_month": 1205758,
+  "pypi_status": 200,
+  "npm_month": 5144317,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 52,
+   "pushed_at": "2026-10-19T10:03:18Z",
+   "stars": 56
+  },
+  "gh_status": 200,
+  "so_count": 60,
+  "so_status": 200,
+  "so_quota": 31
+ },
+ "stream-chat": {
+  "service": "stream-chat",
+  "measured_at": "2026-10-20T07:36:41Z",
+  "pypi_month": 377503,
+  "pypi_status": 200,
+  "npm_month": 2331106,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 15,
+   "pushed_at": "2026-10-19T14:22:36Z",
+   "stars": 73
+  },
+  "gh_status": 200,
+  "so_count": 701,
+  "so_status": 200,
+  "so_quota": 30
+ },
+ "github": {
+  "service": "github",
+  "measured_at": "2026-10-20T07:36:43Z",
+  "pypi_month": 48377974,
+  "pypi_status": 200,
+  "npm_month": 83100745,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 64,
+   "pushed_at": "2026-10-18T14:25:03Z",
+   "stars": 666
+  },
+  "gh_status": 200,
+  "so_count": 3762,
+  "so_status": 200,
+  "so_quota": 29
+ },
+ "gitlab": {
+  "service": "gitlab",
+  "measured_at": "2026-10-20T07:36:44Z",
+  "pypi_month": 11743773,
+  "pypi_status": 200,
+  "npm_month": 6565470,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 33,
+   "pushed_at": "2026-10-20T04:07:18Z",
+   "stars": 2478
+  },
+  "gh_status": 200,
+  "so_count": 716,
+  "so_status": 200,
+  "so_quota": 28
+ },
+ "github-actions": {
+  "service": "github-actions",
+  "measured_at": "2026-10-20T07:36:46Z",
+  "npm_month": 62483888,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 593,
+   "pushed_at": "2026-10-20T00:24:28Z",
+   "stars": 5888
+  },
+  "gh_status": 200,
+  "so_count": 11208,
+  "so_status": 200,
+  "so_quota": 27
+ },
+ "npm-registry": {
+  "service": "npm-registry",
+  "measured_at": "2026-10-20T07:36:47Z",
+  "npm_month": 55096415,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 7,
+   "pushed_at": "2024-06-02T19:19:54Z",
+   "stars": 498
+  },
+  "gh_status": 200
+ },
+ "vercel": {
+  "service": "vercel",
+  "measured_at": "2026-10-20T07:36:48Z",
+  "npm_month": 2009860,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 869,
+   "pushed_at": "2026-10-18T22:06:05Z",
+   "stars": 16414
+  },
+  "gh_status": 200,
+  "so_count": 3295,
+  "so_status": 200,
+  "so_quota": 26
+ },
+ "netlify": {
+  "service": "netlify",
+  "measured_at": "2026-10-20T07:36:50Z",
+  "npm_month": 1385003,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 147,
+   "pushed_at": "2026-10-20T03:44:54Z",
+   "stars": 1928
+  },
+  "gh_status": 200,
+  "so_count": 2198,
+  "so_status": 200,
+  "so_quota": 25
+ },
+ "cloudflare": {
+  "service": "cloudflare",
+  "measured_at": "2026-10-20T07:36:51Z",
+  "pypi_month": 2012441,
+  "pypi_status": 200,
+  "npm_month": 13220824,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 33,
+   "pushed_at": "2026-10-03T02:52:22Z",
+   "stars": 511
+  },
+  "gh_status": 200,
+  "so_count": 3313,
+  "so_status": 200,
+  "so_quota": 24
+ },
+ "firebase": {
+  "service": "firebase",
+  "measured_at": "2026-10-20T07:36:53Z",
+  "pypi_month": 14859661,
+  "pypi_status": 200,
+  "npm_month": 39221318,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 235,
+   "pushed_at": "2026-10-20T02:51:05Z",
+   "stars": 1748
+  },
+  "gh_status": 200,
+  "so_count": 143111,
+  "so_status": 200,
+  "so_quota": 23
+ },
+ "clerk": {
+  "service": "clerk",
+  "measured_at": "2026-10-20T07:36:55Z",
+  "pypi_month": 2693822,
+  "pypi_status": 200,
+  "npm_month": 22094622,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 147,
+   "pushed_at": "2026-10-20T05:55:12Z",
+   "stars": 1767
+  },
+  "gh_status": 200,
+  "so_count": 256,
+  "so_status": 200,
+  "so_quota": 22
+ },
+ "okta": {
+  "service": "okta",
+  "measured_at": "2026-10-20T07:36:56Z",
+  "pypi_month": 864197,
+  "pypi_status": 200,
+  "npm_month": 1820325,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 47,
+   "pushed_at": "2026-10-12T23:41:53Z",
+   "stars": 271
+  },
+  "gh_status": 200,
+  "so_count": 1722,
+  "so_status": 200,
+  "so_quota": 21
+ },
+ "better-auth": {
+  "service": "better-auth",
+  "measured_at": "2026-10-20T07:36:58Z",
+  "npm_month": 44611654,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 880,
+   "pushed_at": "2026-10-20T05:19:52Z",
+   "stars": 30384
+  },
+  "gh_status": 200
+ },
+ "airtable": {
+  "service": "airtable",
+  "measured_at": "2026-10-20T07:36:59Z",
+  "pypi_month": 4161591,
+  "pypi_status": 200,
+  "npm_month": 2008997,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 0,
+   "pushed_at": "2026-09-26T18:38:39Z",
+   "stars": 890
+  },
+  "gh_status": 200,
+  "so_count": 263,
+  "so_status": 200,
+  "so_quota": 20
+ },
+ "google-workspace": {
+  "service": "google-workspace",
+  "measured_at": "2026-10-20T07:37:00Z",
+  "pypi_month": 125164927,
+  "pypi_status": 200,
+  "npm_month": 43500732,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 56,
+   "pushed_at": "2026-10-13T08:05:05Z",
+   "stars": 8949
+  },
+  "gh_status": 200,
+  "so_count": 19830,
+  "so_status": 200,
+  "so_quota": 19
+ },
+ "box": {
+  "service": "box",
+  "measured_at": "2026-10-20T07:37:02Z",
+  "pypi_month": 993149,
+  "pypi_status": 200,
+  "npm_month": 748309,
+  "npm_status": 200,
+  "gh": {
+   "archived": true,
+   "open_issues": 0,
+   "pushed_at": "2025-12-11T10:45:00Z",
+   "stars": 55
+  },
+  "gh_status": 200,
+  "so_count": 1087,
+  "so_status": 200,
+  "so_quota": 18
+ },
+ "google-search-console": {
+  "service": "google-search-console",
+  "measured_at": "2026-10-20T07:37:03Z",
+  "pypi_month": 125164927,
+  "pypi_status": 200,
+  "npm_month": 43500732,
+  "npm_status": 200,
+  "so_count": 1280,
+  "so_status": 200,
+  "so_quota": 18
+ },
+ "polygon-io": {
+  "service": "polygon-io",
+  "measured_at": "2026-10-20T07:37:04Z",
+  "pypi_month": 539909,
+  "pypi_status": 200,
+  "npm_month": 57166,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 22,
+   "pushed_at": "2026-10-19T16:33:46Z",
+   "stars": 1523
+  },
+  "gh_status": 200,
+  "so_count": 20,
+  "so_status": 200,
+  "so_quota": 16
+ },
+ "finnhub": {
+  "service": "finnhub",
+  "measured_at": "2026-10-20T07:37:06Z",
+  "pypi_month": 185296,
+  "pypi_status": 200,
+  "npm_month": 8959,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 42,
+   "pushed_at": "2026-06-24T07:15:10Z",
+   "stars": 1092
+  },
+  "gh_status": 200,
+  "so_count": 8,
+  "so_status": 200,
+  "so_quota": 15
+ },
+ "mastodon": {
+  "service": "mastodon",
+  "measured_at": "2026-10-20T07:37:08Z",
+  "pypi_month": 243903,
+  "pypi_status": 200,
+  "npm_month": 80398,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 0,
+   "pushed_at": "2026-10-18T13:12:04Z",
+   "stars": 959
+  },
+  "gh_status": 200,
+  "so_count": 67,
+  "so_status": 200,
+  "so_quota": 14
+ },
+ "twitch": {
+  "service": "twitch",
+  "measured_at": "2026-10-20T07:37:09Z",
+  "pypi_month": 42028,
+  "pypi_status": 200,
+  "npm_month": 338328,
+  "npm_status": 200,
+  "gh": {
+   "archived": false,
+   "open_issues": 21,
+   "pushed_at": "2026-02-15T19:15:31Z",
+   "stars": 293
+  },
+  "gh_status": 200,
+  "so_count": 183,
+  "so_status": 200,
+  "so_quota": 13
+ },
+ "shopify": {
+  "service": "shopify",
+  "measured_at": "2026-10-20T07:37:11Z",
+  "pypi_month": 776012,
+  "pypi_status": 200,
+  "npm_month": 2523209,
+  "npm_status": 200,
+  "gh": {
+   "archived": true,
+   "open_issues": 9,
+   "pushed_at": "2024-04-11T15:42:14Z",
+   "stars": 954
+  },
+  "gh_status": 200,
+  "so_count": 753,
+  "so_status": 200,
+  "so_quota": 12
+ }
+}

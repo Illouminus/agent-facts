@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facts.baillot.dev/schema/v0/service.schema.json",
+  "title": "Service registration",
+  "description": "services/<service>.yaml (docs/specs/01-fact-schema.md). Registered templates are the only paths check() stores observations for and probes may call.",
+  "type": "object",
+  "required": ["key", "name", "hosts", "surfaces", "dimensions", "tos"],
+  "additionalProperties": false,
+  "properties": {
+    "key": {"$ref": "fact.schema.json#/$defs/slug"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 100},
+    "hosts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/hostname"}
+    },
+    "doc_hosts": {
+      "description": "Vendor documentation hosts (e.g. docs.stripe.com). URLs inside fixes must be on hosts or doc_hosts, or a subdomain of one.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/hostname"}
+    },
+    "surfaces": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "http": {"$ref": "#/$defs/http_surface"},
+        "sdk": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["ecosystem", "package"],
+            "additionalProperties": false,
+            "properties": {
+              "ecosystem": {"$ref": "fix.schema.json#/$defs/ecosystem"},
+              "package": {"$ref": "fix.schema.json#/$defs/package"}
+            }
+          }
+        }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "required": ["env"],
+      "additionalProperties": false,
+      "properties": {
+        "env": {
+          "description": "Base URL per environment the service offers.",
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "prod": {"$ref": "fix.schema.json#/$defs/https_url"},
+            "sandbox": {"$ref": "fix.schema.json#/$defs/https_url"}
+          }
+        },
+        "account_state": {
+          "description": "The account states facts and probes of this service may name (besides `any`).",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "fact.schema.json#/$defs/dimension_value"}
+        }
+      }
+    },
+    "auth": {"$ref": "#/$defs/auth"},
+    "tos": {
+      "type": "object",
+      "required": ["automated_access", "publish_measurements", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "automated_access": {"enum": ["allowed"], "x-error-codes": {"enum": "tos_not_allowed"}},
+        "publish_measurements": {"enum": ["allowed"], "x-error-codes": {"enum": "tos_not_allowed"}},
+        "source": {"$ref": "fix.schema.json#/$defs/https_url"}
+      }
+    },
+    "probe_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "per_template_seconds": {
+          "description": "Invariant 6: at most one request per 5 minutes per (service, template, vantage); overrides may only be slower.",
+          "type": "integer",
+          "minimum": 300,
+          "default": 300,
+          "x-error-codes": {"minimum": "budget_too_low"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hostname": {
+      "type": "string",
+      "pattern": "^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}(?!\\n)$"
+    },
+    "http_surface": {
+      "type": "object",
+      "required": ["base_url", "templates"],
+      "additionalProperties": false,
+      "properties": {
+        "base_url": {"$ref": "fix.schema.json#/$defs/https_url"},
+        "templates": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": ["method", "path"],
+            "additionalProperties": false,
+            "properties": {
+              "method": {"$ref": "fix.schema.json#/$defs/http_method"},
+              "path": {"$ref": "fix.schema.json#/$defs/path_template"}
+            }
+          }
+        },
+        "signal_fields": {
+          "description": "Whitelist of response fields check() may extract into a signal.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Za-z0-9_./-]{1,64}(?!\\n)$"}
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["none", "bearer", "basic", "header", "query"]},
+        "key_name": {
+          "description": "Name of ~/.private_keys/<key_name>.key on the probe runner; never a value.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,63}(?!\\n)$"
+        },
+        "env": {"$ref": "fix.schema.json#/$defs/env"},
+        "header_name": {"$ref": "fix.schema.json#/$defs/header_name"},
+        "param_name": {"$ref": "fix.schema.json#/$defs/identifier"}
+      },
+      "allOf": [
+        {
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["bearer", "basic", "header", "query"]}}},
+          "then": {"required": ["key_name", "env"]}
+        },
+        {
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "header"}}},
+          "then": {"required": ["header_name"]}
+        },
+        {
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "query"}}},
+          "then": {"required": ["param_name"]}
+        }
+      ]
+    }
+  }
+}

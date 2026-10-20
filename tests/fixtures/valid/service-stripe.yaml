@@ -1,0 +1,25 @@
+key: stripe
+name: Stripe
+hosts: [api.stripe.com]
+surfaces:
+  http:
+    base_url: https://api.stripe.com
+    templates:                                   # the ONLY paths check() will store observations for
+      - {method: POST, path: /v1/payment_intents}
+      - {method: GET,  path: "/v1/customers/{id}"}
+    signal_fields: [status, error.code, error.type, error.message, retry-after, stripe-version]  # whitelist
+  sdk:
+    - {ecosystem: pypi, package: stripe}
+    - {ecosystem: npm, package: stripe}
+dimensions:
+  env: {prod: https://api.stripe.com, sandbox: https://api.stripe.com}     # same host, test keys
+  account_state: [active, restricted, test_mode]
+auth:
+  kind: bearer
+  key_name: stripe-test                           # ~/.private_keys/stripe-test.key on the runner only
+  env: sandbox                                    # which env this key reaches
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://stripe.com/legal/ssa
+probe_budget: {per_template_seconds: 300}

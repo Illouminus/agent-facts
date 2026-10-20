@@ -24,4 +24,4 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run pytest -q
-      # W1 adds: uv run agentfacts validate
+      - run: uv run agentfacts validate
