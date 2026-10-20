@@ -1,5 +1,10 @@
 # Журнал решений (новые сверху)
 
+- 2026-10-20 · Волна 1 семени утверждена Edouard как предложено: stripe, google-calendar, pypi, github, solana,
+  firebase, google-sheets, salesforce, telegram, google-gemini (реестр мегамозга D-084, карточка
+  2026-10-20-agent-facts-wave1-approve). Без ключа стартуют pypi, github, solana; ключи остальных — карточка
+  2026-10-20-agent-facts-wave1-keys (keyput: stripe-test, telegram-bot, gemini-api, google-service-account, salesforce-*).
+
 - 2026-10-20 · Старт сборки: репозиторий Illouminus/agent-facts (приватный), спеки v0.1 в docs/specs, семя из
   ранжированной сотни (docs/research/seed-100-2026-10-20.md), волна 1 = 10 сервисов на утверждение Edouard;
   разработка пакетами W0–W9 отдельными сессиями, каждый пакет = ветка + PR + TDD + ревью + зелёный CI.
