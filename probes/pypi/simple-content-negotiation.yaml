@@ -1,0 +1,17 @@
+# PEP 691: HTML unless the client asks for JSON; Vary lists Accept.
+id: af:pypi:probe:simple-content-negotiation
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /simple/requests/}
+  - {do: http, method: GET, path: /simple/requests/, headers: {Accept: application/vnd.pypi.simple.v1+json}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, header: Content-Type, matches: "^text/html"}
+  - {step: 1, header: Vary, matches: "Accept(,|$)"}
+  - {step: 2, status: 200}
+  - {step: 2, header: Content-Type, equals: application/vnd.pypi.simple.v1+json}
+  - {step: 2, json_path: $.name, equals: requests}
+  - {step: 2, json_path: $.meta._last-serial, exists: true}
+  - {step: 2, json_path: $.versions, contains: 2.31.0}

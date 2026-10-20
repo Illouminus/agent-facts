@@ -1,0 +1,10 @@
+id: af:pypi:probe:simple-not-found
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /simple/agent-facts-probe-no-such-project/}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, header: Content-Type, matches: "^text/plain"}
+  - {step: 1, body_contains: 404 Not Found}

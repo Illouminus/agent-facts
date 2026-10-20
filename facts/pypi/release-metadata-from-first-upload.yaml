@@ -1,0 +1,22 @@
+id: af:pypi:release-metadata-from-first-upload
+service: pypi
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/pypi/{project}/{version}/json"
+claim: "JSON API metadata comes from the values given at upload time, not from the files, and the first upload of a release is stored: later uploads to that release do not update it."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: official
+evidence:
+  first_seen: 2026-10-20T09:15:00Z
+  official_url: https://docs.pypi.org/api/json/#get-a-project
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

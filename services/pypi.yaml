@@ -1,0 +1,34 @@
+# PyPI read APIs (JSON API and Simple/Index API), keyless. Probes are anonymous GETs; PyPI asks
+# heavy API users for an identifying User-Agent, which the runner sends.
+key: pypi
+name: PyPI (Python Package Index)
+hosts: [pypi.org]
+doc_hosts: [docs.pypi.org]
+surfaces:
+  http:
+    base_url: https://pypi.org
+    templates:
+      - {method: GET, path: "/pypi/{project}/json"}
+      - {method: GET, path: "/pypi/{project}/json/"}
+      - {method: GET, path: "/pypi/{project}/{version}/json"}
+      - {method: GET, path: "/simple/{project}/"}
+      - {method: GET, path: "/simple/{project}"}
+      - {method: POST, path: /pypi}
+    signal_fields:
+      - status
+      - message
+      - location
+      - cache-control
+      - etag
+      - x-pypi-last-serial
+      - x-cache
+      - retry-after
+dimensions:
+  env: {prod: https://pypi.org}
+  account_state: [anonymous]
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://docs.pypi.org/api/#api-policies
+probe_budget: {per_template_seconds: 900}

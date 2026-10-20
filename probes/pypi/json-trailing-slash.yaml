@@ -1,0 +1,9 @@
+id: af:pypi:probe:json-trailing-slash
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /pypi/requests/json/}
+assert:
+  - {step: 1, status: 301}
+  - {step: 1, header: Location, equals: /pypi/requests/json}

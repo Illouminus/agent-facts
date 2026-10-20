@@ -1,0 +1,28 @@
+id: af:pypi:json-trailing-slash-301
+service: pypi
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/pypi/{project}/json/"
+signal:
+  status: 301
+claim: "GET /pypi/{project}/json/ with a trailing slash returns HTTP 301 with a relative Location /pypi/{project}/json and an HTML body, not JSON."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: use_endpoint, method: GET, path_template: "/pypi/{project}/json"}
+status: verified:server:prod
+evidence:
+  probe: af:pypi:probe:json-trailing-slash
+  first_seen: 2026-10-20T09:06:07Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:06:07Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

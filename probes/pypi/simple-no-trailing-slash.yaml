@@ -1,0 +1,9 @@
+id: af:pypi:probe:simple-no-trailing-slash
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /simple/requests}
+assert:
+  - {step: 1, status: 301}
+  - {step: 1, header: Location, equals: "https://pypi.org/simple/requests/"}

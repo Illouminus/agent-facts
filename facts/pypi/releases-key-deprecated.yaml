@@ -1,0 +1,22 @@
+id: af:pypi:releases-key-deprecated
+service: pypi
+kind: deprecation
+target:
+  surface: http
+  method: GET
+  path_template: "/pypi/{project}/json"
+claim: "The releases key of GET /pypi/{project}/json is deprecated and may be removed; projects should get release files from the Index API instead."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: use_endpoint, method: GET, path_template: "/simple/{project}/"}
+status: official
+evidence:
+  first_seen: 2026-10-20T09:15:00Z
+  official_url: https://docs.pypi.org/api/json/#get-a-project
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

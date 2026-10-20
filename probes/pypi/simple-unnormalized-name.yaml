@@ -1,0 +1,10 @@
+# The runner never follows redirects, so the 301 itself is observed.
+id: af:pypi:probe:simple-unnormalized-name
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /simple/Typing_Extensions/}
+assert:
+  - {step: 1, status: 301}
+  - {step: 1, header: Location, equals: "https://pypi.org/simple/typing-extensions/"}

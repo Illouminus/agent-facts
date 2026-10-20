@@ -1,0 +1,26 @@
+id: af:pypi:project-json-fingerprint
+service: pypi
+kind: schema_drift
+target:
+  surface: http
+  method: GET
+  path_template: "/pypi/{project}/json"
+claim: "On 2026-10-20 /pypi/{project}/json had the top-level keys info, last_serial, ownership, releases, urls and vulnerabilities, schema fingerprint f2ea8b7e27a470cf."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:pypi:probe:json-project-fingerprint
+  first_seen: 2026-10-20T09:06:07Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:06:07Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]
