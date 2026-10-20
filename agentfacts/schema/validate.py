@@ -45,6 +45,7 @@ class Report:
     files: int = 0
     problems: list[Problem] = field(default_factory=list)
     counts: dict[str, int] = field(default_factory=dict)
+    documents: dict[Path, dict[str, Any]] = field(default_factory=dict)  # parsed inputs, by path
 
     @property
     def ok(self) -> bool:
@@ -100,6 +101,7 @@ def validate_paths(paths: Sequence[Path], root: Path = Path(".")) -> Report:
         if doc is not None:
             report.problems.extend(_schema_problems(doc))
             docs.append(doc)
+            report.documents[path] = doc.data
             report.counts[doc.type] = report.counts.get(doc.type, 0) + 1
 
     context: list[_Doc] = []

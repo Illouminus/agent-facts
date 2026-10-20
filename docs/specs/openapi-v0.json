@@ -1,0 +1,1826 @@
+{
+  "components": {
+    "schemas": {
+      "BackoffExponential": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "backoff_exponential",
+            "title": "Action",
+            "type": "string"
+          },
+          "base_ms": {
+            "maximum": 600000.0,
+            "minimum": 1.0,
+            "title": "Base Ms",
+            "type": "integer"
+          },
+          "factor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "gt": 1,
+            "le": 10,
+            "title": "Factor"
+          },
+          "jitter": {
+            "title": "Jitter",
+            "type": "boolean"
+          },
+          "max_attempts": {
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "max_ms": {
+            "maximum": 3600000.0,
+            "minimum": 1.0,
+            "title": "Max Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "action",
+          "base_ms",
+          "factor",
+          "max_ms",
+          "max_attempts",
+          "jitter"
+        ],
+        "title": "BackoffExponential",
+        "type": "object"
+      },
+      "CheckContext": {
+        "additionalProperties": false,
+        "properties": {
+          "env_hint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Env"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sdk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SdkContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "CheckContext",
+        "type": "object"
+      },
+      "CheckError": {
+        "additionalProperties": false,
+        "properties": {
+          "body_excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "First 2 KB of the error body or exception text (longer input is cut).",
+            "title": "Body Excerpt"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "maximum": 599.0,
+                "minimum": 100.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "CheckError",
+        "type": "object"
+      },
+      "CheckRequest": {
+        "additionalProperties": false,
+        "description": "Request = contribution: if `target` matches a registered template, a normalized\nobservation is stored (no body, headers, query or raw IP).",
+        "properties": {
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "$ref": "#/components/schemas/CheckTarget"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "CheckRequest",
+        "type": "object"
+      },
+      "CheckResponse": {
+        "description": "Never empty: all six keys are always present.",
+        "properties": {
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/FactOut"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "matched_template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchedTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed": {
+            "$ref": "#/components/schemas/Observed"
+          },
+          "registry": {
+            "$ref": "#/components/schemas/RegistryInfo"
+          },
+          "service": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          },
+          "unknown": {
+            "$ref": "#/components/schemas/Unknown"
+          }
+        },
+        "required": [
+          "service",
+          "matched_template",
+          "facts",
+          "observed",
+          "unknown",
+          "registry"
+        ],
+        "title": "CheckResponse",
+        "type": "object"
+      },
+      "CheckTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "anyOf": [
+              {
+                "enum": [
+                  "GET",
+                  "HEAD",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE",
+                  "OPTIONS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "HTTP method; required when `url` is an http(s) URL with a path.",
+            "title": "Method"
+          },
+          "url": {
+            "description": "An http(s) URL, a bare host, or a `pypi:<pkg>@<ver>` / `npm:<pkg>@<ver>` locator. Query and fragment are dropped before matching and never stored.",
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "CheckTarget",
+        "type": "object"
+      },
+      "Dimensions": {
+        "additionalProperties": false,
+        "properties": {
+          "account_state": {
+            "default": "any",
+            "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+            "title": "Account State",
+            "type": "string"
+          },
+          "env": {
+            "$ref": "#/components/schemas/Env"
+          },
+          "plan": {
+            "default": "any",
+            "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+            "title": "Plan",
+            "type": "string"
+          },
+          "region": {
+            "default": "any",
+            "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+            "title": "Region",
+            "type": "string"
+          }
+        },
+        "required": [
+          "env"
+        ],
+        "title": "Dimensions",
+        "type": "object"
+      },
+      "EnableInDashboard": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "enable_in_dashboard",
+            "title": "Action",
+            "type": "string"
+          },
+          "setting_key": {
+            "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}$",
+            "title": "Setting Key",
+            "type": "string"
+          },
+          "vendor_doc_url": {
+            "maxLength": 512,
+            "pattern": "^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[^\\s]*)?$",
+            "title": "Vendor Doc Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "setting_key",
+          "vendor_doc_url"
+        ],
+        "title": "EnableInDashboard",
+        "type": "object"
+      },
+      "EncodeAs": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "encode_as",
+            "title": "Action",
+            "type": "string"
+          },
+          "encoding": {
+            "enum": [
+              "base64",
+              "url",
+              "json_string",
+              "rfc3339"
+            ],
+            "title": "Encoding",
+            "type": "string"
+          },
+          "field": {
+            "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}$",
+            "title": "Field",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "field",
+          "encoding"
+        ],
+        "title": "EncodeAs",
+        "type": "object"
+      },
+      "Env": {
+        "enum": [
+          "prod",
+          "sandbox"
+        ],
+        "title": "Env",
+        "type": "string"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "field"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmations": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmations"
+          },
+          "first_seen": {
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$",
+            "title": "First Seen",
+            "type": "string"
+          },
+          "last_confirmed": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Confirmed"
+          },
+          "observations": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observations"
+          },
+          "official_url": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "pattern": "^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Official Url"
+          },
+          "probe": {
+            "anyOf": [
+              {
+                "pattern": "^af:[a-z0-9][a-z0-9-]{0,63}:probe:[a-z0-9][a-z0-9-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probe"
+          },
+          "stale_counter": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stale Counter"
+          },
+          "vantages": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vantages"
+          }
+        },
+        "required": [
+          "first_seen"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "FactOut": {
+        "additionalProperties": false,
+        "description": "A fact as stored in `facts/<service>/<slug>.yaml`, plus its fixes in English.",
+        "properties": {
+          "claim": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Claim",
+            "type": "string"
+          },
+          "dimensions": {
+            "$ref": "#/components/schemas/Dimensions"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          },
+          "fixes": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "backoff_exponential": "#/components/schemas/BackoffExponential",
+                  "enable_in_dashboard": "#/components/schemas/EnableInDashboard",
+                  "encode_as": "#/components/schemas/EncodeAs",
+                  "none_known": "#/components/schemas/NoneKnown",
+                  "paginate_with": "#/components/schemas/PaginateWith",
+                  "pin_sdk_version": "#/components/schemas/PinSdkVersion",
+                  "reduce_payload": "#/components/schemas/ReducePayload",
+                  "remove_param": "#/components/schemas/RemoveParam",
+                  "request_scope": "#/components/schemas/RequestScope",
+                  "retry_after_header": "#/components/schemas/RetryAfterHeader",
+                  "set_header": "#/components/schemas/SetHeader",
+                  "set_param": "#/components/schemas/SetParam",
+                  "switch_env": "#/components/schemas/SwitchEnv",
+                  "upgrade_sdk": "#/components/schemas/UpgradeSdk",
+                  "use_endpoint": "#/components/schemas/UseEndpoint",
+                  "wait_for_state": "#/components/schemas/WaitForState"
+                },
+                "propertyName": "action"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/RetryAfterHeader"
+                },
+                {
+                  "$ref": "#/components/schemas/BackoffExponential"
+                },
+                {
+                  "$ref": "#/components/schemas/SetHeader"
+                },
+                {
+                  "$ref": "#/components/schemas/SetParam"
+                },
+                {
+                  "$ref": "#/components/schemas/RemoveParam"
+                },
+                {
+                  "$ref": "#/components/schemas/UseEndpoint"
+                },
+                {
+                  "$ref": "#/components/schemas/PaginateWith"
+                },
+                {
+                  "$ref": "#/components/schemas/PinSdkVersion"
+                },
+                {
+                  "$ref": "#/components/schemas/UpgradeSdk"
+                },
+                {
+                  "$ref": "#/components/schemas/SwitchEnv"
+                },
+                {
+                  "$ref": "#/components/schemas/RequestScope"
+                },
+                {
+                  "$ref": "#/components/schemas/WaitForState"
+                },
+                {
+                  "$ref": "#/components/schemas/EnableInDashboard"
+                },
+                {
+                  "$ref": "#/components/schemas/ReducePayload"
+                },
+                {
+                  "$ref": "#/components/schemas/EncodeAs"
+                },
+                {
+                  "$ref": "#/components/schemas/NoneKnown"
+                }
+              ]
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Fixes",
+            "type": "array"
+          },
+          "fixes_rendered": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fixes Rendered",
+            "type": "array"
+          },
+          "id": {
+            "pattern": "^af:[a-z0-9][a-z0-9-]{0,63}:[a-z0-9][a-z0-9-]{0,127}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "service": {
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+            "title": "Service",
+            "type": "string"
+          },
+          "signal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Signal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "id",
+          "service",
+          "kind",
+          "target",
+          "claim",
+          "dimensions",
+          "fixes",
+          "status",
+          "evidence",
+          "provenance",
+          "fixes_rendered"
+        ],
+        "title": "FactOut",
+        "type": "object"
+      },
+      "FactsResponse": {
+        "properties": {
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/FactOut"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "registry": {
+            "$ref": "#/components/schemas/RegistryInfo"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "facts",
+          "registry"
+        ],
+        "title": "FactsResponse",
+        "type": "object"
+      },
+      "Health": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "probes_last_run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probes Last Run"
+          },
+          "registry_version": {
+            "title": "Registry Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "registry_version",
+          "probes_last_run"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "HistoryEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "pattern": "^(bot|producer:[a-z0-9][a-z0-9-]{0,63}|human:[A-Za-z0-9][A-Za-z0-9-]{0,38})$",
+            "title": "By",
+            "type": "string"
+          },
+          "change": {
+            "pattern": "^[a-z][a-z0-9_:.-]{0,63}$",
+            "title": "Change",
+            "type": "string"
+          },
+          "date": {
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "title": "Date",
+            "type": "string"
+          },
+          "previous_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Status"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "date",
+          "change",
+          "by"
+        ],
+        "title": "HistoryEntry",
+        "type": "object"
+      },
+      "Kind": {
+        "enum": [
+          "error_meaning",
+          "rate_limit",
+          "breaking_change",
+          "silent_behavior",
+          "auth_quirk",
+          "pagination",
+          "sandbox_divergence",
+          "deprecation",
+          "availability",
+          "schema_drift",
+          "latency_profile"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "MatchedTemplate": {
+        "properties": {
+          "method": {
+            "enum": [
+              "GET",
+              "HEAD",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "OPTIONS"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "path"
+        ],
+        "title": "MatchedTemplate",
+        "type": "object"
+      },
+      "NoneKnown": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "none_known",
+            "title": "Action",
+            "type": "string"
+          },
+          "reason_kind": {
+            "enum": [
+              "vendor_side",
+              "investigating",
+              "by_design"
+            ],
+            "title": "Reason Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "reason_kind"
+        ],
+        "title": "NoneKnown",
+        "type": "object"
+      },
+      "Observed": {
+        "properties": {
+          "last_probe": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Probe"
+          },
+          "p50_latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P50 Latency Ms"
+          },
+          "rate_limit_headers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rate Limit Headers",
+            "type": "array"
+          },
+          "status_distribution_30d": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Share of probe results per HTTP status over 30 days; empty until probes ran.",
+            "title": "Status Distribution 30D",
+            "type": "object"
+          }
+        },
+        "required": [
+          "status_distribution_30d",
+          "p50_latency_ms",
+          "last_probe",
+          "rate_limit_headers"
+        ],
+        "title": "Observed",
+        "type": "object"
+      },
+      "PaginateWith": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "paginate_with",
+            "title": "Action",
+            "type": "string"
+          },
+          "cursor_field": {
+            "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}$",
+            "title": "Cursor Field",
+            "type": "string"
+          },
+          "page_size_max": {
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Page Size Max",
+            "type": "integer"
+          },
+          "param_name": {
+            "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}$",
+            "title": "Param Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "cursor_field",
+          "param_name",
+          "page_size_max"
+        ],
+        "title": "PaginateWith",
+        "type": "object"
+      },
+      "PinSdkVersion": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "pin_sdk_version",
+            "title": "Action",
+            "type": "string"
+          },
+          "constraint": {
+            "pattern": "^[A-Za-z0-9.,<>=!~^*|+-]{1,64}$",
+            "title": "Constraint",
+            "type": "string"
+          },
+          "ecosystem": {
+            "enum": [
+              "pypi",
+              "npm"
+            ],
+            "title": "Ecosystem",
+            "type": "string"
+          },
+          "package": {
+            "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Package",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "package",
+          "ecosystem",
+          "constraint"
+        ],
+        "title": "PinSdkVersion",
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "author": {
+            "pattern": "^(bot|producer:[a-z0-9][a-z0-9-]{0,63}|human:[A-Za-z0-9][A-Za-z0-9-]{0,38})$",
+            "title": "Author",
+            "type": "string"
+          },
+          "created": {
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "title": "Created",
+            "type": "string"
+          },
+          "history": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HistoryEntry"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "required": [
+          "source",
+          "author",
+          "created"
+        ],
+        "title": "Provenance",
+        "type": "object"
+      },
+      "ReducePayload": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "reduce_payload",
+            "title": "Action",
+            "type": "string"
+          },
+          "field": {
+            "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}$",
+            "title": "Field",
+            "type": "string"
+          },
+          "max_bytes": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Bytes"
+          },
+          "max_items": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Items"
+          }
+        },
+        "required": [
+          "action",
+          "field"
+        ],
+        "title": "ReducePayload",
+        "type": "object"
+      },
+      "RegistryInfo": {
+        "properties": {
+          "facts_for_service": {
+            "title": "Facts For Service",
+            "type": "integer"
+          },
+          "license": {
+            "const": "CC-BY-4.0",
+            "title": "License",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "facts_for_service",
+          "license"
+        ],
+        "title": "RegistryInfo",
+        "type": "object"
+      },
+      "RegistryMeta": {
+        "properties": {
+          "license": {
+            "const": "CC-BY-4.0",
+            "title": "License",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "license"
+        ],
+        "title": "RegistryMeta",
+        "type": "object"
+      },
+      "RemoveParam": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "remove_param",
+            "title": "Action",
+            "type": "string"
+          },
+          "location": {
+            "enum": [
+              "query",
+              "body",
+              "header"
+            ],
+            "title": "Location",
+            "type": "string"
+          },
+          "name": {
+            "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "name",
+          "location"
+        ],
+        "title": "RemoveParam",
+        "type": "object"
+      },
+      "RequestScope": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "request_scope",
+            "title": "Action",
+            "type": "string"
+          },
+          "scope": {
+            "pattern": "^[A-Za-z0-9._:/-]{1,128}$",
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "scope"
+        ],
+        "title": "RequestScope",
+        "type": "object"
+      },
+      "RetryAfterHeader": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "retry_after_header",
+            "title": "Action",
+            "type": "string"
+          },
+          "header": {
+            "default": "Retry-After",
+            "pattern": "^[A-Za-z0-9-]{1,128}$",
+            "title": "Header",
+            "type": "string"
+          },
+          "max_attempts": {
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "unit": {
+            "enum": [
+              "s",
+              "ms"
+            ],
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "unit",
+          "max_attempts"
+        ],
+        "title": "RetryAfterHeader",
+        "type": "object"
+      },
+      "SdkContext": {
+        "additionalProperties": false,
+        "properties": {
+          "ecosystem": {
+            "enum": [
+              "pypi",
+              "npm"
+            ],
+            "title": "Ecosystem",
+            "type": "string"
+          },
+          "package": {
+            "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Package",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9.+-]{1,64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "package",
+          "ecosystem"
+        ],
+        "title": "SdkContext",
+        "type": "object"
+      },
+      "SdkRef": {
+        "additionalProperties": false,
+        "properties": {
+          "ecosystem": {
+            "enum": [
+              "pypi",
+              "npm"
+            ],
+            "title": "Ecosystem",
+            "type": "string"
+          },
+          "package": {
+            "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Package",
+            "type": "string"
+          },
+          "versions": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9.,<>=!~^*|+-]{1,64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Versions"
+          }
+        },
+        "required": [
+          "package",
+          "ecosystem"
+        ],
+        "title": "SdkRef",
+        "type": "object"
+      },
+      "ServiceSummary": {
+        "properties": {
+          "facts": {
+            "title": "Facts",
+            "type": "integer"
+          },
+          "hosts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Hosts",
+            "type": "array"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "templates": {
+            "title": "Templates",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "hosts",
+          "templates",
+          "facts"
+        ],
+        "title": "ServiceSummary",
+        "type": "object"
+      },
+      "ServicesResponse": {
+        "properties": {
+          "registry": {
+            "$ref": "#/components/schemas/RegistryMeta"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceSummary"
+            },
+            "title": "Services",
+            "type": "array"
+          }
+        },
+        "required": [
+          "services",
+          "registry"
+        ],
+        "title": "ServicesResponse",
+        "type": "object"
+      },
+      "SetHeader": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "set_header",
+            "title": "Action",
+            "type": "string"
+          },
+          "name": {
+            "pattern": "^[A-Za-z0-9-]{1,128}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "value_source": {
+            "pattern": "^(new_uuid_per_request|new_uuid_per_distinct_request|literal:[A-Za-z0-9._/+=,-]{1,128}|account_setting:[A-Za-z0-9_.-]{1,64})$",
+            "title": "Value Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "name",
+          "value_source"
+        ],
+        "title": "SetHeader",
+        "type": "object"
+      },
+      "SetParam": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "set_param",
+            "title": "Action",
+            "type": "string"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "enum": [
+                  "query",
+                  "body",
+                  "header"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "name": {
+            "pattern": "^[A-Za-z0-9_.\\[\\]*$/-]{1,128}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "value_source": {
+            "pattern": "^(new_uuid_per_request|new_uuid_per_distinct_request|literal:[A-Za-z0-9._/+=,-]{1,128}|account_setting:[A-Za-z0-9_.-]{1,64})$",
+            "title": "Value Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "name",
+          "value_source"
+        ],
+        "title": "SetParam",
+        "type": "object"
+      },
+      "Signal": {
+        "additionalProperties": false,
+        "properties": {
+          "error_code": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_string": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error String"
+          },
+          "normalized": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalized"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "maximum": 599.0,
+                "minimum": 100.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "Signal",
+        "type": "object"
+      },
+      "Source": {
+        "enum": [
+          "probe",
+          "observation_quorum",
+          "producer",
+          "manual"
+        ],
+        "title": "Source",
+        "type": "string"
+      },
+      "Status": {
+        "enum": [
+          "verified:server:prod",
+          "verified:server:sandbox",
+          "verified:client",
+          "reported",
+          "official",
+          "stale",
+          "retracted"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "Surface": {
+        "enum": [
+          "http",
+          "sdk",
+          "cli"
+        ],
+        "title": "Surface",
+        "type": "string"
+      },
+      "SwitchEnv": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "switch_env",
+            "title": "Action",
+            "type": "string"
+          },
+          "reason_kind": {
+            "enum": [
+              "feature_missing",
+              "state_unreachable"
+            ],
+            "title": "Reason Kind",
+            "type": "string"
+          },
+          "to": {
+            "$ref": "#/components/schemas/Env"
+          }
+        },
+        "required": [
+          "action",
+          "to",
+          "reason_kind"
+        ],
+        "title": "SwitchEnv",
+        "type": "object"
+      },
+      "Target": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "anyOf": [
+              {
+                "enum": [
+                  "GET",
+                  "HEAD",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE",
+                  "OPTIONS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "path_template": {
+            "anyOf": [
+              {
+                "pattern": "^/[^\\s?#]{0,255}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Template"
+          },
+          "sdk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SdkRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "surface": {
+            "$ref": "#/components/schemas/Surface"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "Target",
+        "type": "object"
+      },
+      "Unknown": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "no_fact_for_signal",
+                  "unregistered_target",
+                  "signal_not_extractable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why no fact answers the signal; null when facts do.",
+            "title": "Reason"
+          },
+          "stored_as_observation": {
+            "title": "Stored As Observation",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reason",
+          "stored_as_observation"
+        ],
+        "title": "Unknown",
+        "type": "object"
+      },
+      "UpgradeSdk": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "upgrade_sdk",
+            "title": "Action",
+            "type": "string"
+          },
+          "ecosystem": {
+            "enum": [
+              "pypi",
+              "npm"
+            ],
+            "title": "Ecosystem",
+            "type": "string"
+          },
+          "min_version": {
+            "pattern": "^[A-Za-z0-9.+-]{1,64}$",
+            "title": "Min Version",
+            "type": "string"
+          },
+          "package": {
+            "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Package",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "package",
+          "ecosystem",
+          "min_version"
+        ],
+        "title": "UpgradeSdk",
+        "type": "object"
+      },
+      "UseEndpoint": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "use_endpoint",
+            "title": "Action",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "GET",
+              "HEAD",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "OPTIONS"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "path_template": {
+            "pattern": "^/[^\\s?#]{0,255}$",
+            "title": "Path Template",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "path_template"
+        ],
+        "title": "UseEndpoint",
+        "type": "object"
+      },
+      "WaitForState": {
+        "additionalProperties": false,
+        "properties": {
+          "account_state": {
+            "pattern": "^[a-z0-9_-]{1,64}$",
+            "title": "Account State",
+            "type": "string"
+          },
+          "action": {
+            "const": "wait_for_state",
+            "title": "Action",
+            "type": "string"
+          },
+          "typical_delay_s": {
+            "maximum": 2592000.0,
+            "minimum": 0.0,
+            "title": "Typical Delay S",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "action",
+          "account_state",
+          "typical_delay_s"
+        ],
+        "title": "WaitForState",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "summary": "Verified facts about machine interfaces for AI agents (data CC BY 4.0).",
+    "title": "agent-facts",
+    "version": "v0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthz"
+      }
+    },
+    "/v0/check": {
+      "post": {
+        "description": "Facts and typed fixes for a target and (optionally) an observed error. Never empty.\nA target outside the registered templates is answered but not stored.",
+        "operationId": "check_v0_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Check"
+      }
+    },
+    "/v0/facts/{service}": {
+      "get": {
+        "operationId": "facts_v0_facts__service__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service",
+            "required": true,
+            "schema": {
+              "title": "Service",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Facts"
+      }
+    },
+    "/v0/facts/{service}/{slug}": {
+      "get": {
+        "operationId": "fact_v0_facts__service___slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service",
+            "required": true,
+            "schema": {
+              "title": "Service",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Fact"
+      }
+    },
+    "/v0/services": {
+      "get": {
+        "operationId": "services_v0_services_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Services"
+      }
+    }
+  }
+}

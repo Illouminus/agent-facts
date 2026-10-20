@@ -23,3 +23,7 @@ coverage/
 # local scratch
 .DS_Store
 tmp/
+
+# check() API state (never in git)
+observations.sqlite
+observations.sqlite-*
