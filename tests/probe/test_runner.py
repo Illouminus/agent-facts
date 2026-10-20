@@ -84,6 +84,7 @@ def test_two_step_probe_with_reference_and_sleep_confirms_the_fact(repo, httpser
         line)
     assert (line["probe_id"], line["vantage"], line["env"], line["outcome"]) == (
         "af:acme:probe:items-list", "illouminus", "sandbox", "pass")
+    assert line["selection"] == "due"
     assert line["started"] == "2026-10-20T10:00:00Z"
     assert [s["do"] for s in line["steps"]] == ["http", "sleep", "http"]
     first, _, third = line["steps"]
@@ -265,6 +266,8 @@ def test_budget_between_ticks_and_run_all(repo, httpserver):
     clock.advance(300)
     assert outcomes(tick(repo, httpserver, clock=clock)) == {"items-list": "pass"}
     assert len(httpserver.log) == 3
+    # the digest tells a budget violation from a deliberate --all by this field
+    assert [r["selection"] for r in repo.results()] == ["due", "all", "due"]
 
 
 def test_service_budget_override(repo, httpserver):

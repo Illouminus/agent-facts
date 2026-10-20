@@ -3,7 +3,10 @@
 Configuration (environment, read at startup): `AGENTFACTS_REPO` (registry checkout, default `.`),
 `AGENTFACTS_DB` (sqlite file, default `observations.sqlite`), `AGENTFACTS_TRUSTED_PROXIES`
 (comma-separated IPs/CIDRs whose `X-Forwarded-For` is believed, default `127.0.0.1,::1`),
-`AGENTFACTS_REGISTRY_VERSION` (overrides the version derived from the facts).
+`AGENTFACTS_REGISTRY_VERSION` (overrides the version derived from the facts), `AGENTFACTS_RESULTS`
+(the probe runner's results.jsonl for `/healthz`, default `<repo>/var/results.jsonl`).
+
+The facts index is read once, at startup: a new registry needs a restart (`ops/deploy.sh` does it).
 
 One process: rate limits live in memory and the store is one sqlite connection.
 """
@@ -27,6 +30,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from agentfacts.api.facts_index import FactsIndex, IndexedFact, ServiceEntry, Template
+from agentfacts.api.health import last_probe_run
 from agentfacts.api.match import (
     HostTarget,
     Locator,
@@ -85,6 +89,7 @@ class _State:
     daily_cap: int
     trusted_proxies: tuple[Network, ...]
     utcnow: Callable[[], datetime]
+    results: Path
 
 
 def _state(request: Request) -> _State:
@@ -364,6 +369,7 @@ def create_app(
     repo: str | Path | None = None,
     db_path: str | Path | None = None,
     *,
+    results_path: str | Path | None = None,
     per_net: int = 60,
     global_limit: int = 600,
     daily_cap: int = DAILY_CAP,
@@ -385,6 +391,11 @@ def create_app(
             daily_cap=daily_cap,
             trusted_proxies=trusted,
             utcnow=utcnow or (lambda: datetime.now(UTC)),
+            results=Path(
+                results_path
+                or os.environ.get("AGENTFACTS_RESULTS")
+                or root / "var" / "results.jsonl"
+            ),
         )
         try:
             yield
@@ -455,8 +466,12 @@ def create_app(
 
     @app.get("/healthz", response_model=Health)
     def healthz(request: Request) -> dict[str, Any]:
-        index = _state(request).index
-        return {"ok": True, "registry_version": index.version, "probes_last_run": None}
+        state = _state(request)
+        return {
+            "ok": True,
+            "registry_version": state.index.version,
+            "probes_last_run": last_probe_run(state.results),
+        }
 
     return app
 

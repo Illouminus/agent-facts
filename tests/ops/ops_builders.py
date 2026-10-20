@@ -90,14 +90,19 @@ def run_record(
     method: str = "GET",
     vantage: str = "illouminus",
     detail: str | None = None,
+    selection: str | None = "due",
 ) -> dict[str, Any]:
+    """`selection=None` writes a record of the runner before 20.10.2026 (no such field)."""
     steps = []
     if outcome in ("pass", "fail", "error"):
         steps = [{"step": 1, "do": "http", "method": method, "path": "/v1/customers/x",
                   "template": template, "status": 200}]
-    return {"probe_id": probe_id, "service": "stripe", "vantage": vantage, "env": "prod",
-            "started": started, "outcome": outcome, "detail": detail, "steps": steps,
-            "asserts": []}
+    record = {"probe_id": probe_id, "service": "stripe", "vantage": vantage, "env": "prod",
+              "started": started, "outcome": outcome, "detail": detail, "steps": steps,
+              "asserts": []}
+    if selection is not None:
+        record["selection"] = selection
+    return record
 
 
 def make_db(path: Path, observations: list[dict[str, Any]], counters: list[tuple[str, str, int]]):

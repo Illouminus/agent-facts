@@ -4,6 +4,7 @@ Fixtures only: no network except a local fake of the Telegram gateway, no VPS.
 """
 
 import json
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -139,6 +140,22 @@ def test_budget_violation_is_two_runs_on_one_template_closer_than_the_budget(reg
     ])
     m = digest.probe_metrics(path, services_of(registry), WEEK43)
     assert m.budget_violations == 1
+    assert m.violation_keys == ("stripe GET /v1/customers/{id} @illouminus",)
+    assert m.budget_bypassed == 0
+
+
+def test_run_all_is_not_a_budget_violation(registry, tmp_path):
+    # 20.10.2026: the first `probe run --all` (30 probes, seconds apart on shared templates) printed
+    # «нарушений бюджета 20»; --all skips the budget by design, a --due tick never pairs like that.
+    path = write_results(tmp_path / "results.jsonl", [
+        run_record("2026-10-20T13:57:57Z", probe_id="af:stripe:probe:a", selection="all"),
+        run_record("2026-10-20T13:57:58Z", probe_id="af:stripe:probe:b", selection="all"),
+        run_record("2026-10-20T13:57:59Z", probe_id="af:stripe:probe:c", selection=None),  # legacy
+        run_record("2026-10-20T14:01:00Z", probe_id="af:stripe:probe:a"),  # due after --all: real
+        run_record("2026-10-20T14:15:00Z", probe_id="af:stripe:probe:b"),  # due, 14 min: fine
+    ])
+    m = digest.probe_metrics(path, services_of(registry), WEEK43)
+    assert (m.budget_violations, m.budget_bypassed) == (1, 2)
     assert m.violation_keys == ("stripe GET /v1/customers/{id} @illouminus",)
 
 
@@ -277,6 +294,12 @@ def test_report_is_deterministic(registry, week):
                          db=registry.root / "var" / "observations.sqlite",
                          policy_path=REPO / "ops" / "publish-policy.yaml")
     assert digest.render_report(again) == digest.render_report(week)
+
+
+def test_ping_names_run_all_pairs_apart_from_violations(week):
+    p = replace(week.probes, budget_violations=0, budget_bypassed=20)
+    line = digest._probes_line(replace(week, probes=p))
+    assert "нарушений бюджета 0 (+20 вне бюджета по --all)" in line
 
 
 def test_ping_is_5_to_8_lines_with_the_report_link(week):

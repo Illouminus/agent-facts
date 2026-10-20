@@ -55,6 +55,12 @@ Over ssh only a sha ahead of the deployed one is accepted (no downgrade with a l
 hand: `~/apps/agent-facts/ops/deploy.sh <40-hex sha on origin/main>`, any sha on main, so this is
 also the rollback. Exit 1 = rolled back (prod alive on the old sha), 3 = rollback failed too.
 
+The API loads `facts/` and `services/` only at startup. A bare `git pull` / `git checkout` in
+`~/apps/agent-facts` leaves it answering from the old registry until `systemctl --user restart
+agentfacts-api` — `deploy.sh` always restarts, so prefer it. `/healthz` → `registry_version` shows
+which registry is served; `probes_last_run` is read from `var/results.jsonl` on each call (no
+restart needed after a probe tick).
+
 The probe runner rewrites evidence in `facts/` in place; until the W4 bot publishes those edits,
 `deploy.sh` carries them across checkouts as a patch, and parks a patch that no longer applies in
 `var/deploy/` instead of dropping it.

@@ -146,14 +146,19 @@ class ProbeMetrics:
     missing_keys: tuple[str, ...] = ()
     budget_violations: int = 0
     violation_keys: tuple[str, ...] = ()
+    budget_bypassed: int = 0
     bad_lines: int = 0
     last_run: str | None = None
 
 
 def probe_metrics(path: Path, services: Iterable[Service], window: Window) -> ProbeMetrics:
-    """Runs in the window from results.jsonl. A budget violation = two runs that hit one
-    (service, method, template, vantage) closer than the service's per-template budget
-    (invariant 6; `probe run --all` ignores that budget by design, so a manual --all shows here)."""
+    """Runs in the window from results.jsonl. Two runs that hit one (service, method, template,
+    vantage) closer than the service's per-template budget (invariant 6) are a budget violation
+    when the later one was selected as due (`selection: due`): the runner promised the budget
+    there. When the later one came from `probe run --all`, which ignores budgets by design, the
+    pair is `budget_bypassed` instead. A record without `selection` (runner before 20.10.2026)
+    counts as bypassed: a --due tick of that runner already refused such a pair at selection, so
+    only --all could write it."""
     if not path.is_file():
         return ProbeMetrics(available=False)
     budget = {s.key: s.probe_budget.per_template_seconds for s in services}
@@ -161,7 +166,7 @@ def probe_metrics(path: Path, services: Iterable[Service], window: Window) -> Pr
     vantages: Counter[str] = Counter()
     probes: set[str] = set()
     keys: set[str] = set()
-    hits: defaultdict[tuple[str, str, str, str], list[datetime]] = defaultdict(list)
+    hits: defaultdict[tuple[str, str, str, str], list[tuple[datetime, bool]]] = defaultdict(list)
     bad = 0
     last: datetime | None = None
     with path.open(encoding="utf-8") as fh:
@@ -193,17 +198,22 @@ def probe_metrics(path: Path, services: Iterable[Service], window: Window) -> Pr
             used = {(service, str(s.get("method")), str(s.get("template")), vantage)
                     for s in record.get("steps") or ()
                     if s.get("do") == "http" and s.get("template") and not s.get("refused")}
+            due = record.get("selection") == "due"
             for key in used:
-                hits[key].append(started)
-    violations = 0
+                hits[key].append((started, due))
+    violations = bypassed = 0
     violated: set[str] = set()
     for key, moments in hits.items():
-        moments.sort()
+        moments.sort(key=lambda m: m[0])
         limit = budget.get(key[0], DEFAULT_BUDGET_S)
-        for earlier, later in zip(moments, moments[1:], strict=False):
-            if (later - earlier).total_seconds() < limit:
+        for (earlier, _), (later, due) in zip(moments, moments[1:], strict=False):
+            if (later - earlier).total_seconds() >= limit:
+                continue
+            if due:
                 violations += 1
                 violated.add(f"{key[0]} {key[1]} {key[2]} @{key[3]}")
+            else:
+                bypassed += 1
     return ProbeMetrics(
         available=True,
         outcomes=dict(sorted(outcomes.items())),
@@ -213,6 +223,7 @@ def probe_metrics(path: Path, services: Iterable[Service], window: Window) -> Pr
         missing_keys=tuple(sorted(keys)),
         budget_violations=violations,
         violation_keys=tuple(sorted(violated)),
+        budget_bypassed=bypassed,
         bad_lines=bad,
         last_run=last.strftime("%Y-%m-%dT%H:%M:%SZ") if last else None,
     )
@@ -422,8 +433,9 @@ def _probes_line(d: Digest) -> str:
         return "пробы: нет var/results.jsonl"
     split = ", ".join(f"{p.outcomes.get(o, 0)} {o}" for o in RUN_OUTCOMES if p.outcomes.get(o))
     keys = ", ".join(p.missing_keys) or "—"
+    bypassed = f" (+{p.budget_bypassed} вне бюджета по --all)" if p.budget_bypassed else ""
     return (f"пробы: {p.runs} прогонов ({split or '—'}) · нарушений бюджета "
-            f"{p.budget_violations} · ключей нет: {keys}")
+            f"{p.budget_violations}{bypassed} · ключей нет: {keys}")
 
 
 def _check_line(d: Digest) -> str:
@@ -502,8 +514,11 @@ def render_report(d: Digest) -> str:
         split = ", ".join(f"{k} {v}" for k, v in p.outcomes.items()) or "—"
         out += [
             f"- прогонов {p.runs} ({p.probes} проб): {split}",
-            f"- нарушений бюджета (два прогона на шаблон ближе бюджета): {p.budget_violations}"
+            f"- нарушений бюджета (два прогона на шаблон ближе бюджета, второй — плановый --due): "
+            f"{p.budget_violations}"
             + (f" — {'; '.join(p.violation_keys)}" if p.violation_keys else ""),
+            f"- пар ближе бюджета от ручного `probe run --all` (бюджет не проверяет намеренно; "
+            f"записи без поля selection считаются здесь же): {p.budget_bypassed}",
             f"- ключей нет (skipped:no_key): {', '.join(p.missing_keys) or '—'}",
             "- vantage: " + (", ".join(f"{k} {v}" for k, v in p.vantages.items()) or "—"),
             f"- последний прогон: {p.last_run or '—'}",
