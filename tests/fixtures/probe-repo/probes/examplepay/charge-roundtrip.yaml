@@ -1,0 +1,12 @@
+id: af:examplepay:probe:charge-roundtrip
+service: examplepay
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/charges, form: {amount: 100, currency: eur}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+  - {do: sleep, seconds: 1}
+  - {do: http, method: GET, path: "/v1/charges/{{step[1].json.id}}"}
+assert:
+  - {step: 1, status: 200}
+  - {step: 3, status: 200}
+  - {step: 3, json_path: $.amount, equals: 100}
+  - {step: 3, body_contains: "eur"}

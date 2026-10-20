@@ -5,8 +5,8 @@ Every problem prints as `file:line: code message`. Schema codes come from the sc
 `fixes[]`), else `schema_<keyword>`. Cross-document codes: duplicate_id, id_mismatch,
 unknown_service, unknown_probe, unknown_step, unregistered_template, foreign_url,
 unknown_account_state, env_not_offered, auth_env_mismatch, forbidden_header,
-prod_probe_not_readonly. Cross-document rules run only on documents that passed their schema, so
-one mistake gives one problem.
+prod_probe_not_readonly, key_not_bound, foreign_env_url. Cross-document rules run only on documents
+that passed their schema, so one mistake gives one problem.
 """
 
 from collections.abc import Iterable, Mapping, Sequence
@@ -19,7 +19,12 @@ from ruamel.yaml.error import MarkedYAMLError, YAMLError
 
 from agentfacts.schema import validator_for
 from agentfacts.schema.models import http_step_violations
-from agentfacts.schema.registry import Registry, ServiceInfo, on_vendor_domain
+from agentfacts.schema.registry import (
+    Registry,
+    ServiceInfo,
+    key_bound_to_service,
+    on_vendor_domain,
+)
 from agentfacts.schema.yamlio import line_of, load_yaml, plain
 
 DocType = Literal["service", "fact", "probe"]
@@ -243,9 +248,26 @@ def _location_mismatch(doc: _Doc, folder: str, service: str, slug: str) -> str |
 
 
 def _service_checks(doc: _Doc, registry: Registry) -> list[Problem]:
-    key = doc.data["key"]
-    mismatch = _location_mismatch(doc, "services", key, key)
-    return [doc.problem(["key"], "id_mismatch", mismatch)] if mismatch else []
+    data = doc.data
+    key = data["key"]
+    problems = []
+    if mismatch := _location_mismatch(doc, "services", key, key):
+        problems.append(doc.problem(["key"], "id_mismatch", mismatch))
+    # Where the probe runner may send a key: only the service's own hosts, only its own key.
+    urls: list[tuple[list[str | int], str]] = [
+        (["dimensions", "env", env], url) for env, url in data["dimensions"]["env"].items()
+    ]
+    if (http := data["surfaces"].get("http")) is not None:
+        urls.append((["surfaces", "http", "base_url"], http["base_url"]))
+    for path, url in urls:
+        if not on_vendor_domain(url, data["hosts"]):
+            message = f"{url} is not on {key}'s hosts ({', '.join(data['hosts'])})"
+            problems.append(doc.problem(path, "foreign_env_url", message))
+    auth = data.get("auth") or {}
+    if (name := auth.get("key_name")) and not key_bound_to_service(name, key):
+        message = f"key {name} is not named after the service ({key}, {key}-…, {key}_…)"
+        problems.append(doc.problem(["auth", "key_name"], "key_not_bound", message))
+    return problems
 
 
 def _service_of(doc: _Doc, registry: Registry) -> tuple[ServiceInfo | None, list[Problem]]:

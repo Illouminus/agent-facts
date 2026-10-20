@@ -1,0 +1,22 @@
+key: examplepay
+name: ExamplePay (fixture)
+hosts: [api.examplepay.com]
+surfaces:
+  http:
+    base_url: https://api.examplepay.com
+    templates:
+      - {method: POST, path: /v1/charges}
+      - {method: GET, path: "/v1/charges/{id}"}
+    signal_fields: [status, error.code, error.message, idempotent-replayed]
+dimensions:
+  env: {sandbox: https://api.examplepay.com}
+  account_state: [active, test_mode]
+auth:
+  kind: bearer
+  key_name: examplepay-fixture   # never present: its probes are skipped:no_key
+  env: sandbox
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://examplepay.com/terms
+probe_budget: {per_template_seconds: 600}

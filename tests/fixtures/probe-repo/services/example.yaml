@@ -1,0 +1,18 @@
+key: example
+name: Example (fixture)
+hosts: [api.example.com]
+surfaces:
+  http:
+    base_url: https://api.example.com
+    templates:
+      - {method: GET, path: /v1/status}
+      - {method: GET, path: "/v1/items/{id}"}
+    signal_fields: [status, error.code, retry-after]
+dimensions:
+  env: {prod: https://api.example.com}
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://example.com/terms
+probe_budget: {per_template_seconds: 300}

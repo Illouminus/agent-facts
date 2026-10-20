@@ -1,0 +1,21 @@
+id: af:example:item-missing-404
+service: example
+kind: error_meaning
+target: {surface: http, method: GET, path_template: "/v1/items/{id}"}
+signal: {status: 404, error_code: not_found}
+claim: GET /v1/items/{id} for an unknown id returns HTTP 404 with error.code not_found.
+dimensions: {env: prod, plan: any, region: any, account_state: any}
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:example:probe:item-missing
+  first_seen: 2026-10-20T09:00:00Z
+  last_confirmed: 2026-10-20T09:00:00Z
+  confirmations: 1
+  vantages: [illouminus]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]
