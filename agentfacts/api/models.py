@@ -53,8 +53,8 @@ class CheckContext(_Request):
 
 
 class CheckRequest(_Request):
-    """Request = contribution: if `target` matches a registered template, a normalized
-    observation is stored (no body, headers, query or raw IP)."""
+    """Request = contribution: if `target` matches a registered template and `error` carries a
+    signal, a normalized observation is stored (no body, headers, query or raw IP)."""
 
     target: CheckTarget
     error: CheckError | None = None

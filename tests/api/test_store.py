@@ -1,4 +1,4 @@
-"""sqlite store: observation rows exactly as spec 01, daily salt, anonymous counters."""
+"""sqlite store: observation rows exactly as spec 01, weekly salt, anonymous counters."""
 
 import sqlite3
 
@@ -23,6 +23,8 @@ ROW = {
     "vantage_country": None,
 }
 DAY = "2026-10-20"
+PERIOD = "2026-10-19"  # the Monday of DAY's week
+NEXT = "2026-10-26"
 
 
 @pytest.fixture
@@ -76,28 +78,28 @@ def test_daily_cap_drops_beyond_the_limit(store):
     assert store.count() == 4
 
 
-def test_salt_is_stable_within_a_day_and_rotates_at_utc_midnight(store):
-    first = store.daily_salt(DAY)
+def test_salt_is_stable_within_a_period_and_rotates_with_the_next(store):
+    first = store.period_salt(PERIOD)
     assert len(first) == 32
-    assert store.daily_salt(DAY) == first
-    second = store.daily_salt("2026-10-21")
+    assert store.period_salt(PERIOD) == first
+    second = store.period_salt(NEXT)
     assert second != first
-    days = [r[0] for r in store.connection.execute("SELECT day FROM salts")]
-    assert days == ["2026-10-21"]  # yesterday's salt is gone: its hashes cannot be recomputed
+    periods = [r[0] for r in store.connection.execute("SELECT day FROM salts")]
+    assert periods == [NEXT]  # last week's salt is gone: its hashes cannot be recomputed
 
 
-def test_late_request_for_yesterday_keeps_todays_salt(store):
-    today = store.daily_salt("2026-10-21")
-    store.daily_salt(DAY)  # a request whose clock read 23:59:59.999 the day before
-    assert store.daily_salt("2026-10-21") == today
+def test_late_request_for_last_period_keeps_this_periods_salt(store):
+    current = store.period_salt(NEXT)
+    store.period_salt(PERIOD)  # a request whose clock read Sunday 23:59:59.999
+    assert store.period_salt(NEXT) == current
 
 
 def test_salt_survives_a_restart(tmp_path):
     a = Store(tmp_path / "o.sqlite")
-    salt = a.daily_salt(DAY)
+    salt = a.period_salt(PERIOD)
     a.close()
     b = Store(tmp_path / "o.sqlite")
-    assert b.daily_salt(DAY) == salt
+    assert b.period_salt(PERIOD) == salt
     b.close()
 
 

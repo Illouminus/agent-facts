@@ -207,7 +207,14 @@ def test_non_whitelisted_fields_are_ignored():
     body = '{"error": {"code": "x"}, "message": "top"}'
     s = extract_signal(400, body, ("error.message",))
     assert s.error_code is None
-    assert s.raw_string == body  # no whitelisted message → first line of the excerpt
+    assert s.raw_string is None  # JSON without a whitelisted message: status only (Q4)
+
+
+def test_bare_field_is_a_top_level_body_key():
+    body = '{"message": "Not Found", "documentation_url": "https://docs.github.com/x",' \
+        ' "status": "404"}'
+    s = extract_signal(404, body, ("status", "message", "x-ratelimit-limit"))
+    assert (s.raw_string, s.normalized, s.error_code) == ("Not Found", "not found", None)
 
 
 def test_falls_back_to_first_non_empty_line():

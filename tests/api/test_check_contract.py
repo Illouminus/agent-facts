@@ -83,7 +83,7 @@ def test_stored_row_is_normalized_and_anonymous(client, db_path):
     }
 
 
-def test_same_network_same_day_same_reporter_hash(make_client, db_path):
+def test_same_network_same_period_same_reporter_hash(make_client, db_path):
     a = make_client(peer=("203.0.113.7", 1))
     b = make_client(peer=("203.0.200.9", 2))  # same /16
     c = make_client(peer=("198.51.100.1", 3))
@@ -127,8 +127,9 @@ def test_service_level_fallback_is_no_fact_for_signal(client):
 def test_signal_not_extractable(client, rows):
     body = check(client, {"target": {"method": "POST", "url": STRIPE_PI},
                           "error": {"body_excerpt": "   \n  "}}).json()
-    assert body["unknown"]["reason"] == "signal_not_extractable"
+    assert body["unknown"] == {"reason": "signal_not_extractable", "stored_as_observation": False}
     assert ids(body) == ["af:stripe:payment-intents-429"]
+    assert rows() == 0
 
 
 def test_registered_service_without_facts_still_answers(client, rows):
@@ -147,8 +148,8 @@ def test_preflight_url_lists_template_and_service_facts(client, rows):
     body = check(client, {"target": {"method": "GET",
                                      "url": "https://api.stripe.com/v1/customers/cus_1"}}).json()
     assert ids(body) == ["af:stripe:customer-not-found", "af:stripe:payment-intents-429"]
-    assert body["unknown"] == {"reason": None, "stored_as_observation": True}
-    assert rows() == 1
+    assert body["unknown"] == {"reason": None, "stored_as_observation": False}  # Q5
+    assert rows() == 0
 
 
 def test_preflight_bare_host(client, rows):

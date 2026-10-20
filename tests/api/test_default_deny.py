@@ -1,5 +1,5 @@
 """Default-deny ingestion (spec 03 step 1, invariant 3): an unregistered target is answered, never
-stored; only one anonymous counter moves."""
+stored; only the anonymous counter moves, labelled with a seed candidate's host or `other`."""
 
 import pytest
 from api_fixtures import STRIPE_PI
@@ -35,7 +35,10 @@ def test_unregistered_target_is_answered_but_not_stored(client, rows, counters, 
     assert body["unknown"] == {"reason": "unregistered_target", "stored_as_observation": False}
     assert body["registry"]["license"] == "CC-BY-4.0"
     assert rows() == 0
-    assert counters() == {"unregistered_target": 1}
+    assert counters().get("unregistered_target") == 1
+    labels = [name for name in counters() if name.startswith("unregistered_target:")]
+    assert len(labels) == 1 and counters()[labels[0]] == 1
+    assert set(counters()) == {"unregistered_target", labels[0]}
 
 
 def test_unregistered_path_on_known_host_still_gets_service_facts(client, rows):
@@ -51,17 +54,18 @@ def test_unregistered_path_on_known_host_still_gets_service_facts(client, rows):
 def test_unknown_host_names_nothing(client, db_path):
     body = client.post(
         "/v0/check",
-        json={"target": {"method": "GET", "url": "https://api.notion.com/v1/secret-project"}},
+        json={"target": {"method": "GET", "url": "https://api.acme-corp.example/v1/secret-project"}},
     ).json()
     assert body["service"] is None and body["facts"] == []
     assert body["registry"]["facts_for_service"] == 0
-    assert b"notion" not in db_path.read_bytes()
+    assert b"acme" not in db_path.read_bytes()  # not a seed candidate: counted as `other`
     assert b"secret-project" not in db_path.read_bytes()
 
 
 def test_query_string_of_a_registered_target_is_never_stored(client, db_path, rows):
     url = STRIPE_PI + "?client_secret=pi_123_secret_456&expand=customer"
-    client.post("/v0/check", json={"target": {"method": "POST", "url": url}})
+    client.post("/v0/check", json={"target": {"method": "POST", "url": url},
+                                   "error": {"status": 400}})
     assert rows() == 1
     data = db_path.read_bytes()
     assert b"client_secret" not in data and b"expand" not in data

@@ -67,9 +67,11 @@ _AUTH_SCHEME = re.compile(
     r"(?:(?=\S*[0-9])[A-Za-z0-9._~+/=-]{8,}|[A-Za-z0-9._~+/=-]{16,})"
 )
 
+# Spec 03 step 7 (Q2): `disregard … previous` allows up to three words in between ("disregard
+# your previous instructions"); `ignore` takes only all/any/the, as listed.
 _PROMPT_MARKERS = re.compile(
     r"ignore (?:all |any |the )*(?:previous|prior|above)"
-    r"|disregard (?:all |any |the )*(?:previous|prior|above)"
+    r"|disregard(?: \S+){0,3}? (?:previous|prior|above)"
     r"|\bsystem\s*:|\bassistant\s*:|<\|im_(?:start|end)\|>|\[/?inst\]"
 )
 
@@ -158,11 +160,15 @@ def _is_error_code(value: str) -> bool:
 
 
 def _path(field: str) -> list[str] | None:
-    """A `signal_fields` entry as path segments: JSON pointer (`/a/b`) or dotted (`a.b`).
-    A bare name without a dot is a header or the HTTP status, not a body field."""
+    """A `signal_fields` entry as path segments: JSON pointer (`/a/b`), dotted (`a.b`), or a bare
+    name, which is a top-level body key (`message` for GitHub and PyPI) when the body is JSON; a
+    check() request carries no response headers, so a header name simply finds nothing. Bare
+    `status` is the HTTP status, never a body field."""
     if field.startswith("/"):
         return [p.replace("~1", "/").replace("~0", "~") for p in field[1:].split("/")]
-    return field.split(".") if "." in field else None
+    if field == "status":
+        return None
+    return field.split(".")
 
 
 def _lookup(data: Any, path: list[str]) -> Any:
@@ -173,9 +179,17 @@ def _lookup(data: Any, path: list[str]) -> Any:
     return data
 
 
+def _json_shaped(excerpt: str) -> bool:
+    """A JSON object or array, complete or cut short by the 2 KB excerpt (spec 03 step 2, Q4).
+    `[` must open an object, array or string, so a bracketed log prefix (`[ERROR] …`,
+    `[2026-10-20] …`) stays text; the price is that a bare array of numbers does too."""
+    text = excerpt.lstrip()
+    if text.startswith("{"):
+        return True
+    return text.startswith("[") and text[1:].lstrip()[:1] in ("{", "[", '"', "]", "")
+
+
 def _json_body(excerpt: str) -> Any:
-    if not excerpt.lstrip().startswith(("{", "[")):
-        return None
     try:
         return json.loads(excerpt)
     except ValueError:
@@ -190,9 +204,11 @@ def extract_signal(
     status: int | None, body_excerpt: str | None, signal_fields: Iterable[str]
 ) -> ExtractedSignal:
     """Spec 03 step 2: status; vendor code and message through the service's whitelist; error
-    string = first whitelisted message field, else the first line of the excerpt."""
+    string = first whitelisted message field. A JSON (or truncated JSON) body without one yields
+    no string, only the status (Q4); any other body falls back to its first line."""
     excerpt = (body_excerpt or "")[:MAX_EXCERPT]
-    data = _json_body(excerpt)
+    json_shaped = _json_shaped(excerpt)
+    data = _json_body(excerpt) if json_shaped else None
     code: str | None = None
     message: str | None = None
     for field in signal_fields:
@@ -209,7 +225,7 @@ def extract_signal(
                     code = candidate
         elif message is None and leaf in _MESSAGE_LEAVES and isinstance(value, str):
             message = value.strip() or None
-    raw = message or _first_line(excerpt)
+    raw = message if json_shaped else _first_line(excerpt)
     normalized = normalize(raw) if raw else None
     normalized = normalized or None
     return ExtractedSignal(
