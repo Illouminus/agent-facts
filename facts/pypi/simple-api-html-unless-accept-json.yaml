@@ -1,0 +1,27 @@
+id: af:pypi:simple-api-html-unless-accept-json
+service: pypi
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/simple/{project}/"
+claim: "GET /simple/{project}/ returns HTML unless Accept asks for application/vnd.pypi.simple.v1+json; the JSON form has name, versions and meta._last-serial, and Vary lists Accept."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Accept, value_source: "literal:application/vnd.pypi.simple.v1+json"}
+status: verified:server:prod
+evidence:
+  probe: af:pypi:probe:simple-content-negotiation
+  first_seen: 2026-10-20T09:06:08Z
+  confirmations: 1
+  official_url: https://docs.pypi.org/api/index-api/
+  last_confirmed: 2026-10-20T09:06:08Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

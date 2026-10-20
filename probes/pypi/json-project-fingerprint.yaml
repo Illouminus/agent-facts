@@ -1,0 +1,11 @@
+# Drift detector: sha256 of the sorted top-level keys of /pypi/<project>/json
+# (info, last_serial, ownership, releases, urls, vulnerabilities on 2026-10-20).
+id: af:pypi:probe:json-project-fingerprint
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /pypi/sampleproject/json}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, schema_fingerprint: f2ea8b7e27a470cfb5c8d16041b8d069c758cd02b7b2e54405e27ceed2a7653e}

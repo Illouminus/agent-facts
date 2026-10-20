@@ -1,0 +1,22 @@
+id: af:pypi:xml-rpc-planned-deprecation
+service: pypi
+kind: deprecation
+target:
+  surface: http
+  method: POST
+  path_template: /pypi
+claim: "The XML-RPC API is planned for deprecation and may be rate limited; no new integration should use it, and existing consumers should move to the JSON, RSS or Index APIs."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: use_endpoint, method: GET, path_template: "/pypi/{project}/json"}
+status: official
+evidence:
+  first_seen: 2026-10-20T09:15:00Z
+  official_url: https://docs.pypi.org/api/#api-preference
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

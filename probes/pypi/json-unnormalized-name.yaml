@@ -1,0 +1,10 @@
+# /pypi/<name>/json answers a non-normalized name directly (no redirect), unlike /simple/.
+id: af:pypi:probe:json-unnormalized-name
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /pypi/Typing_Extensions/json}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.info.name, equals: typing-extensions}

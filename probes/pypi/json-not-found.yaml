@@ -1,0 +1,12 @@
+id: af:pypi:probe:json-not-found
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /pypi/agent-facts-probe-no-such-project/json}
+  - {do: http, method: GET, path: /pypi/requests/0.0.0.999/json}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.message, equals: Not Found}
+  - {step: 2, status: 404}
+  - {step: 2, json_path: $.message, equals: Not Found}

@@ -1,0 +1,16 @@
+id: af:pypi:probe:json-project
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /pypi/requests/json}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, header: Cache-Control, matches: "max-age=900"}
+  - {step: 1, header: X-PyPI-Last-Serial, matches: "^[0-9]+$"}
+  - {step: 1, header: ETag, present: true}
+  - {step: 1, json_path: $.info.name, equals: requests}
+  - {step: 1, json_path: $.info.downloads.last_day, equals: -1}
+  - {step: 1, json_path: $.info.downloads.last_month, equals: -1}
+  - {step: 1, json_path: $.info.bugtrack_url, equals: null}
+  - {step: 1, json_path: $.releases, exists: true}

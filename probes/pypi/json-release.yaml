@@ -1,0 +1,11 @@
+id: af:pypi:probe:json-release
+service: pypi
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /pypi/requests/2.31.0/json}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.info.version, equals: 2.31.0}
+  - {step: 1, json_path: $.urls, exists: true}
+  - {step: 1, json_path: $.releases, exists: false}

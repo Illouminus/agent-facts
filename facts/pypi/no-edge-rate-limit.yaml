@@ -1,0 +1,22 @@
+id: af:pypi:no-edge-rate-limit
+service: pypi
+kind: rate_limit
+target:
+  surface: http
+  method: GET
+  path_template: "/pypi/{project}/json"
+claim: "PyPI's JSON, RSS and Index APIs are not rate limited at the edge because of heavy CDN caching, but PyPI may prohibit a consumer for irresponsible activity."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: set_header, name: User-Agent, value_source: "account_setting:contact_identifying_user_agent"}
+status: official
+evidence:
+  first_seen: 2026-10-20T09:15:00Z
+  official_url: https://docs.pypi.org/api/#rate-limiting
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]
