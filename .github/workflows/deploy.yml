@@ -1,0 +1,45 @@
+# Merge = deployed (spec 08, W8). After CI succeeds on a push to main, ssh the commit sha to a
+# forced command on illouminus; the host checks the sha is on origin/main and ahead of the deployed
+# one, then runs ops/deploy.sh (checkout, uv sync, restart, /healthz, rollback on failure).
+# One short job, no checkout, no third-party action (D-076: Actions minutes are paid).
+# Secrets: VPS_SSH_KEY (forced-command key, can only deploy), VPS_SSH_KNOWN_HOSTS (pinned host
+# key), VPS_HOST, VPS_PORT (public OpenSSH port; Tailscale SSH ignores authorized_keys), VPS_USER.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Deploy the sha on illouminus (ops/deploy.sh via forced command)
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          SHA: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -F /dev/null -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o BatchMode=yes -o ConnectTimeout=20 \
+            -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "$SHA"
