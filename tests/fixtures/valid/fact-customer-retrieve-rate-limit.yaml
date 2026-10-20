@@ -1,0 +1,28 @@
+# reported: quorum of observations met, no probe yet (yellow badge on the page).
+id: af:stripe:customer-retrieve-rate-limit
+service: stripe
+kind: rate_limit
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/customers/{id}"
+signal:
+  status: 429
+  error_code: rate_limit
+  error_string: "Too many requests hit the API too quickly. We recommend an exponential backoff of your requests."
+  normalized: "too many requests hit the api too quickly. we recommend an exponential backoff of your requests."
+claim: >
+  Bursts of customer retrievals return HTTP 429 rate_limit before the documented global rate is reached.
+dimensions:
+  env: prod
+fixes:
+  - {action: backoff_exponential, base_ms: 500, factor: 2, max_ms: 8000, max_attempts: 5, jitter: true}
+status: reported
+evidence:
+  first_seen: 2026-10-26T10:00:00Z
+  last_confirmed: 2026-10-28T10:00:00Z
+  observations: 5
+provenance:
+  source: observation_quorum
+  author: bot
+  created: 2026-10-26

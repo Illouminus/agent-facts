@@ -1,0 +1,28 @@
+# reported, last quorum refresh more than 30 days before the registry version: kept in git, no page.
+id: af:stripe:payment-intent-lock-timeout
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /v1/payment_intents
+signal:
+  status: 429
+  error_code: lock_timeout
+  error_string: "This object cannot be accessed right now because another API request or Stripe process is currently accessing it."
+  normalized: "this object cannot be accessed right now because another api request or stripe process is currently accessing it."
+claim: >
+  Concurrent writes to one PaymentIntent return HTTP 429 lock_timeout while another request holds the object.
+dimensions:
+  env: prod
+fixes:
+  - {action: backoff_exponential, base_ms: 200, factor: 2, max_ms: 5000, max_attempts: 4, jitter: true}
+status: reported
+evidence:
+  first_seen: 2026-09-02T12:00:00Z
+  last_confirmed: 2026-09-15T12:00:00Z
+  observations: 3
+provenance:
+  source: observation_quorum
+  author: bot
+  created: 2026-09-02

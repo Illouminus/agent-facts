@@ -33,7 +33,7 @@ SCHEMA_LEVEL = {
 def test_valid_fixtures_pass(tmp_path):
     report = validate_paths([VALID], root=tmp_path)
     assert [str(p) for p in report.problems] == []
-    assert report.files == 3
+    assert report.files == len(list(VALID.glob("*.yaml")))
 
 
 def test_every_invalid_fixture_has_an_expectation():

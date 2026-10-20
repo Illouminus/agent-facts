@@ -1,0 +1,29 @@
+# retracted: one-line page with the reason (the reason is the suffix of the retracted:<reason> change).
+id: af:stripe:amount-too-small
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /v1/payment_intents
+signal:
+  status: 400
+  error_code: amount_too_small
+  error_string: "Amount must be at least $0.50 usd"
+  normalized: "amount must be at least $#.## usd"
+claim: >
+  A PaymentIntent below the currency minimum returns HTTP 400 amount_too_small.
+dimensions:
+  env: prod
+fixes:
+  - {action: set_param, name: amount, value_source: "literal:50", location: body}
+status: retracted
+evidence:
+  first_seen: 2026-10-22T10:00:00Z
+provenance:
+  source: manual
+  author: human:edouard
+  created: 2026-10-22
+  history:
+    - {date: 2026-10-22, change: created, by: "human:edouard"}
+    - {date: 2026-10-27, change: "retracted:duplicate", by: "human:edouard", previous_status: verified:server:prod}

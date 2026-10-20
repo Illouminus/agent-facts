@@ -1,0 +1,38 @@
+# Sandbox dimension row of fact-idempotency-key-reuse-different-params.yaml: same kind, target and
+# signal, different env (spec 01: a probe in another env adds a sibling, never changes the original).
+id: af:stripe:idempotency-key-reuse-different-params-sandbox
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /v1/payment_intents
+  sdk: {package: stripe, ecosystem: pypi, versions: ">=7,<13"}
+signal:
+  status: 400
+  error_code: idempotency_error
+  error_string: "Keys for idempotent requests can only be used with the same parameters they were first used with."
+  normalized: "keys for idempotent requests can only be used with the same parameters they were first used with"
+claim: >
+  Reusing an Idempotency-Key with a different request body returns HTTP 400 idempotency_error
+  for 24 hours after the first request.
+dimensions:
+  env: sandbox
+  plan: any
+  region: any
+  account_state: test_mode
+fixes:
+  - {action: set_param, name: Idempotency-Key, value_source: new_uuid_per_distinct_request}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:idempotency-key-reuse
+  first_seen: 2026-10-23T08:00:00Z
+  last_confirmed: 2026-10-29T08:00:00Z
+  confirmations: 4
+  vantages: [illouminus]
+  observations: 0
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-23
+  history: [{date: 2026-10-23, change: created, by: bot}]

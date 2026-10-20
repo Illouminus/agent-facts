@@ -1,0 +1,31 @@
+# stale: no longer reproduced, never refuted; no error string, so the page title is the claim.
+id: af:stripe:deleted-customer-returns-200
+service: stripe
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/customers/{id}"
+signal:
+  status: 200
+claim: >
+  Retrieving a deleted customer returns HTTP 200 with deleted set to true instead of HTTP 404.
+dimensions:
+  env: sandbox
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: stale
+evidence:
+  probe: af:stripe:probe:deleted-customer
+  first_seen: 2026-10-21T07:00:00Z
+  last_confirmed: 2026-10-24T07:00:00Z
+  confirmations: 3
+  stale_counter: 3
+  vantages: [illouminus]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-21
+  history:
+    - {date: 2026-10-21, change: created, by: bot}
+    - {date: 2026-10-28, change: stale, by: bot, previous_status: verified:server:sandbox}
