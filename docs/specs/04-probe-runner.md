@@ -30,8 +30,10 @@ fact stays `reported` or `official`.
 ## Execution
 
 - Due = `now − last_run ≥ service.probe_budget.per_template_seconds` and not killed; max N probes per tick.
-- Each run records `{probe_id, vantage, env, started, steps:[{status, latency_ms, headers(whitelist),
-  body_fingerprint, error_string(normalized)}], asserts:[{ok, detail}]}`.
+- Each run records `{probe_id, vantage, selection, env, started, steps:[{status, latency_ms,
+  headers(whitelist), body_fingerprint, error_string(normalized)}], asserts:[{ok, detail}]}`;
+  `selection` is `due` (the tick honoured budgets) or `all` (`probe run --all`, budgets skipped), so
+  the digest counts only `due` pairs closer than the budget as violations (added 20.10.2026).
 - Outcome → facts referencing the probe: all asserts ok → `last_confirmed`, `confirmations += 1`,
   `stale_counter = 0`; any assert failed → `stale_counter += 1`; counter ≥ 3 → status `stale`
   (previous status kept in `history`). A failure in a **different env** than the fact's dimension never

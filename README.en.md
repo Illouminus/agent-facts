@@ -43,6 +43,9 @@ The response is never empty: `facts`, `observed`, and an `unknown.reason` when n
 Pre-release. The schemas and the validator come first; the API above is **not deployed yet**. Design
 contracts live in [`docs/specs/`](docs/specs/README.md).
 
+Running your own copy: the API reads `facts/` and `services/` once, at startup, so after a `git pull`
+restart it; [`ops/deploy.sh`](ops/README.md#deploy) checks out, syncs and restarts in one step.
+
 ## Contributing
 
 Calling `check()` is contributing. Pull requests are for humans and API producers: see

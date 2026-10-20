@@ -31,8 +31,8 @@ _LETTER = re.compile(r"[A-Za-z]")
 EXEMPT_PATHS = frozenset(
     {
         *((name,) for name in (
-            "probe_id", "service", "vantage", "env", "account_state", "outcome", "run_id",
-            "started", "version",
+            "probe_id", "service", "vantage", "selection", "env", "account_state", "outcome",
+            "run_id", "started", "version",
         )),
         ("steps", "*", "do"),
         ("steps", "*", "body_fingerprint"),

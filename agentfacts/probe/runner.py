@@ -261,14 +261,16 @@ def _execute(
     return run
 
 
-def _record(c: _Candidate, vantage: str, now: datetime, run: _Run) -> dict[str, Any]:
+def _record(c: _Candidate, options: TickOptions, now: datetime, run: _Run) -> dict[str, Any]:
+    """`selection` says whether the tick honoured the budgets (`due`) or ran everything (`all`)."""
     probe = c.item.probe
     return {
         "version": __version__,
         "run_id": run.run_id,
         "probe_id": probe.id,
         "service": probe.service,
-        "vantage": vantage,
+        "vantage": options.vantage,
+        "selection": "all" if options.run_all else "due",
         "env": probe.env.value,
         "account_state": probe.account_state or "any",
         "started": rfc3339(now),
@@ -329,7 +331,7 @@ class _Tick:
 
     def _skip(self, c: _Candidate, detail: str, log: ResultsLog) -> None:
         now = self.clock()
-        redacted = log.append(_record(c, self.options.vantage, now, _Run("skipped:no_key", detail)))
+        redacted = log.append(_record(c, self.options, now, _Run("skipped:no_key", detail)))
         # The probe's own budget moves (one line per budget window); no template was used.
         self.state.record(c.id, [], self.options.vantage, now.timestamp(), "skipped:no_key")
         self.line(c, "skipped:no_key", redacted["detail"])
@@ -337,7 +339,7 @@ class _Tick:
     def _refuse(self, c: _Candidate, detail: str, log: ResultsLog) -> None:
         """A probe refused before any request (its key is not bound to its service)."""
         now = self.clock()
-        redacted = log.append(_record(c, self.options.vantage, now, _Run("error", detail)))
+        redacted = log.append(_record(c, self.options, now, _Run("error", detail)))
         self.state.record(c.id, [], self.options.vantage, now.timestamp(), "error")
         self.report.refused.append(c.id)
         self.line(c, "error", redacted["detail"])
@@ -352,7 +354,7 @@ class _Tick:
     ) -> None:
         now = self.clock()
         run = _execute(c, key, self.base_urls, client, self.sleep, now, redactor)
-        record = _record(c, self.options.vantage, now, run)
+        record = _record(c, self.options, now, run)
         if run.outcome in ("pass", "fail"):
             for loaded in self.repo.facts_citing(c.id):
                 change = apply_outcome(
