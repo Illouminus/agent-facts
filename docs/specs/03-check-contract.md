@@ -28,7 +28,7 @@ mode, no error). `error` is optional. Nothing else is accepted: unknown fields â
 {
   "service": "stripe",
   "matched_template": {"method": "POST", "path": "/v1/payment_intents"},
-  "facts": [ { "...fact fields...", "fixes_rendered": ["Send header Idempotency-Key = new UUID per distinct request"] } ],
+  "facts": [ { "...fact fields...", "fixes_rendered": ["Send header Idempotency-Key = new UUID per distinct request"] } ],   // status verified:server:sandbox for this example fact
   "observed": {"status_distribution_30d": {"200": 0.97, "400": 0.02, "429": 0.01},
                "p50_latency_ms": 310, "last_probe": "2026-10-22T09:14:00Z", "rate_limit_headers": ["Retry-After"]},
   "unknown": {"reason": "no_fact_for_signal", "stored_as_observation": true},

@@ -18,14 +18,14 @@ fact stays `reported` or `official`.
 | `auth: service` (default) | adds the service's auth header from the injected key |
 | `expect_rate_limit: true` | marks a step allowed to return 429 without failing the run |
 
-| Assertion | Fields |
+| Assertion (every entry carries `step: N`, 1-based) | Shape (as in the spec 01 example and `schema/probe.schema.json`) |
 |-----------|--------|
-| `status` | `equals` |
-| `header` | `name`, `present` / `equals` / `matches` |
-| `json_path` | `path`, `equals` / `contains` / `exists` |
-| `body_contains` | `text` |
-| `latency_ms` | `lt` |
-| `schema_fingerprint` | `equals: <sha256 of sorted top-level keys>` (drift detection) |
+| status | `{step: 2, status: 400}` |
+| header | `{step: 1, header: Retry-After, present: true}` / `equals: …` / `matches: <regex>` |
+| json_path | `{step: 2, json_path: $.error.code, equals: idempotency_error}` / `contains: …` / `exists: true` |
+| body_contains | `{step: 1, body_contains: "same parameters"}` |
+| latency_ms | `{step: 1, latency_ms: {lt: 2000}}` |
+| schema_fingerprint | `{step: 1, schema_fingerprint: <sha256 of sorted top-level keys>}` (drift detection) |
 
 ## Execution
 

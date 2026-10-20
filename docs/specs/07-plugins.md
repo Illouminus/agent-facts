@@ -15,7 +15,7 @@ cache; opt-out `AGENTFACTS_DISABLE=1`; all of this covered by tests against a lo
 ```
 ──────────── Known facts (agent-facts, CC BY 4.0) ────────────
 POST api.stripe.com/v1/payment_intents → 400 idempotency_error
-✅ verified:server:prod · Reusing an Idempotency-Key with a different request body returns HTTP 400 …
+✅ verified:server:sandbox · Reusing an Idempotency-Key with a different request body returns HTTP 400 …
    fix: Send header Idempotency-Key = new UUID per distinct request
    https://github.com/Illouminus/agent-facts/blob/main/pages/stripe/idempotency-key-reuse-different-params.md
 ```

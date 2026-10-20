@@ -27,7 +27,7 @@ pages/
 # `keys for idempotent requests can only be used with the same parameters…`
 
 **Stripe · POST /v1/payment_intents · HTTP 400 `idempotency_error`**
-Status: ✅ verified:server:prod · first seen 2026-10-22 · last confirmed 2026-10-29 · 7 confirmations from 1 vantage
+Status: ✅ verified:server:sandbox · first seen 2026-10-22 · last confirmed 2026-10-29 · 7 confirmations from 1 vantage
 
 > Reusing an Idempotency-Key with a different request body returns HTTP 400 idempotency_error for 24 hours after the first request.
 
@@ -35,7 +35,7 @@ Status: ✅ verified:server:prod · first seen 2026-10-22 · last confirmed 2026
 1. Send header `Idempotency-Key` = new UUID per distinct request.
 
 ## Dimensions
-env: prod · plan: any · region: any · account_state: any · also seen: sandbox (verified 2026-10-23)
+env: sandbox · plan: any · region: any · account_state: any · prod: not probed (POST is write-only there)
 
 ## Evidence
 Probe `af:stripe:probe:idempotency-key-reuse` (declarative, [source](../../probes/stripe/idempotency-key-reuse.yaml)) · official doc: https://docs.stripe.com/api/idempotent_requests

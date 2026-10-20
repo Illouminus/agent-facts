@@ -24,13 +24,13 @@ claim: >                                                   # ONE sentence, decla
   Reusing an Idempotency-Key with a different request body returns HTTP 400 idempotency_error
   for 24 hours after the first request.
 dimensions:
-  env: prod                                                # prod | sandbox
+  env: sandbox                                             # prod | sandbox; must equal the env of the probe that verified it
   plan: any                                                # vendor plan name or any
   region: any
   account_state: any                                       # enum defined per service
 fixes:                                                     # typed only, see 02-fix-vocabulary.md
-  - {action: set_param, name: Idempotency-Key, value_source: new_uuid_per_distinct_request}
-status: verified:server:prod                               # see table
+  - {action: set_header, name: Idempotency-Key, value_source: new_uuid_per_distinct_request}
+status: verified:server:sandbox                            # a POST can only be reproduced in sandbox (prod probes are read-only)
 evidence:
   probe: af:stripe:probe:idempotency-key-reuse             # probes/stripe/idempotency-key-reuse.yaml
   first_seen: 2026-10-22T09:14:00Z
@@ -40,8 +40,8 @@ evidence:
   official_url: https://docs.stripe.com/api/idempotent_requests    # optional; status official needs it
   observations: 0                                          # distinct reporter networks that hit this
 provenance:
-  source: probe | observation_quorum | producer | manual
-  author: bot | producer:<org> | human:<handle>
+  source: probe                                            # probe | observation_quorum | producer | manual
+  author: bot                                              # bot | producer:<org> | human:<handle>
   created: 2026-10-22
   history: [{date: 2026-10-22, change: created, by: bot}]
 ```
@@ -82,7 +82,7 @@ surfaces:
     base_url: https://api.stripe.com
     templates:                                   # the ONLY paths check() will store observations for
       - {method: POST, path: /v1/payment_intents}
-      - {method: GET,  path: /v1/customers/{id}}
+      - {method: GET,  path: "/v1/customers/{id}"}        # quote paths with {id}: `{` inside a flow mapping is not valid YAML
     signal_fields: [status, error.code, error.type, error.message, retry-after, stripe-version]  # whitelist
   sdk:
     - {ecosystem: pypi, package: stripe}
