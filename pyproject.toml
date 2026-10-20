@@ -37,6 +37,9 @@ path = "agentfacts/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["agentfacts"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"schema" = "agentfacts/schema/json"  # load_schema() prefers this packaged copy
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
