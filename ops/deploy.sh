@@ -4,7 +4,8 @@
 # Reached from GitHub Actions ONLY through a forced command (ops/README.md):
 #   command="/home/ubuntu/apps/agent-facts/ops/deploy.sh",restrict ssh-ed25519 AAAA… gha-deploy-agent-facts
 # The client's string lands in $SSH_ORIGINAL_COMMAND and is untrusted input: exactly one 40-hex
-# sha that is on origin/main is accepted, nothing else. By hand: ops/deploy.sh <sha>.
+# sha that is on origin/main and not behind the deployed one is accepted, nothing else. By hand:
+# ops/deploy.sh <sha> (any sha on origin/main, so a rollback is possible).
 #
 # Steps: fetch → the sha must be on origin/main → keep the probe runner's uncommitted edits under
 # facts/ as a patch → checkout --detach <sha> → re-apply the patch (if it no longer applies it is
@@ -61,6 +62,12 @@ main() {
     return 2
   fi
   prev="$(git rev-parse HEAD)"
+  # Over ssh only forward: a leaked Actions key must not buy a downgrade to an old main commit.
+  # Rolling back to an earlier sha stays a by-hand act (no SSH_ORIGINAL_COMMAND).
+  if [ -n "${SSH_ORIGINAL_COMMAND:-}" ] && ! git merge-base --is-ancestor "$prev" "$sha"; then
+    refuse "$sha is not ahead of the deployed $prev (downgrade over ssh); roll back by hand"
+    return 2
+  fi
 
   if [ "$prev" = "$sha" ] && healthy; then
     log "already deployed and healthy: $sha"

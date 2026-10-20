@@ -175,3 +175,15 @@ def test_journal_hook_is_skipped_without_state_and_never_fails_the_deploy(host):
     result = host.deploy(c2)
     assert result.returncode == 0
     assert "journal hook skipped" in result.stdout
+
+
+def test_ssh_refuses_a_downgrade_but_by_hand_rollback_works(host):
+    host.write("README", "two\n")
+    c2 = host.commit("c2")
+    assert host.deploy(SSH_ORIGINAL_COMMAND=c2).returncode == 0
+    result = host.deploy(SSH_ORIGINAL_COMMAND=host.c1)
+    assert result.returncode == 2
+    assert "downgrade over ssh" in result.stdout
+    assert host.head() == c2
+    assert host.deploy(host.c1).returncode == 0  # by hand
+    assert host.head() == host.c1
