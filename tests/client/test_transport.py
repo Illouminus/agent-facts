@@ -245,3 +245,33 @@ def test_settings_from_env(tmp_path):
         assert Settings.from_env({"AGENTFACTS_DISABLE": value}).disabled
     for value in ("0", "", "no", "false"):
         assert not Settings.from_env({"AGENTFACTS_DISABLE": value}).disabled
+
+
+def test_a_dripping_server_hits_the_total_deadline(httpserver, make):
+    def drip(_request):
+        def body():
+            for _ in range(10):
+                time.sleep(0.1)
+                yield b" "
+
+        return Response(body(), content_type="application/json")
+
+    httpserver.expect_request("/v0/check").respond_with_handler(drip)
+    started = time.monotonic()
+    client = make(timeout=0.3)
+    assert client.check(PAYLOAD) is None
+    assert time.monotonic() - started < 0.6
+    assert "within 0.3 s" in client.last_error
+
+
+def test_malformed_snapshot_is_no_answer(tmp_path, clock):
+    (tmp_path / "services").mkdir()
+    (tmp_path / "services" / "x.yaml").write_text(
+        "key: stripe\nhosts: [api.stripe.com, 7]\nsurfaces: []\n"
+    )
+    (tmp_path / "facts" / "stripe").mkdir(parents=True)
+    (tmp_path / "facts" / "stripe" / "f.yaml").write_text("service: stripe\ntarget: x\nkind: 3\n")
+    client = Client("https://unused.example", "ua", offline=True, snapshot=tmp_path, clock=clock)
+    assert client.registered_host("api.stripe.com") == "api.stripe.com"
+    answer = client.check(PAYLOAD)
+    assert answer is not None and answer["facts"] == []

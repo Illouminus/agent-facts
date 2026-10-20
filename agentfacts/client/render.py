@@ -90,10 +90,11 @@ def render_section(result: Any, signal: Signal, *, show_empty: bool = False) -> 
         return None
     facts = result.get("facts")
     facts = [f for f in facts if isinstance(f, Mapping)] if isinstance(facts, list) else []
-    blocks = [lines for lines in map(_fact_lines, facts) if lines]
+    shown = [(fact, lines) for fact in facts if (lines := _fact_lines(fact))]
+    blocks = [lines for _, lines in shown]
     if not blocks and not show_empty:
         return None
-    out = [_target_line(result, signal, facts)]
+    out = [_target_line(result, signal, [fact for fact, _ in shown])]
     for lines in blocks[:MAX_FACTS]:
         out.extend(lines)
     if len(blocks) > MAX_FACTS:

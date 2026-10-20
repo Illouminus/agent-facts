@@ -163,3 +163,10 @@ def test_typed_fix_parameters_are_cleaned_too():
     )
     lines = render_section({**RESULT, "facts": [sneaky]}, SIGNAL).splitlines()
     assert lines[2] == "   fix: Call GET /v1/ [2Jx instead"
+
+
+def test_error_code_only_from_a_shown_fact():
+    hidden = fact(status="retracted", signal={"status": 400, "error_code": "ghost_code"})
+    plain = fact(signal={"status": 400})
+    first = render_section({**RESULT, "facts": [hidden, plain]}, SIGNAL).splitlines()[0]
+    assert first == "POST api.stripe.com/v1/payment_intents → 400"

@@ -13,7 +13,9 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 
 EXCERPT_BYTES = 2048  # spec 03: body_excerpt kept, 2 KB in
 RAW_CHARS = 16_384  # redaction runs on this prefix; output is cut far inside it
-REDACTED, ID, EMAIL = "<redacted>", "<id>", "<email>"  # same placeholders as the server (spec 03)
+# Same placeholders as the server (spec 03): it normalizes URLs to <url> too, so replacing them here
+# loses nothing and leaves no userinfo, query or fragment to parse.
+REDACTED, ID, EMAIL, URL = "<redacted>", "<id>", "<email>", "<url>"
 
 HTTP_METHODS = frozenset({"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
 
@@ -86,22 +88,6 @@ def _looks_secret(value: str) -> bool:
     )
 
 
-def _url(match: re.Match[str]) -> str:
-    """Any scheme: drop query and fragment; a URL that may carry credentials goes whole.
-
-    No guessing where userinfo ends (a password may hold `/ ? #`, a query may hold `@`): any `@`,
-    or a non-numeric port, redacts the URL. Nothing is lost: the server normalizes URLs to <url>.
-    """
-    scheme, _, rest = match.group(0).partition("://")
-    if "@" in rest:
-        return f"{scheme}://{REDACTED}"
-    rest = rest[: min((i for i in (rest.find("?"), rest.find("#")) if i >= 0), default=len(rest))]
-    _, colon, port = rest.split("/", 1)[0].rpartition(":")
-    if colon and not port.isdigit():
-        return f"{scheme}://{REDACTED}"
-    return f"{scheme}://{rest}"
-
-
 def _auth_scheme(match: re.Match[str]) -> str:
     scheme, space, value = match.groups()
     return f"{scheme}{space}{REDACTED}" if _looks_secret(value) else match.group(0)
@@ -129,7 +115,7 @@ def redact(text: str) -> str:
     """Replace secret-shaped substrings; keep everything else byte for byte."""
     text = _PEM.sub(REDACTED, text)
     text = _SPACED_USERINFO.sub(rf"\1{REDACTED}@", text)
-    text = _URL.sub(_url, text)
+    text = _URL.sub(URL, text)
     text = _SHAPES.sub(REDACTED, text)
     text = _AUTH_SCHEME.sub(_auth_scheme, text)
     text = _NAMED.sub(_named, text)
@@ -150,10 +136,10 @@ def excerpt(text: str) -> str:
 
 
 def _scrub_segment(segment: str) -> str:
-    segment = unquote(segment)  # judge what the server will decode, not the encoding
-    if "@" in segment or _SHAPES.search(segment):
+    decoded = unquote(segment)  # judge what the server will decode; send it as it was
+    if "@" in decoded or _SHAPES.search(decoded):
         return REDACTED
-    for run in _SEGMENT_RUN.findall(segment):
+    for run in _SEGMENT_RUN.findall(decoded):
         if _DIGIT.search(run) and _LETTER.search(run):
             return REDACTED
     return segment

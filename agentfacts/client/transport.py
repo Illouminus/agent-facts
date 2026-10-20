@@ -10,12 +10,15 @@ checks are answered from memory; a session sends at most `max_checks` checks and
 import ipaddress
 import json
 import os
+import threading
 import time
 import urllib.request
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
+
+from agentfacts.schema.registry import match_host
 
 TIMEOUT_S = 2.0  # spec 07
 CACHE_TTL_S = 24 * 3600
@@ -46,12 +49,6 @@ def is_local(host: str) -> bool:
     except ValueError:
         return False
     return True
-
-
-def match_host(host: str, hosts: Iterable[str]) -> str | None:
-    """The registered host `host` is, or is a subdomain of (most specific wins)."""
-    candidates = [h for h in hosts if host == h or host.endswith("." + h)]
-    return max(candidates, key=len, default=None)
 
 
 def hosts_of(answer: Any) -> frozenset[str]:
@@ -125,7 +122,10 @@ class Client:
         if key in self._memo:
             return self._memo[key]
         if self.offline:
-            answer = self._offline().check(payload)
+            try:
+                answer = self._offline().check(payload)
+            except Exception as exc:  # a malformed snapshot is "no answer", like a bad server
+                return self._fail(f"offline snapshot: {type(exc).__name__}: {exc}")
         else:
             if self._checks >= self.max_checks:
                 self.last_error = f"check limit of {self.max_checks} per session reached"
@@ -202,14 +202,32 @@ class Client:
         if data is not None:
             headers["Content-Type"] = "application/json"
         request = urllib.request.Request(self.endpoint + path, data, headers, method=method)
+        box: dict[str, Any] = {}
+
+        def fetch() -> None:
+            try:
+                with self._opener.open(request, timeout=self.timeout) as response:
+                    box["raw"] = response.read(MAX_RESPONSE_BYTES + 1)
+            except Exception as exc:  # network, TLS, HTTP status: all mean "no answer"
+                box["error"] = exc
+
+        # urllib's timeout bounds each socket operation, not the request: a server dripping one
+        # byte a second would never trip it. The thread gives a hard deadline; a straggler dies
+        # with the process (daemon) and the breaker stops any further request.
+        worker = threading.Thread(target=fetch, name="agentfacts-request", daemon=True)
         started = time.monotonic()
-        try:
-            with self._opener.open(request, timeout=self.timeout) as response:
-                raw = response.read(MAX_RESPONSE_BYTES + 1)
-            if len(raw) > MAX_RESPONSE_BYTES:
-                return self._fail(f"{method} {path}: answer larger than {MAX_RESPONSE_BYTES} bytes")
-            return json.loads(raw)
-        except Exception as exc:  # network, TLS, HTTP status, JSON: all mean "no answer"
+        worker.start()
+        worker.join(self.timeout)
+        self._spent += time.monotonic() - started
+        if worker.is_alive():
+            return self._fail(f"{method} {path}: no complete answer within {self.timeout} s")
+        if "error" in box:
+            exc = box["error"]
             return self._fail(f"{method} {path}: {type(exc).__name__}: {exc}")
-        finally:
-            self._spent += time.monotonic() - started
+        raw = box["raw"]
+        if len(raw) > MAX_RESPONSE_BYTES:
+            return self._fail(f"{method} {path}: answer larger than {MAX_RESPONSE_BYTES} bytes")
+        try:
+            return json.loads(raw)
+        except ValueError as exc:
+            return self._fail(f"{method} {path}: not JSON: {exc}")

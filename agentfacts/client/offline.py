@@ -13,8 +13,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from agentfacts.client.transport import match_host
-from agentfacts.schema.registry import match_template
+from agentfacts.schema.registry import match_host, match_template
 
 PACKAGED = Path(__file__).parent / "snapshot"
 SERVICE_WIDE_KINDS = frozenset({"rate_limit", "availability"})
@@ -34,11 +33,19 @@ def _load(paths: list[Path]) -> tuple[dict[str, Any], ...]:
     return tuple(docs)
 
 
+def _map(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
 def _templates(service: Mapping[str, Any]) -> list[tuple[str, str]]:
-    http = (service.get("surfaces") or {}).get("http") or {}
+    http = _map(_map(service.get("surfaces")).get("http"))
     return [
         (t["method"], t["path"])
-        for t in http.get("templates") or ()
+        for t in _list(http.get("templates"))
         if isinstance(t, Mapping)
         and isinstance(t.get("method"), str)
         and isinstance(t.get("path"), str)
@@ -61,13 +68,12 @@ class Snapshot:
     @property
     def hosts(self) -> frozenset[str]:
         return frozenset(
-            h.lower() for s in self.services for h in s.get("hosts") or () if isinstance(h, str)
+            h.lower() for s in self.services for h in _list(s.get("hosts")) if isinstance(h, str)
         )
 
     def check(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         """Same shape as the server's answer; `observed` is always empty offline."""
-        target = payload.get("target") or {}
-        error = payload.get("error") or {}
+        target, error = _map(payload.get("target")), _map(payload.get("error"))
         url, method, status = target.get("url", ""), target.get("method"), error.get("status")
         parts = urlsplit(url) if "://" in url else urlsplit("https://" + url)
         host = (parts.hostname or "").lower()
@@ -75,7 +81,9 @@ class Snapshot:
             (
                 s
                 for s in self.services
-                if match_host(host, [h.lower() for h in s.get("hosts") or ()])
+                if match_host(
+                    host, [h.lower() for h in _list(s.get("hosts")) if isinstance(h, str)]
+                )
             ),
             None,
         )
@@ -107,9 +115,9 @@ class Snapshot:
             found = [
                 f
                 for f in facts
-                if (f.get("target") or {}).get("method") == template[0]
-                and (f.get("target") or {}).get("path_template") == template[1]
-                and (status is None or (f.get("signal") or {}).get("status") == status)
+                if _map(f.get("target")).get("method") == template[0]
+                and _map(f.get("target")).get("path_template") == template[1]
+                and (status is None or _map(f.get("signal")).get("status") == status)
             ]
         if not found:
             found = [f for f in facts if f.get("kind") in SERVICE_WIDE_KINDS]
@@ -124,7 +132,7 @@ def _with_fixes_rendered(fact: dict[str, Any]) -> dict[str, Any]:
     from agentfacts.fixes.templates import render_fix
 
     rendered = []
-    for fix in fact.get("fixes") or ():
+    for fix in _list(fact.get("fixes")):
         try:
             rendered.append(render_fix(fix))
         except Exception:

@@ -91,10 +91,10 @@ def test_long_mixed_run_is_redacted_but_words_survive():
     assert "resource_missing_for_customer_object_here" in out
 
 
-def test_url_query_and_fragment_are_dropped_in_text():
+def test_urls_in_text_become_the_server_placeholder():
     url = "https://api.stripe.com/v1/charges"
     out = redact(f"400 Client Error for url: {url}?api_key=abc&x=1#frag done")
-    assert out == f"400 Client Error for url: {url} done"
+    assert out == "400 Client Error for url: <url> done"
 
 
 def test_vendor_error_message_is_unchanged():
@@ -230,15 +230,12 @@ def test_review_findings_do_not_leak(text, leaked):
     assert leaked not in redact(text)
 
 
-def test_urls_that_may_carry_credentials_are_redacted_whole():
-    assert redact("connect postgres://admin:pw@db:5432/app?sslmode=x ok") == (
-        "connect postgres://<redacted> ok"
-    )
-    assert redact("see https://host/p?email=a@b.com&token=SECRET end") == (
-        "see https://<redacted> end"
-    )
-    assert redact("dsn mysql://root:pa ss@db").startswith("dsn mysql://<redacted>")
-    assert redact("db at postgres://db:5432/app?x=1 down") == "db at postgres://db:5432/app down"
+def test_urls_of_any_scheme_go_whole():
+    assert redact("connect postgres://admin:pw@db:5432/app?sslmode=x ok") == "connect <url> ok"
+    assert redact("see https://host/p?email=a@b.com&token=SECRET end") == "see <url> end"
+    out = redact("dsn mysql://root:pa ss@db")
+    assert "pa" not in out and "ss" not in out
+    assert redact("db at postgres://db:5432/app?x=1 down") == "db at <url> down"
 
 
 @pytest.mark.parametrize(
@@ -271,4 +268,9 @@ def test_passwords_with_raw_spaces_leave_nothing(text, fragments):
 
 def test_ordinary_text_after_a_url_is_kept():
     text = "Visit https://docs.stripe.com/x or contact support for help"
-    assert redact(text) == text
+    assert redact(text) == "Visit <url> or contact support for help"
+
+
+def test_kept_path_segments_are_sent_as_encoded():
+    url = "https://api.example.org/v1/files/a%2Fb/x%20y"
+    assert scrub_url(url) == url

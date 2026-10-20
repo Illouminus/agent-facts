@@ -24,9 +24,11 @@ def _read_body(path: Path) -> str:
 
     limit = RAW_CHARS * 4
     if str(path) == "-":
-        return sys.stdin.read(limit)
-    with path.open("rb") as fh:
-        return fh.read(limit).decode("utf-8", "replace")
+        data = sys.stdin.buffer.read(limit)
+    else:
+        with path.open("rb") as fh:
+            data = fh.read(limit)
+    return data.decode("utf-8", "replace")  # an error page in any encoding is still an excerpt
 
 
 def _fail(message: str, code: int) -> typer.Exit:
@@ -79,7 +81,9 @@ def check(
     client = Client(settings.endpoint, USER_AGENT, offline=offline, snapshot=settings.snapshot)
     result = client.check(signal.payload())
     if result is None:
-        raise _fail(f"registry unreachable at {settings.endpoint}: {client.last_error}", 1)
+        raise _fail(
+            f"registry unreachable at {settings.endpoint}: {client.last_error}", EXIT_UNREACHABLE
+        )
 
     if json_out:
         typer.echo(json.dumps(result, indent=2, sort_keys=True))  # ASCII-escaped: no raw control

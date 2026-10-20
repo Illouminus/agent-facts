@@ -77,6 +77,13 @@ def test_check_body_from_stdin(server):
     assert posted(server).get_json()["error"] == {"status": 400, "body_excerpt": "rate limited\n"}
 
 
+def test_non_utf8_stdin_body_is_an_excerpt(server):
+    server.expect_request("/v0/check").respond_with_json(answer())
+    result = runner.invoke(app, ["check", URL, "--body", "-"], input=b"erreur \xe9chou\xe9e")
+    assert result.exit_code == 0, result.output
+    assert posted(server).get_json()["error"]["body_excerpt"] == "erreur \ufffdchou\ufffde"
+
+
 def test_json_prints_the_raw_answer(server):
     server.expect_request("/v0/check").respond_with_json(answer())
     result = runner.invoke(app, ["check", URL, "--json"])
