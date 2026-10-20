@@ -1,8 +1,10 @@
 """Redaction filter: every string passes it before results.jsonl, logs or facts (spec 04)."""
 
+import base64
 import json
+from urllib.parse import quote
 
-from agentfacts.probe.redact import REDACTED, Redactor
+from agentfacts.probe.redact import REDACTED, Redactor, secret_forms
 
 
 def test_exact_secret_and_patterns_are_redacted():
@@ -50,17 +52,43 @@ def test_record_exempts_identifiers_but_not_exact_secrets():
     r = Redactor({"FAKEKEY12345678"})
     rec = {
         "probe_id": "af:x:probe:values-batch-get-v4-range-limit-exceeded",
-        "body_fingerprint": "ab" * 32,
-        "steps": [{"error_string": "token FAKEKEY12345678 " + "0f" * 20}],
+        "steps": [
+            {"body_fingerprint": "ab" * 32, "error_string": "token FAKEKEY12345678 " + "0f" * 20}
+        ],
         "facts": [{"id": "af:x:values-batch-get-v4-range-limit-exceeded", "change": "confirmed"}],
     }
     out = r.record(rec)
     assert out["probe_id"] == rec["probe_id"]
-    assert out["body_fingerprint"] == "ab" * 32
+    assert out["steps"][0]["body_fingerprint"] == "ab" * 32
     assert out["facts"] == rec["facts"]
     dumped = json.dumps(out)
     assert "FAKEKEY12345678" not in dumped
     assert "0f" * 20 not in dumped
+
+
+def test_exemption_is_by_full_path_not_by_key_name():
+    r = Redactor(set())
+    token = "ab12" * 10
+    rec = {"steps": [{"headers": {"id": token, "kind": token}, "body_fingerprint": token}],
+           "nested": {"probe_id": token}}
+    out = r.record(rec)
+    assert out["steps"][0]["headers"] == {"id": REDACTED, "kind": REDACTED}
+    assert out["nested"]["probe_id"] == REDACTED
+    assert out["steps"][0]["body_fingerprint"] == token
+
+
+def test_secret_forms_cover_url_and_basic_encodings():
+    key = "user:pa ss/word"
+    forms = secret_forms(key)
+    assert {key, quote(key, safe=""), base64.b64encode(key.encode()).decode()} <= forms
+    assert base64.b64encode(b"tok123:").decode() in secret_forms("tok123")
+    assert secret_forms("  ") == set()
+
+
+def test_for_keys_redacts_every_form():
+    r = Redactor.for_keys(["tok/12345678"])
+    text = "q=tok%2F12345678 auth=" + base64.b64encode(b"tok/12345678:").decode()
+    assert "12345678" not in r.text_strict(text)
 
 
 def test_exempt_fields_still_lose_exact_secrets():

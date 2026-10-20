@@ -4,13 +4,16 @@ Three levels:
 - exact key values (the runner's injected secrets and their derived forms) — everywhere;
 - strict patterns `sk_[a-z]+_[A-Za-z0-9]{8,}` and `Bearer [A-Za-z0-9._-]{16,}` — everywhere;
 - generic runs: hex ≥ 32 always, base64 ≥ 32 when the run holds a digit and a letter (so words,
-  slugs and URL paths survive) — on every field except identifiers the runner itself produces
-  (`EXEMPT_FIELDS`), which a generic rule would otherwise eat (sha256 fingerprints, digit slugs).
+  slugs and URL paths survive) — on every field except the identifiers the runner itself produces,
+  named by their full path in the run record (`EXEMPT_PATHS`), which a generic rule would otherwise
+  eat (sha256 fingerprints, slugs with digits). Vendor-derived subtrees are never exempt.
 """
 
+import base64
 import re
 from collections.abc import Iterable
 from typing import Any
+from urllib.parse import quote, quote_plus
 
 REDACTED = "[redacted]"
 
@@ -23,11 +26,36 @@ _B64_RUN = re.compile(r"[A-Za-z0-9+/_=-]{32,}")
 _DIGIT = re.compile(r"[0-9]")
 _LETTER = re.compile(r"[A-Za-z]")
 
-# Values the runner generates from the repository or computes itself; never vendor-controlled.
-EXEMPT_FIELDS = frozenset(
-    {"probe_id", "service", "vantage", "env", "account_state", "outcome", "id", "change",
-     "kind", "do", "body_fingerprint", "run_id", "started", "finished", "version"}
+# Fields of a run record the runner fills from the repository or computes itself; `*` = any list
+# item. Never vendor-controlled.
+EXEMPT_PATHS = frozenset(
+    {
+        *((name,) for name in (
+            "probe_id", "service", "vantage", "env", "account_state", "outcome", "run_id",
+            "started", "version",
+        )),
+        ("steps", "*", "do"),
+        ("steps", "*", "body_fingerprint"),
+        ("asserts", "*", "kind"),
+        ("facts", "*", "id"),
+        ("facts", "*", "change"),
+    }
 )
+
+
+def secret_forms(key: str) -> set[str]:
+    """A key and the encodings it travels in: URL-encoded (query auth) and base64 (basic auth)."""
+    key = key.strip()
+    if not key:
+        return set()
+    user_pass = key if ":" in key else key + ":"
+    return {
+        key,
+        quote(key, safe=""),
+        quote_plus(key),
+        base64.b64encode(key.encode()).decode(),
+        base64.b64encode(user_pass.encode()).decode(),
+    }
 
 
 def _generic(match: re.Match[str]) -> str:
@@ -52,17 +80,19 @@ class Redactor:
         value = _HEX_RUN.sub(REDACTED, value)
         return _B64_RUN.sub(_generic, value)
 
-    def record(self, data: Any, *, exempt: bool = False) -> Any:
-        """Redact every string in a JSON-like structure (dict keys included)."""
+    @classmethod
+    def for_keys(cls, keys: Iterable[str]) -> "Redactor":
+        return cls(set().union(*(secret_forms(k) for k in keys)))
+
+    def record(self, data: Any, _path: tuple[str, ...] = ()) -> Any:
+        """Redact every string in a run record (dict keys included); `EXEMPT_PATHS` get the
+        strict level only."""
         if isinstance(data, str):
-            return self.text_strict(data) if exempt else self.text(data)
+            return self.text_strict(data) if _path in EXEMPT_PATHS else self.text(data)
         if isinstance(data, dict):
-            return {
-                self.text(str(k)): self.record(v, exempt=k in EXEMPT_FIELDS)
-                for k, v in data.items()
-            }
+            return {self.text(str(k)): self.record(v, (*_path, str(k))) for k, v in data.items()}
         if isinstance(data, list | tuple):
-            return [self.record(v, exempt=exempt) for v in data]
+            return [self.record(v, (*_path, "*")) for v in data]
         return data
 
     def line(self, value: str) -> str:
