@@ -181,7 +181,8 @@ def _lookup(data: Any, path: list[str]) -> Any:
 
 def _json_shaped(excerpt: str) -> bool:
     """A JSON object or array, complete or cut short by the 2 KB excerpt (spec 03 step 2, Q4).
-    `[` must open a JSON value, so a bracketed log prefix (`[ERROR] …`) stays text."""
+    `[` must open an object, array or string, so a bracketed log prefix (`[ERROR] …`,
+    `[2026-10-20] …`) stays text; the price is that a bare array of numbers does too."""
     text = excerpt.lstrip()
     if text.startswith("{"):
         return True
@@ -189,8 +190,6 @@ def _json_shaped(excerpt: str) -> bool:
 
 
 def _json_body(excerpt: str) -> Any:
-    if not _json_shaped(excerpt):
-        return None
     try:
         return json.loads(excerpt)
     except ValueError:
@@ -208,7 +207,8 @@ def extract_signal(
     string = first whitelisted message field. A JSON (or truncated JSON) body without one yields
     no string, only the status (Q4); any other body falls back to its first line."""
     excerpt = (body_excerpt or "")[:MAX_EXCERPT]
-    data = _json_body(excerpt)
+    json_shaped = _json_shaped(excerpt)
+    data = _json_body(excerpt) if json_shaped else None
     code: str | None = None
     message: str | None = None
     for field in signal_fields:
@@ -225,7 +225,7 @@ def extract_signal(
                     code = candidate
         elif message is None and leaf in _MESSAGE_LEAVES and isinstance(value, str):
             message = value.strip() or None
-    raw = message if _json_shaped(excerpt) else _first_line(excerpt)
+    raw = message if json_shaped else _first_line(excerpt)
     normalized = normalize(raw) if raw else None
     normalized = normalized or None
     return ExtractedSignal(
