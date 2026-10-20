@@ -1,0 +1,13 @@
+# per_page 500 on a user with > 100 followers: 100 items back, no error.
+id: af:github:probe:followers-per-page-cap
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /users/torvalds/followers, query: {per_page: 500}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: "$[99].login", exists: true}
+  - {step: 1, json_path: "$[100]", exists: false}
+  - {step: 1, header: Link, matches: 'per_page=500&page=2>; rel="next"'}
+  - {step: 1, header: Link, matches: 'rel="last"'}

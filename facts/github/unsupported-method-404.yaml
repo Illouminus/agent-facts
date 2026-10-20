@@ -1,0 +1,24 @@
+id: af:github:unsupported-method-404
+service: github
+kind: error_meaning
+target:
+  surface: http
+  method: DELETE
+  path_template: /rate_limit
+signal:
+  status: 404
+claim: "A request with an HTTP method the endpoint does not support, such as DELETE on a GET-only endpoint, returns HTTP 404 Not Found instead of 405 Method Not Allowed."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: use_endpoint, method: GET, path_template: /rate_limit}
+status: official
+evidence:
+  first_seen: 2026-10-20T08:50:00Z
+  official_url: https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api#404-not-found-for-an-existing-resource
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

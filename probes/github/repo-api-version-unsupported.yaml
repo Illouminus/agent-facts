@@ -1,0 +1,12 @@
+# 2021-01-01 was never a REST API version. cb is a cache buster (see repo-api-version-2026).
+id: af:github:probe:repo-api-version-unsupported
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World, query: {cb: "{{run_uuid}}"}, headers: {X-GitHub-Api-Version: "2021-01-01"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.message, equals: Bad Request}
+  - {step: 1, json_path: $.errors, contains: "\"2021-01-01\", is not a supported version"}
+  - {step: 1, json_path: $.status, equals: "400"}

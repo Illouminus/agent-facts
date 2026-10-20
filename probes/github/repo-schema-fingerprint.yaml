@@ -1,0 +1,12 @@
+# Drift detector: sha256 of the sorted top-level keys of the repository object at version
+# 2022-11-28 (84 keys on 2026-10-20). cb is a cache buster (see repo-api-version-2026).
+id: af:github:probe:repo-schema-fingerprint
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World, query: {cb: "{{run_uuid}}"}, headers: {X-GitHub-Api-Version: "2022-11-28"}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, header: X-GitHub-Api-Version-Selected, equals: "2022-11-28"}
+  - {step: 1, schema_fingerprint: 4ca5975282230619132a896324e7817ed749e220c1254b1002481b7f7c792f66}

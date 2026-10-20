@@ -1,0 +1,25 @@
+id: af:github:secondary-rate-limit-429
+service: github
+kind: rate_limit
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+signal:
+  status: 429
+claim: "Exceeding a secondary rate limit returns HTTP 403 or 429 with a message saying so; retry-after, when present, gives the seconds to wait, otherwise the wait is at least one minute."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: retry_after_header, unit: s, max_attempts: 3}
+  - {action: backoff_exponential, base_ms: 60000, factor: 2, max_ms: 960000, max_attempts: 5, jitter: true}
+status: official
+evidence:
+  first_seen: 2026-10-20T08:50:00Z
+  official_url: https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

@@ -1,0 +1,12 @@
+# GET /rate_limit does not count against the primary rate limit (docs.github.com, rate limits page).
+id: af:github:probe:rate-limit
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /rate_limit}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.resources.core.limit, equals: 60}
+  - {step: 1, json_path: $.resources.search.limit, equals: 10}
+  - {step: 1, json_path: $.resources.graphql.limit, equals: 0}

@@ -1,0 +1,31 @@
+id: af:github:search-query-longer-than-256
+service: github
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: /search/repositories
+signal:
+  status: 422
+  error_code: invalid
+  error_string: "The search is longer than 256 characters."
+  normalized: "the search is longer than ### characters."
+claim: "A search q parameter longer than 256 characters returns HTTP 422 Validation Failed with errors[0] code invalid, field q and message The search is longer than 256 characters."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: reduce_payload, field: q, max_bytes: 256}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:search-query-too-long
+  first_seen: 2026-10-20T09:01:24Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:01:24Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

@@ -1,0 +1,26 @@
+id: af:github:private-repo-404-not-403
+service: github
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+signal:
+  status: 404
+  error_string: "Not Found"
+  normalized: "not found"
+claim: "A request for a private resource without proper authentication returns 404 Not Found, not 403 Forbidden, so that the existence of private repositories is not confirmed."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: request_scope, scope: repo}
+status: official
+evidence:
+  first_seen: 2026-10-20T08:50:00Z
+  official_url: https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api#404-not-found-for-an-existing-resource
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

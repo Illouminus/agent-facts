@@ -1,0 +1,29 @@
+id: af:github:anonymous-cache-ignores-api-version
+service: github
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+signal:
+  status: 200
+claim: "Anonymous GET /repos/{owner}/{repo} responses are shared-cacheable for 60 s (public, s-maxage=60) and Vary does not list X-GitHub-Api-Version, so by HTTP caching rules a cache may serve a body of another API version."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_param, name: cb, value_source: new_uuid_per_request, location: query}
+  - {action: request_scope, scope: public_repo}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:repo-cache-headers
+  first_seen: 2026-10-20T09:01:23Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:01:23Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

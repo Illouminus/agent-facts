@@ -1,0 +1,9 @@
+id: af:github:probe:search-beyond-1000
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /search/repositories, query: {q: "stars:>1", per_page: 100, page: 11}}
+assert:
+  - {step: 1, status: 422}
+  - {step: 1, json_path: $.message, equals: Only the first 1000 search results are available}

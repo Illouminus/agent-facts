@@ -1,0 +1,27 @@
+id: af:github:api-version-2026-drops-has-downloads
+service: github
+kind: breaking_change
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+claim: "With X-GitHub-Api-Version 2026-03-10, GET /repos/{owner}/{repo} no longer returns has_downloads, which the default version 2022-11-28 still includes."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: X-GitHub-Api-Version, value_source: "literal:2022-11-28"}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:repo-api-version-2026
+  first_seen: 2026-10-20T09:01:22Z
+  confirmations: 1
+  official_url: https://docs.github.com/en/rest/about-the-rest-api/breaking-changes
+  last_confirmed: 2026-10-20T09:01:22Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

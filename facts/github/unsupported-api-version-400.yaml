@@ -1,0 +1,31 @@
+id: af:github:unsupported-api-version-400
+service: github
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+signal:
+  status: 400
+  error_string: "The version you specified in the \"X-GitHub-API-Version\" request header, \"2021-01-01\", is not a supported version. The following versions are currently supported: \"2026-03-10\" (most recent) and \"2022-11-28\"."
+  normalized: "the version you specified in the \"x-github-api-version\" request header, \"####-##-##\", is not a supported version. the following versions are currently supported: \"####-##-##\" (most recent) and \"####-##-##\"."
+claim: "An X-GitHub-Api-Version that is not a supported version, such as 2021-01-01, returns HTTP 400 Bad Request whose errors field is a string naming the supported versions."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: X-GitHub-Api-Version, value_source: "literal:2026-03-10"}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:repo-api-version-unsupported
+  first_seen: 2026-10-20T09:01:22Z
+  confirmations: 1
+  official_url: https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api#not-a-supported-version
+  last_confirmed: 2026-10-20T09:01:22Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]
