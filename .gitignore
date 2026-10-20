@@ -1,0 +1,25 @@
+# secrets never
+.env
+.env.*
+*.key
+*.pem
+.private_keys/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# node
+node_modules/
+coverage/
+
+# local scratch
+.DS_Store
+tmp/
