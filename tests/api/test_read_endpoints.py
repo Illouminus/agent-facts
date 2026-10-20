@@ -2,7 +2,7 @@
 
 from api_fixtures import IDEMPOTENCY_ID, STRIPE_PI
 
-CHECK = {"target": {"method": "POST", "url": STRIPE_PI}}
+CHECK = {"target": {"method": "POST", "url": STRIPE_PI}, "error": {"status": 429}}
 
 
 def test_facts_of_a_service(client):

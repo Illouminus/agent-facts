@@ -1,4 +1,4 @@
-"""The sqlite file behind `check()`: observation rows, the daily salt, anonymous counters.
+"""The sqlite file behind `check()`: observation rows, the weekly reporter salt, anonymous counters.
 
 One connection guarded by a lock (the API runs sync handlers in a thread pool, one process). Every
 row is validated by `agentfacts.schema.models.Observation` with its final id before it is written,
@@ -20,6 +20,12 @@ from agentfacts.schema.models import Observation
 SCHEMA_SQL = Path(__file__).with_name("schema.sql")
 COLUMNS = tuple(Observation.model_fields)
 SALT_BYTES = 32
+
+
+def salt_period(day: date) -> date:
+    """First day (Monday, UTC) of the salt period holding `day`: the reporter salt rotates weekly
+    at Monday 00:00 UTC, and the quorum window is that same week (spec 03 Q6, spec 05)."""
+    return day - timedelta(days=day.weekday())
 
 
 def _day_bounds(received_at: str) -> tuple[str, str]:
@@ -74,17 +80,18 @@ class Store:
         with self._lock:
             return self.connection.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
 
-    def daily_salt(self, day: str) -> bytes:
-        """The salt of UTC `day` (YYYY-MM-DD); the first call of a new day creates it and deletes
-        every other, so yesterday's reporter hashes can no longer be recomputed."""
+    def period_salt(self, period: str) -> bytes:
+        """The salt of the period starting `period` (its Monday, YYYY-MM-DD, from `salt_period`);
+        the first call of a new period creates it and deletes every older one, so last week's
+        reporter hashes can no longer be recomputed."""
         with self._lock, self.connection:
-            found = self.connection.execute("SELECT salt FROM salts WHERE day = ?", (day,))
+            found = self.connection.execute("SELECT salt FROM salts WHERE day = ?", (period,))
             if (row := found.fetchone()) is not None:
                 return row[0]
             salt = secrets.token_bytes(SALT_BYTES)
-            # only older days: a late request for yesterday must not delete today's salt
-            self.connection.execute("DELETE FROM salts WHERE day < ?", (day,))
-            self.connection.execute("INSERT INTO salts (day, salt) VALUES (?, ?)", (day, salt))
+            # only older periods: a late request for last week must not delete this week's salt
+            self.connection.execute("DELETE FROM salts WHERE day < ?", (period,))
+            self.connection.execute("INSERT INTO salts (day, salt) VALUES (?, ?)", (period, salt))
             return salt
 
     def bump(self, name: str, day: str) -> None:

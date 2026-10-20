@@ -117,7 +117,7 @@
       },
       "CheckRequest": {
         "additionalProperties": false,
-        "description": "Request = contribution: if `target` matches a registered template, a normalized\nobservation is stored (no body, headers, query or raw IP).",
+        "description": "Request = contribution: if `target` matches a registered template and `error` carries a\nsignal, a normalized observation is stored (no body, headers, query or raw IP).",
         "properties": {
           "context": {
             "anyOf": [

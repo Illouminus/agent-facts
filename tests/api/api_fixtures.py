@@ -86,6 +86,7 @@ PYPI_SERVICE = """
 key: pypi
 name: PyPI
 hosts: [pypi.org]
+doc_hosts: [docs.pypi.org]
 surfaces:
   http:
     base_url: https://pypi.org

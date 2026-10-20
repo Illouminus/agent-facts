@@ -51,7 +51,8 @@ from agentfacts.api.models import (
 )
 from agentfacts.api.normalize import ExtractedSignal, extract_signal, find_urls, looks_like_prompt
 from agentfacts.api.ratelimit import RateLimiter
-from agentfacts.api.store import Store
+from agentfacts.api.seed_hosts import metric_host
+from agentfacts.api.store import Store, salt_period
 from agentfacts.schema.registry import on_vendor_domain
 
 LICENSE = "CC-BY-4.0"
@@ -175,19 +176,20 @@ def _ingest(
     state: _State,
     entry: ServiceEntry,
     template: Template,
-    signal: ExtractedSignal | None,
+    signal: ExtractedSignal,
     req: CheckRequest,
     target: UrlTarget,
     ip: str,
     user_agent: str | None,
     now: datetime,
 ) -> bool:
-    """Spec 03 step 4: one normalized row, or nothing (dropped and counted)."""
+    """Spec 03 step 4: one normalized row, or nothing (dropped and counted). The reporter salt
+    is the week's (Q6): one network keeps one id for the whole quorum window."""
     day = now.date().isoformat()
     if (dropped := _drop_reason(entry, signal)) is not None:
         state.store.bump(dropped, day)
         return False
-    salt = state.store.daily_salt(day)
+    salt = state.store.period_salt(salt_period(now.date()).isoformat())
     context = req.context
     sdk = context.sdk if context else None
     row = {
@@ -195,9 +197,9 @@ def _ingest(
         "service": entry.key,
         "method": template[0],
         "path_template": template[1],
-        "status": signal.status if signal else None,
-        "error_hash": signal.error_hash if signal else None,
-        "normalized_error": signal.normalized if signal else None,
+        "status": signal.status,
+        "error_hash": signal.error_hash,
+        "normalized_error": signal.normalized,
         "reporter_net": hashlib.sha256(salt + network_of(ip).encode()).hexdigest(),
         "reporter_ua_class": classify_ua(user_agent),
         "sdk_package": sdk.package if sdk else None,
@@ -210,6 +212,15 @@ def _ingest(
         return False
     state.store.bump("stored", day)
     return True
+
+
+def _count_unregistered(store: Store, target: Target | None, day: str) -> None:
+    """Spec 03 step 1 (Q7): one anonymous daily count, labelled with the host only when it is a
+    seed candidate's API host; every other target (package, unparsed, unknown host) is `other`.
+    The unlabelled total is kept as well, so a reader can sum one name."""
+    host = target.host if isinstance(target, UrlTarget | HostTarget) else None
+    store.bump("unregistered_target", day)
+    store.bump(f"unregistered_target:{metric_host(host)}", day)
 
 
 def _observed(entry: ServiceEntry | None) -> dict[str, Any]:
@@ -258,7 +269,8 @@ def _check(state: _State, req: CheckRequest, ip: str, user_agent: str | None) ->
         else:
             facts, answered = index.for_signal(entry, template, signal, sdk)
             reason = None if answered else "no_fact_for_signal"
-        stored = _ingest(state, entry, template, signal, req, target, ip, user_agent, now)
+        if signal is not None and not signal.empty:  # pre-flight and empty errors: never (Q5)
+            stored = _ingest(state, entry, template, signal, req, target, ip, user_agent, now)
     elif entry is not None and isinstance(target, HostTarget):
         facts = index.for_service(entry, sdk)
         reason = None if facts else "no_fact_for_signal"
@@ -269,7 +281,7 @@ def _check(state: _State, req: CheckRequest, ip: str, user_agent: str | None) ->
         facts = index.service_level(entry, sdk) if entry is not None else []
         entry = entry if isinstance(target, UrlTarget) else None
         reason = "unregistered_target"
-        state.store.bump("unregistered_target", now.date().isoformat())
+        _count_unregistered(state.store, target, now.date().isoformat())
 
     return {
         "service": entry.key if entry else None,
