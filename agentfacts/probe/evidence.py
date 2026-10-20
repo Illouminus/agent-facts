@@ -1,7 +1,8 @@
 """Apply a probe outcome to a fact that cites the probe (spec 04 Execution, spec 01 status rules).
 
 - pass → `last_confirmed`, `confirmations += 1`, `stale_counter = 0`, vantage added; a `stale` fact
-  gets back the `previous_status` of its last `stale` history entry (or `verified:server:<env>`).
+  gets back the `previous_status` of its last `stale` history entry (or `verified:server:<env>`);
+  a `reported` fact (quorum draft citing this probe) becomes `verified:server:<env>` (spec 05).
 - fail → `stale_counter += 1`; at ≥ 3 a `verified:*` fact becomes `stale`, the old status kept in
   history. `official`, `reported` only count; `retracted` is never touched.
 - A probe in another `env` or `account_state` than the fact (probe without `account_state` = `any`)
@@ -115,6 +116,15 @@ def _confirm(doc: CommentedMap, probe: Probe, vantage: str, now: datetime) -> st
         evidence["vantages"] = vantages
     if vantage not in vantages:
         vantages.append(vantage)
+    if doc["status"] == Status.reported:
+        doc["status"] = f"verified:server:{probe.env}"
+        _history(doc).append({
+            "date": Stamp(now.date().isoformat()),
+            "change": "verified",
+            "by": "bot",
+            "previous_status": Status.reported.value,
+        })
+        return "verified"
     if doc["status"] != Status.stale:
         return "confirmed"
     doc["status"] = _previous_status(doc, probe)
@@ -139,8 +149,18 @@ def _fail(doc: CommentedMap, now: datetime) -> str:
     return "stale"
 
 
+def save_fact(path: Path, doc: Any) -> None:
+    """Re-validate a round-tripped fact document and replace the file atomically (ValueError if
+    the document is not a valid fact; the file is left as is)."""
+    try:
+        Fact.model_validate(plain(doc))
+    except ValidationError as exc:
+        raise ValueError(f"{path}: not a valid fact: {exc.error_count()} errors") from exc
+    _write_atomic(path, dump_text(doc))
+
+
 def apply_outcome(path: Path, probe: Probe, outcome: Outcome, vantage: str, now: datetime) -> str:
-    """Update one fact file; returns the change: confirmed, restored, failed, stale,
+    """Update one fact file; returns the change: confirmed, verified, restored, failed, stale,
     other_dimension, untouched or invalid (file left as is)."""
     try:
         doc = load_fact(path)
@@ -154,8 +174,7 @@ def apply_outcome(path: Path, probe: Probe, outcome: Outcome, vantage: str, now:
     now = now.astimezone(UTC)
     change = _confirm(doc, probe, vantage, now) if outcome == "pass" else _fail(doc, now)
     try:
-        Fact.model_validate(plain(doc))
-    except ValidationError:
+        save_fact(path, doc)
+    except ValueError:
         return "invalid"
-    _write_atomic(path, dump_text(doc))
     return change
