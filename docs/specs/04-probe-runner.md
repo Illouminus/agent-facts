@@ -37,7 +37,8 @@ fact stays `reported` or `official`.
   (previous status kept in `history`). A failure in a **different env** than the fact's dimension never
   touches the fact (`01` rule).
 - Side effects: probes may only create objects in `env: sandbox`; a probe with `env: prod` must be
-  read-only (`GET`/`HEAD`) — enforced by the validator.
+  read-only: `GET`/`HEAD`, or a `POST` whose body is one JSON-RPC call to a method listed in the
+  service's `surfaces.http.jsonrpc.read_methods` (added by W7 for Solana, PR #9) — enforced by the validator.
 
 ## Keys and secrets
 

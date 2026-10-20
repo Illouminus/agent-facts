@@ -22,20 +22,20 @@ illouminus and the first Monday digest has arrived.
 
 ## Packages
 
-| Pkg | Name | Branch | Specs | Depends on | Agent-hours* |
-|-----|------|--------|-------|------------|--------------|
-| W0 | Scaffold + CI + public README | `feat/w0-scaffold` | 00 | — | 0.5–1 |
-| W1 | Schemas + validator CLI | `feat/w1-schemas` | 01, 02 | W0 | 1–2 |
-| W2 | Probe runner | `feat/w2-probe-runner` | 04, 01 | W1 | 2–3 |
-| W3 | `check()` API + ingestion | `feat/w3-check-api` | 03, 01 | W1 | 2–3 |
-| W4 | Quorum + bot | `feat/w4-quorum-bot` | 05 | W2, W3 | 2 |
-| W5 | Pages generator | `feat/w5-pages` | 06 | W1 | 1–2 |
-| W6 | pytest plugin + CLI `check` | `feat/w6-pytest-plugin` | 07, 03 | W1 (W3 mocked) | 1–2 |
-| W7 | Seed content, wave 1 (10 services × ≥ 10 facts) | `content/w7-wave1-<service>` (one PR per service) | 01, 04, research doc | W1, W2 | 3–5 |
-| W8 | Ops on illouminus + digest + state | `feat/w8-ops` | 08 | W2–W6 | 2 |
-| W9 | jest plugin, MCP server, client sandbox (`verified:client`) | `feat/w9-*` | 07 | W3, W6 | 3 |
+| Pkg | Name | Branch | Specs | Depends on | Estimate* | Measured (opus session, worktree → merge) |
+|-----|------|--------|-------|------------|-----------|-------------------------------------------|
+| W0 | Scaffold + CI + public README | `feat/w0-scaffold` | 00 | — | 0.5–1 h | 11 min (PR #1) |
+| W1 | Schemas + validator CLI | `feat/w1-schemas` | 01, 02 | W0 | 1–2 h | 18 min (PR #2) |
+| W2 | Probe runner | `feat/w2-probe-runner` | 04, 01 | W1 | 2–3 h | 43 min (PR #6) |
+| W3 | `check()` API + ingestion | `feat/w3-check-api` | 03, 01 | W1 | 2–3 h | ~1 h (PR #4, 463 tests) |
+| W4 | Quorum + bot | `feat/w4-quorum-bot` | 05 | W2, W3, answers to the 7 ingestion questions | 2 h | — |
+| W5 | Pages generator | `feat/w5-pages` | 06 | W1 | 1–2 h | 18 min (PR #3) |
+| W6 | pytest plugin + CLI `check` | `feat/w6-pytest-plugin` | 07, 03 | W1 (W3 mocked) | 1–2 h | 35 min (PR #5) |
+| W7 | Seed content, wave 1 (10 services × ≥ 10 facts) | `content/w7-wave1-<service>` (one PR per service) | 01, 04, research doc | W1, W2 | 3–5 h | keyless 3 services: ~1.5 h (PRs #7–#9, 53 facts) |
+| W8 | Ops on illouminus + digest + state | `feat/w8-ops` | 08 | W2–W6 | 2 h | — |
+| W9 | jest plugin, MCP server, client sandbox (`verified:client`) | `feat/w9-*` | 07 | W3, W6 | 3 h | — |
 
-\* unmeasured estimates; the first package measured will recalibrate the rest.
+\* the 2026-10-20 estimates were 3–5× too high for an opus session with a written spec; W4/W8/W9 should expect 30–60 min each. Calibration lives here, not in prose.
 
 ### Order and parallelism
 
