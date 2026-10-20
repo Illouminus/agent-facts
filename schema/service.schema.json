@@ -15,6 +15,12 @@
       "uniqueItems": true,
       "items": {"$ref": "#/$defs/hostname"}
     },
+    "doc_hosts": {
+      "description": "Vendor documentation hosts (e.g. docs.stripe.com). URLs inside fixes must be on hosts or doc_hosts, or a subdomain of one.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/hostname"}
+    },
     "surfaces": {
       "type": "object",
       "minProperties": 1,

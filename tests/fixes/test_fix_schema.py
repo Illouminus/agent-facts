@@ -56,6 +56,12 @@ REJECTED = {
         "path_template": "v1/customers",
     },
     "attempts_zero": {"action": "retry_after_header", "unit": "s", "max_attempts": 0},
+    "constraint_free_text": {
+        "action": "pin_sdk_version",
+        "package": "stripe",
+        "ecosystem": "pypi",
+        "constraint": "just use the latest one",
+    },
     "header_trailing_newline": {
         "action": "set_header",
         "name": "Idempotency-Key\n",

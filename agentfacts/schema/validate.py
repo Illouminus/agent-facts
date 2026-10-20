@@ -73,7 +73,9 @@ def collect_files(paths: Iterable[Path]) -> list[Path]:
     files: list[Path] = []
     for path in paths:
         if path.is_dir():
-            files.extend(sorted(p for p in path.rglob("*") if p.suffix in YAML_SUFFIXES))
+            files.extend(
+                sorted(p for p in path.rglob("*") if p.suffix in YAML_SUFFIXES and p.is_file())
+            )
         elif path.is_file():
             files.append(path)
         else:
@@ -123,6 +125,9 @@ def validate_paths(paths: Sequence[Path], root: Path = Path(".")) -> Report:
 def _load(path: Path, problems: list[Problem]) -> _Doc | None:
     try:
         raw = load_yaml(path)
+    except OSError as exc:
+        problems.append(Problem(path, 1, "read_error", _clip(f"cannot read file: {exc.strerror}")))
+        return None
     except (YAMLError, UnicodeDecodeError) as exc:
         mark = exc.problem_mark if isinstance(exc, MarkedYAMLError) else None
         line = mark.line + 1 if mark is not None else 1
@@ -153,15 +158,21 @@ def _classify(doc: Mapping[str, Any]) -> DocType | None:
 
 
 def _schema_problems(doc: _Doc) -> list[Problem]:
-    errors = sorted(validator_for(doc.type).iter_errors(doc.data), key=lambda e: list(e.path))
+    errors = list(validator_for(doc.type).iter_errors(doc.data))
     doc.schema_ok = not errors
     return [doc.problem(list(e.absolute_path), _code(e), _schema_message(e)) for e in errors]
 
 
+def _annotated_code(error: SchemaError) -> str | None:
+    """The code a schema assigns to the failing keyword via `x-error-codes`, if any."""
+    if not isinstance(error.schema, Mapping):
+        return None
+    return error.schema.get("x-error-codes", {}).get(error.validator)
+
+
 def _code(error: SchemaError) -> str:
-    annotations = error.schema.get("x-error-codes", {}) if isinstance(error.schema, Mapping) else {}
-    if error.validator in annotations:
-        return annotations[error.validator]
+    if code := _annotated_code(error):
+        return code
     path = list(error.absolute_path)
     if len(path) >= 2 and path[0] == "fixes":
         return "fix_invalid"
@@ -220,6 +231,8 @@ def _registry(docs: list[_Doc], context: list[_Doc]) -> Registry:
 def _location_mismatch(doc: _Doc, folder: str, service: str, slug: str) -> str | None:
     """If the file sits in its canonical folder, the folder and file name must match the id."""
     path = doc.path
+    if folder != "services" and path.parent.name == folder:
+        return f"{folder}/{path.name} must live in {folder}/<service>/<slug>.yaml"
     if folder == "services" and path.parent.name == "services" and path.stem != slug:
         return f"services/{path.name} holds service {slug}"
     if path.parent.parent.name == folder and (path.parent.name, path.stem) != (service, slug):
@@ -300,7 +313,11 @@ def _fix_checks(
             _unknown_state(doc, [*path, "account_state"], fix["account_state"], service)
         )
     for name, value in fix.items():
-        if isinstance(value, str) and "://" in value and not on_vendor_domain(value, service.hosts):
+        if (
+            isinstance(value, str)
+            and "://" in value
+            and not on_vendor_domain(value, service.vendor_hosts)
+        ):
             problems.append(
                 doc.problem(
                     [*path, name], "foreign_url", f"{value} is not on {service.key}'s domain"
@@ -370,9 +387,6 @@ def fix_problems(fix: Any, label: Path = Path("<fix>")) -> list[Problem]:
     """Schema problems of one standalone fix (no service context), for `agentfacts render-fix`."""
     problems = []
     for error in validator_for("fix").iter_errors(fix):
-        annotations = (
-            error.schema.get("x-error-codes", {}) if isinstance(error.schema, Mapping) else {}
-        )
-        code = annotations.get(error.validator, "fix_invalid")
+        code = _annotated_code(error) or "fix_invalid"
         problems.append(Problem(label, 1, code, _clip(_schema_message(error))))
     return sorted(problems)

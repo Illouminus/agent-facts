@@ -83,19 +83,26 @@ def test_use_endpoint_registered_template_passes(tmp_path):
     assert _codes(tmp_path, {"s.yaml": SERVICE, "f.yaml": fact, "p.yaml": PROBE}) == set()
 
 
+SERVICE_WITH_DOCS = _swap(
+    SERVICE, "hosts: [api.stripe.com]", "hosts: [api.stripe.com]\ndoc_hosts: [docs.stripe.com]"
+)
+
+
 @pytest.mark.parametrize(
-    ("url", "codes"),
+    ("service", "url", "codes"),
     [
-        ("https://docs.stripe.com/payments", set()),
-        ("https://api.stripe.com/docs", set()),
-        ("https://stripe.com.evil.example/x", {"foreign_url"}),
-        ("https://evil.example/stripe.com", {"foreign_url"}),
+        (SERVICE_WITH_DOCS, "https://docs.stripe.com/payments", set()),
+        (SERVICE, "https://docs.stripe.com/payments", {"foreign_url"}),
+        (SERVICE, "https://api.stripe.com/docs", set()),
+        (SERVICE_WITH_DOCS, "https://stripe.com/docs", {"foreign_url"}),
+        (SERVICE_WITH_DOCS, "https://docs.stripe.com.evil.example/x", {"foreign_url"}),
+        (SERVICE_WITH_DOCS, "https://evil.example/docs.stripe.com", {"foreign_url"}),
     ],
 )
-def test_vendor_doc_url_must_be_on_the_vendor_domain(tmp_path, url, codes):
+def test_vendor_doc_url_must_be_on_a_registered_host(tmp_path, service, url, codes):
     fix = f"  - {{action: enable_in_dashboard, setting_key: payments, vendor_doc_url: '{url}'}}"
     fact = _swap(FACT, FIX_LINE, fix)
-    assert _codes(tmp_path, {"s.yaml": SERVICE, "f.yaml": fact, "p.yaml": PROBE}) == codes
+    assert _codes(tmp_path, {"s.yaml": service, "f.yaml": fact, "p.yaml": PROBE}) == codes
 
 
 def test_scope_url_must_be_on_the_vendor_domain(tmp_path):
@@ -184,6 +191,11 @@ def test_inputs_shadow_context_documents(tmp_path):
         ("/v1/customers/", "/v1/customers/{id}", False),
         ("/v1/payment_intents", "/v1/payment_intents", True),
         ("/v1/payment_intent", "/v1/payment_intents", False),
+        ("/v1/customers/..", "/v1/customers/{id}", False),
+        ("/v1/customers/.", "/v1/customers/{id}", False),
+        ("/v1/customers/%2E%2E", "/v1/customers/{id}", False),
+        ("/v1/customers/a%2Fb", "/v1/customers/{id}", False),
+        ("/v1/customers/a\\b", "/v1/customers/{id}", False),
     ],
 )
 def test_match_template(path, template, ok):
@@ -191,13 +203,13 @@ def test_match_template(path, template, ok):
 
 
 def test_on_vendor_domain():
-    hosts = ("api.stripe.com",)
-    assert on_vendor_domain("https://stripe.com/x", hosts)
+    hosts = ("api.stripe.com", "docs.stripe.com")
     assert on_vendor_domain("https://docs.stripe.com/x", hosts)
-    assert not on_vendor_domain("https://notstripe.com/x", hosts)
-    assert not on_vendor_domain("https://user@evil.example/x", hosts)
-    assert on_vendor_domain("https://example.org/x", ("example.org",))
-    assert not on_vendor_domain("https://org/x", ("example.org",))
+    assert on_vendor_domain("https://eu.api.stripe.com/x", hosts)
+    assert not on_vendor_domain("https://stripe.com/x", hosts)  # no parent-domain guessing
+    assert not on_vendor_domain("https://notapi.stripe.com/x", hosts)
+    assert not on_vendor_domain("https://docs.stripe.com@evil.example/x", hosts)
+    assert not on_vendor_domain("https://api.co.uk/x", ("x.api.co.uk",))
 
 
 PROD_GET = (
@@ -241,3 +253,29 @@ def test_probe_env_must_match_the_key_env(tmp_path):
 def test_keyless_step_may_cross_env(tmp_path):
     probe = (PROD_GET % "").replace("cus_123}", "cus_123, auth: none}")
     assert _codes(tmp_path, {"s.yaml": SERVICE, "p.yaml": probe}) == set()
+
+
+def test_malformed_service_is_reported_not_a_crash(tmp_path):
+    service = "key: stripe\nname: Stripe\nhosts: api.stripe.com\nsurfaces: [http]\nauth: bearer\n"
+    codes = _codes(tmp_path, {"s.yaml": service, "f.yaml": FACT, "p.yaml": PROBE})
+    assert "schema_type" in codes  # hosts / surfaces / auth have the wrong shape; no traceback
+
+
+def test_fact_directly_under_facts_is_misplaced(tmp_path):
+    files = {"s.yaml": SERVICE, "facts/idempotency.yaml": FACT, "p.yaml": PROBE}
+    assert _codes(tmp_path, files) == {"id_mismatch"}
+
+
+def test_directory_named_like_yaml_is_skipped(tmp_path):
+    (tmp_path / "old.yaml").mkdir()
+    assert validate_paths([tmp_path], root=tmp_path / "no-root").problems == []
+
+
+def test_unreadable_file_is_a_read_error(tmp_path):
+    path = tmp_path / "f.yaml"
+    path.write_text(FACT, encoding="utf-8")
+    path.chmod(0)
+    try:
+        assert {p.code for p in validate_paths([path], root=tmp_path).problems} == {"read_error"}
+    finally:
+        path.chmod(0o644)

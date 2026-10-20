@@ -63,7 +63,7 @@
     "path_template": {"type": "string", "pattern": "^/[^\\s?#]{0,255}(?!\\n)$"},
     "ecosystem": {"enum": ["pypi", "npm"]},
     "package": {"type": "string", "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}(?!\\n)$"},
-    "version_constraint": {"type": "string", "pattern": "^[A-Za-z0-9.,<>=!~^*|+ -]{1,64}(?!\\n)$"},
+    "version_constraint": {"type": "string", "pattern": "^[A-Za-z0-9.,<>=!~^*|+-]{1,64}(?!\\n)$"},
     "version": {"type": "string", "pattern": "^[A-Za-z0-9.+-]{1,64}(?!\\n)$"},
     "env": {"enum": ["prod", "sandbox"]},
     "https_url": {"type": "string", "pattern": "^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[^\\s]*)?(?!\\n)$", "maxLength": 512},

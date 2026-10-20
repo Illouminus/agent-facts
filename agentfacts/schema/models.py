@@ -42,7 +42,7 @@ ValueSource = _pattern(
 )
 PathTemplate = _pattern(r"^/[^\s?#]{0,255}$")
 Package = _pattern(r"^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
-VersionConstraint = _pattern(r"^[A-Za-z0-9.,<>=!~^*|+ -]{1,64}$")
+VersionConstraint = _pattern(r"^[A-Za-z0-9.,<>=!~^*|+-]{1,64}$")
 Version = _pattern(r"^[A-Za-z0-9.+-]{1,64}$")
 HttpsUrl = _pattern(r"^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[^\s]*)?$", max_length=512)
 
@@ -441,6 +441,7 @@ class Service(_Closed):
     key: Slug
     name: Annotated[str, StringConstraints(min_length=1, max_length=100)]
     hosts: Annotated[tuple[Hostname, ...], Field(min_length=1)]
+    doc_hosts: tuple[Hostname, ...] | None = None
     surfaces: Surfaces
     dimensions: ServiceDimensions
     auth: Auth | None = None
