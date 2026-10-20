@@ -1,4 +1,4 @@
-# NOT ENABLED: switched on after a green dry run on the host (see agentfacts-quorum.service).
+# Enabled 2026-10-20: switched on after a green dry run on the host (see agentfacts-quorum.service).
 # Hourly per spec 08.
 [Unit]
 Description=agent-facts quorum + bot hourly (not enabled)

@@ -41,11 +41,34 @@ PUBLISHED_DIRS = ("facts/", "pages/")
 Gh = Callable[[Sequence[str]], str]
 
 
+GH_FALLBACKS = ("~/.local/bin/gh", "/usr/local/bin/gh", "/snap/bin/gh", "/opt/homebrew/bin/gh")
+
+
+def find_gh(
+    environ: Mapping[str, str] | None = None, fallbacks: Sequence[str] = GH_FALLBACKS
+) -> str:
+    """Path to the `gh` binary: `AGENTFACTS_GH`, then PATH, then the usual per-user and system
+    locations. systemd user units run with a minimal PATH that lacks ~/.local/bin, where gh lives
+    on illouminus (quorum service failed with FileNotFoundError on 2026-10-20)."""
+    env = os.environ if environ is None else environ
+    if explicit := env.get("AGENTFACTS_GH"):
+        return explicit
+    if found := shutil.which("gh", path=env.get("PATH")):
+        return found
+    home = env.get("HOME") or str(Path.home())
+    for candidate in fallbacks:
+        path = Path(candidate.replace("~", home, 1))
+        if path.is_file() and os.access(path, os.X_OK):
+            return str(path)
+    raise GitError("gh not found: set AGENTFACTS_GH or add gh to PATH")
+
+
 def gh_cli(root: Path) -> Gh:
     """The real `gh`, run in the checkout (its `origin` names the repository)."""
+    exe = find_gh()
 
     def run(args: Sequence[str]) -> str:
-        done = subprocess.run(["gh", *args], cwd=root, capture_output=True, text=True, check=False)
+        done = subprocess.run([exe, *args], cwd=root, capture_output=True, text=True, check=False)
         if done.returncode != 0:
             raise GitError(f"gh {' '.join(args[:2])}: {done.stderr.strip()}")
         return done.stdout
