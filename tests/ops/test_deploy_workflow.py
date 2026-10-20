@@ -23,6 +23,8 @@ def test_job_only_on_a_successful_push_run_and_short():
     job = load()["jobs"]["deploy"]
     assert "github.event.workflow_run.conclusion == 'success'" in job["if"]
     assert "github.event.workflow_run.event == 'push'" in job["if"]
+    manual = "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'"
+    assert manual in job["if"]
     assert job["timeout-minutes"] <= 3
 
 
