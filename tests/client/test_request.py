@@ -219,6 +219,8 @@ def test_signal_is_frozen():
         ("db error: postgres://admin:hunter2@db.internal:5432/app failed", "hunter2"),
         ("see https://bob:pw123@api.example.org/v1/x?token=abc", "pw123"),
         ("redis://:s3cret@cache:6379/0?x=1", "s3cret"),
+        ("postgres://user:pa/ss@db/app", "pa"),
+        ("amqp://user:p?w#d@mq/vhost", "p?w"),
         ("user jane.doe%40example.com not found", "jane.doe"),
     ],
 )

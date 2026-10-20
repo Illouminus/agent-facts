@@ -84,11 +84,10 @@ def _looks_secret(value: str) -> bool:
 
 def _url(match: re.Match[str]) -> str:
     """Any scheme: drop userinfo (`user:pass@`), query and fragment."""
-    url = match.group(0)
-    cut = min((i for i in (url.find("?"), url.find("#")) if i >= 0), default=len(url))
-    scheme, _, rest = url[:cut].partition("://")
-    authority, slash, path = rest.partition("/")
-    return f"{scheme}://{authority.rpartition('@')[2]}{slash}{path}"
+    scheme, _, rest = match.group(0).partition("://")
+    rest = rest.rpartition("@")[2]  # a password may hold / ? or #: cut at the last @ first
+    cut = min((i for i in (rest.find("?"), rest.find("#")) if i >= 0), default=len(rest))
+    return f"{scheme}://{rest[:cut]}"
 
 
 def _auth_scheme(match: re.Match[str]) -> str:

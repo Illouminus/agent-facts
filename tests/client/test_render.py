@@ -155,3 +155,11 @@ def test_title_line_width_like_pytest_sep():
 def test_no_fix_lines_without_typed_fixes():
     lines = render_section({**RESULT, "facts": [fact(fixes=None)]}, SIGNAL).splitlines()
     assert not any("fix:" in line for line in lines)
+
+
+def test_typed_fix_parameters_are_cleaned_too():
+    sneaky = fact(
+        fixes=[{"action": "use_endpoint", "method": "GET", "path_template": "/v1/\x1b[2Jx"}]
+    )
+    lines = render_section({**RESULT, "facts": [sneaky]}, SIGNAL).splitlines()
+    assert lines[2] == "   fix: Call GET /v1/ [2Jx instead"

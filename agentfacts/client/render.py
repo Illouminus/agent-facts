@@ -46,7 +46,7 @@ def _fix_lines(fact: Mapping[str, Any]) -> list[str]:
     lines = []
     for i, fix in enumerate(fixes if isinstance(fixes, list) else ()):
         try:
-            sentence = render_fix(fix)
+            sentence = _clean(render_fix(fix), 200)  # typed parameters may still hold ESC
         except Exception:  # an action newer than this client
             sentence = _clean(rendered[i], 200) if i < len(rendered) else ""
         if sentence:
