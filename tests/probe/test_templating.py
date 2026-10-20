@@ -69,6 +69,10 @@ def test_non_strings_pass_through():
         "{{step[1].json.missing}}",
         "{{step[1].json.id[0]}}",
         "{{step[1].headers.x}}",
+        "{{run_uuid}",
+        "{run_uuid}}",
+        "{{ a {b} }}",
+        "x {{run_uuid}} {{",
     ],
 )
 def test_rejected_templates(template):

@@ -52,6 +52,8 @@ _ERROR_PATHS = (
 ERROR_MAX = 512
 _TEXT_ERROR_MAX = 200
 FIELD_MAX = 1024  # any string in a record, clipped after redaction
+DETAIL_MAX = 200  # run and assertion details
+_DETAIL_PATHS = frozenset({("detail",), ("asserts", "*", "detail")})
 
 
 def header_whitelist(service: Service, probe: Probe) -> frozenset[str]:
@@ -134,13 +136,14 @@ def refused_step_record(index: int, step: HttpStep, refused: Refused) -> dict[st
     }
 
 
-def _clip(data: Any) -> Any:
+def _clip(data: Any, path: tuple[str, ...] = ()) -> Any:
     if isinstance(data, str):
-        return data if len(data) <= FIELD_MAX else data[: FIELD_MAX - 1] + "…"
+        limit = DETAIL_MAX if path in _DETAIL_PATHS else FIELD_MAX
+        return data if len(data) <= limit else data[: limit - 1] + "…"
     if isinstance(data, dict):
-        return {k: _clip(v) for k, v in data.items()}
+        return {k: _clip(v, (*path, k)) for k, v in data.items()}
     if isinstance(data, list):
-        return [_clip(v) for v in data]
+        return [_clip(v, (*path, "*")) for v in data]
     return data
 
 

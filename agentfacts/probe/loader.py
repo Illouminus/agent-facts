@@ -44,9 +44,11 @@ class Repo:
         return [f for f in self.facts if f.fact.evidence.probe == probe_id]
 
 
-def _model(path: Path, model: type[BaseModel], problems: list[Problem]) -> Any:
+def _model(
+    path: Path, model: type[BaseModel], data: dict[str, Any] | None, problems: list[Problem]
+) -> Any:
     try:
-        return model.model_validate(plain(load_yaml(path)))
+        return model.model_validate(data if data is not None else plain(load_yaml(path)))
     except ValidationError as exc:  # the JSON Schema accepted it, the mirror did not
         first = exc.errors()[0]
         where = ".".join(str(p) for p in first["loc"]) or "document"
@@ -75,7 +77,8 @@ def load_repo(root: Path) -> Repo:
     ]
     for directory, model, keep in loaders:
         for path in clean(directory):
-            if (loaded := _model(path, model, repo.problems)) is not None:
+            data = report.documents.get(path)  # parsed once, by the validator
+            if (loaded := _model(path, model, data, repo.problems)) is not None:
                 keep(path, loaded)
 
     known = []

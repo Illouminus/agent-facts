@@ -133,3 +133,25 @@ def test_transport_error_fails_every_assertion():
 def test_record_shape():
     rec = check(status=400).to_record()
     assert rec == {"step": 1, "kind": "status", "ok": True, "detail": "status 400"}
+
+
+def test_details_never_carry_whole_json_values():
+    responses = {1: response(body={"user": {"email": "a@b.example", "name": "Ann"},
+                                   "ids": [1, 2, 3]})}
+    for fields in ({"json_path": "$.user", "equals": "x"},
+                   {"json_path": "$.user", "contains": "x"},
+                   {"json_path": "$.ids", "equals": 1}):
+        detail = evaluate(AssertJsonPath.model_validate({"step": 1, **fields}), responses).detail
+        assert "a@b.example" not in detail and "Ann" not in detail
+    detail = evaluate(AssertJsonPath.model_validate(
+        {"step": 1, "json_path": "$.user", "equals": "x"}), responses).detail
+    assert "object (2 keys)" in detail
+    detail = evaluate(AssertJsonPath.model_validate(
+        {"step": 1, "json_path": "$.ids", "equals": 1}), responses).detail
+    assert "array (3 items)" in detail
+
+
+def test_fingerprint_detail_points_to_the_step_record():
+    result = check(schema_fingerprint="0" * 64)
+    assert result.detail == "fingerprint differs (see steps[1].body_fingerprint)"
+    assert check(schema_fingerprint=schema_fingerprint(BODY)).detail == "fingerprint matches"

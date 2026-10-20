@@ -4,11 +4,12 @@ The runner is the only reader (invariant 4). `key_name` is pattern-checked by th
 (`^[a-z0-9][a-z0-9_-]{0,63}$`), so it cannot leave `keys_dir`. A missing or blank file means no key:
 the service's keyed probes are skipped, never an error.
 
-A key is bound to its service by name: `key_name` is the service key or starts with `<service>-` /
-`<service>_` (`stripe-test` for `stripe`). Otherwise a new `services/evil.yaml` could claim
-`stripe-test` and send it to its own hosts; the runner refuses such a service, key unread.
+A key is bound to its service by name (`key_bound_to_service`: `stripe-test` for `stripe`); the
+validator rejects any other name in CI and the runner refuses it again at run time, key unread.
+`has_key` only looks at the file (dry runs and `probe list` never read a value).
 """
 
+import stat
 from pathlib import Path
 
 DEFAULT_KEYS_DIR = Path.home() / ".private_keys"
@@ -19,16 +20,19 @@ def key_path(key_name: str, keys_dir: Path) -> Path:
 
 
 def read_key(key_name: str, keys_dir: Path) -> str | None:
+    """The key's value, or None when the file is missing, unreadable, not text or blank."""
     try:
         value = key_path(key_name, keys_dir).read_text(encoding="utf-8").strip()
-    except (FileNotFoundError, NotADirectoryError):
+    except (OSError, UnicodeDecodeError):
         return None
     return value or None
 
 
 def has_key(key_name: str, keys_dir: Path) -> bool:
-    return read_key(key_name, keys_dir) is not None
-
-
-def bound_to(key_name: str, service_key: str) -> bool:
-    return key_name == service_key or key_name.startswith((f"{service_key}-", f"{service_key}_"))
+    """A non-empty key file exists; its content is not read (a blank-but-spaces file passes here and
+    is skipped as unreadable when the run reads it)."""
+    try:
+        info = key_path(key_name, keys_dir).stat()
+    except OSError:
+        return False
+    return stat.S_ISREG(info.st_mode) and info.st_size > 0

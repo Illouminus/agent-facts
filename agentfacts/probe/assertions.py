@@ -45,8 +45,13 @@ def schema_fingerprint(body: Any) -> str | None:
 
 
 def _shown(value: Any) -> str:
-    # Never truncated here: a cut could leave part of a secret that redaction no longer matches.
-    # The results log clips long strings after redaction.
+    """A scalar as seen; objects and arrays only by size — details never copy vendor documents
+    (personal data) into results. Not truncated here: a cut could leave part of a secret that
+    redaction no longer matches; the results log clips after redaction."""
+    if isinstance(value, dict):
+        return f"object ({len(value)} keys)"
+    if isinstance(value, list):
+        return f"array ({len(value)} items)"
     return json.dumps(value, ensure_ascii=False) if not isinstance(value, str) else repr(value)
 
 
@@ -138,7 +143,10 @@ def _fingerprint(a: AssertSchemaFingerprint, r: StepResponse) -> tuple[bool, str
     seen = schema_fingerprint(r.json) if r.json is not NOT_JSON else None
     if seen is None:
         return False, "body is not a JSON object"
-    return seen == a.schema_fingerprint, f"fingerprint {seen}"
+    if seen == a.schema_fingerprint:
+        return True, "fingerprint matches"
+    # The digest itself would be eaten by redaction here; the step record carries it unredacted.
+    return False, f"fingerprint differs (see steps[{a.step}].body_fingerprint)"
 
 
 _CHECKS = {

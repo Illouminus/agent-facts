@@ -100,6 +100,9 @@ def _text(value: Any) -> str:
 
 
 def _render_str(value: str, ctx: RunContext, keep_type: bool, encode: bool) -> Any:
+    rest = _PLACEHOLDER.sub("", value)
+    if "{{" in rest or "}}" in rest:
+        raise TemplateError(f"malformed placeholder in {value!r}")
     whole = _PLACEHOLDER.fullmatch(value)
     if keep_type and whole is not None:
         return _resolve(whole.group(1), ctx)

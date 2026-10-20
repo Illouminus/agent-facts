@@ -8,11 +8,13 @@ the services about to run. Only `pass`/`fail` touch facts; `error` (transport er
 429, refused request) is not evidence. Every outcome moves the probe's budget (back-off).
 """
 
+import fcntl
 import os
 import re
 import time
 from collections import Counter
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -33,8 +35,9 @@ from agentfacts.probe.http import (
     matching_template,
     prepare,
     send,
+    uses_key,
 )
-from agentfacts.probe.keys import DEFAULT_KEYS_DIR, bound_to, has_key, read_key
+from agentfacts.probe.keys import DEFAULT_KEYS_DIR, has_key, read_key
 from agentfacts.probe.loader import LoadedProbe, Repo, load_repo
 from agentfacts.probe.redact import Redactor
 from agentfacts.probe.results import (
@@ -45,11 +48,13 @@ from agentfacts.probe.results import (
     sleep_step_record,
 )
 from agentfacts.probe.templating import NOT_JSON, RunContext, rfc3339
-from agentfacts.schema.models import HttpStep, Service, SleepStep
+from agentfacts.schema.models import AssertStatus, HttpStep, Service, SleepStep
+from agentfacts.schema.registry import key_bound_to_service
 from agentfacts.schema.validate import Problem
 
 STATE_FILE = "probe-state.sqlite"
 RESULTS_FILE = "results.jsonl"
+LOCK_FILE = "probe.lock"
 DEFAULT_VANTAGE = "illouminus"
 KILL_FILE = Path("ops") / "KILL"
 _VANTAGE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
@@ -81,14 +86,15 @@ class TickOptions:
 @dataclass(frozen=True)
 class ProbeLine:
     probe_id: str
-    outcome: str  # pass, fail, error, skipped:no_key; dry run: would-run, not-due, deferred,
-    # refused
+    # pass, fail, error, skipped:no_key; dry run also would-run, not-due, deferred, refused
+    outcome: str
     detail: str = ""
 
 
 @dataclass
 class TickReport:
     killed: str | None = None
+    busy: bool = False  # another tick holds the lock: this one did nothing
     lines: list[ProbeLine] = field(default_factory=list)
     problems: list[Problem] = field(default_factory=list)
     refused: list[str] = field(default_factory=list)
@@ -129,9 +135,7 @@ def _candidate(item: LoadedProbe, service: Service) -> _Candidate:
             template = matching_template(service, step.method, step.path)
             if template is not None:
                 templates.append((service.key, step.method, template))
-            keyed |= step.auth == "service" and service.auth is not None and (
-                service.auth.kind != "none"
-            )
+            keyed |= uses_key(step, service)
     return _Candidate(item, service, templates, requests, keyed)
 
 
@@ -170,7 +174,7 @@ def _select(
             if used & set(c.templates):
                 plan.append((c, "not-due", "shares a template with a probe in this tick"))
                 continue
-        if c.keyed and not bound_to(c.service.auth.key_name, c.service.key):
+        if c.keyed and not key_bound_to_service(c.service.auth.key_name, c.service.key):
             message = (f"refused:key_not_bound: key {c.service.auth.key_name} is not named after "
                        f"service {c.service.key}")
             plan.append((c, "refused", message))
@@ -213,6 +217,10 @@ def _execute(
     except Refused as exc:
         return _Run("error", f"refused:{exc.code}: {exc.message}", refused=True)
     whitelist = header_whitelist(service, probe)
+    # A 5xx is an outage, not a non-reproduction, unless the probe asserts that very status.
+    expected_5xx = {
+        a.step for a in probe.assertions if isinstance(a, AssertStatus) and a.status >= 500
+    }
     ctx = RunContext.start(now=now)
     run, responses = _Run("error", run_id=ctx.run_uuid), {}
     for i, step in enumerate(probe.steps, 1):
@@ -238,6 +246,9 @@ def _execute(
             return run
         if response.status == 429 and not step.expect_rate_limit:
             run.detail = f"step {i}: rate limited (429)"
+            return run
+        if response.status >= 500 and i not in expected_5xx:
+            run.detail = f"step {i}: server error ({response.status})"
             return run
     results = [evaluate(a, responses) for a in probe.assertions]
     run.asserts = [r.to_record() for r in results]
@@ -280,12 +291,13 @@ class _Tick:
     state: BudgetState
     report: TickReport
 
+    def line(self, c: _Candidate, outcome: str, detail: str) -> None:
+        self.report.counts[_count_key(outcome)] += 1
+        self.report.lines.append(ProbeLine(c.id, outcome, detail))
+
     def dry_run(self, plan: list[tuple[_Candidate, str, str]]) -> None:
-        self.report.counts["would_run"] = sum(decision == "run" for _, decision, _ in plan)
-        self.report.lines = [
-            ProbeLine(c.id, "would-run" if decision == "run" else decision, detail)
-            for c, decision, detail in plan
-        ]
+        for c, decision, detail in plan:
+            self.line(c, "would-run" if decision == "run" else decision, detail)
 
     def run(self, plan: list[tuple[_Candidate, str, str]], results: Path) -> None:
         keys = {
@@ -298,7 +310,9 @@ class _Tick:
         log = ResultsLog(results, redactor)
         with make_client(timeout=self.options.timeout_s) as client:
             for c, decision, detail in plan:
-                if decision == "skipped:no_key":
+                if decision in ("not-due", "deferred"):  # counted, not printed: timer noise
+                    self.report.counts[_count_key(decision)] += 1
+                elif decision == "skipped:no_key":
                     self._skip(c, detail, log)
                 elif decision == "refused":
                     self._refuse(c, detail, log)
@@ -307,7 +321,6 @@ class _Tick:
                         self.report.killed = reason
                         return
                     if c.keyed and c.service.key not in keys:  # unreadable since selection
-                        self.report.counts["skipped_no_key"] += 1
                         self._skip(c, "key unreadable", log)
                     else:
                         self._probe(c, keys.get(c.service.key), client, log, redactor)
@@ -317,16 +330,15 @@ class _Tick:
         redacted = log.append(_record(c, self.options.vantage, now, _Run("skipped:no_key", detail)))
         # The probe's own budget moves (one line per budget window); no template was used.
         self.state.record(c.id, [], self.options.vantage, now.timestamp(), "skipped:no_key")
-        self.report.lines.append(ProbeLine(c.id, "skipped:no_key", redacted["detail"]))
+        self.line(c, "skipped:no_key", redacted["detail"])
 
     def _refuse(self, c: _Candidate, detail: str, log: ResultsLog) -> None:
         """A probe refused before any request (its key is not bound to its service)."""
         now = self.clock()
         redacted = log.append(_record(c, self.options.vantage, now, _Run("error", detail)))
         self.state.record(c.id, [], self.options.vantage, now.timestamp(), "error")
-        self.report.counts["error"] += 1
         self.report.refused.append(c.id)
-        self.report.lines.append(ProbeLine(c.id, "error", redacted["detail"]))
+        self.line(c, "error", redacted["detail"])
 
     def _probe(
         self,
@@ -352,14 +364,30 @@ class _Tick:
                     )
         redacted = log.append(record)
         self.state.record(c.id, c.templates, self.options.vantage, now.timestamp(), run.outcome)
-        self.report.counts[run.outcome] += 1
         if run.refused:
             self.report.refused.append(c.id)
-        self.report.lines.append(ProbeLine(c.id, run.outcome, redacted["detail"]))
+        self.line(c, run.outcome, redacted["detail"])
 
 
 def _count_key(outcome: str) -> str:
     return outcome.replace("-", "_").replace(":", "_")
+
+
+@contextmanager
+def _tick_lock(state_dir: Path) -> Iterator[bool]:
+    """One tick at a time per state dir: two overlapping ticks would both see the same probes due
+    (double requests, invariant 6) and race on the same fact files. False = another tick runs."""
+    state_dir.mkdir(parents=True, exist_ok=True)
+    with (state_dir / LOCK_FILE).open("a") as fh:
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 
 
 def run_tick(
@@ -382,19 +410,21 @@ def run_tick(
         report.killed = reason
         return report
 
-    repo = load_repo(root)
-    report.problems.extend(repo.problems)
-    with BudgetState(state_dir / STATE_FILE, read_only=options.dry_run) as state:
-        plan = _select(repo, state, options, clock().timestamp(), keys_dir)
-        for _, decision, _ in plan:
-            if decision not in ("run", "refused") or options.dry_run:
-                report.counts[_count_key(decision)] += 1
-        tick = _Tick(root, options, keys_dir, base_urls or {}, sleep, clock, environ, repo, state,
-                     report)
-        if options.dry_run:
-            tick.dry_run(plan)
-        else:
-            tick.run(plan, results)
+    # A dry run writes nothing, so it needs no lock (and must not create the state dir).
+    with nullcontext(True) if options.dry_run else _tick_lock(state_dir) as locked:
+        if not locked:
+            report.busy = True
+            return report
+        repo = load_repo(root)
+        report.problems.extend(repo.problems)
+        with BudgetState(state_dir / STATE_FILE, read_only=options.dry_run) as state:
+            plan = _select(repo, state, options, clock().timestamp(), keys_dir)
+            tick = _Tick(root, options, keys_dir, base_urls or {}, sleep, clock, environ, repo,
+                         state, report)
+            if options.dry_run:
+                tick.dry_run(plan)
+            else:
+                tick.run(plan, results)
     return report
 
 
@@ -425,7 +455,7 @@ def probe_status(
         for item in sorted(repo.probes, key=lambda i: i.probe.id):
             c = _candidate(item, repo.services[item.probe.service])
             key = "none"
-            if c.keyed and not bound_to(c.service.auth.key_name, c.service.key):
+            if c.keyed and not key_bound_to_service(c.service.auth.key_name, c.service.key):
                 key = "unbound"
             elif c.keyed:
                 key = "ok" if has_key(c.service.auth.key_name, keys_dir) else "missing"

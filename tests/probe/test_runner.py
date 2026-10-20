@@ -333,7 +333,7 @@ def test_a_different_env_never_refutes(repo, httpserver):
     repo.probe()  # env sandbox
     prod_fact = repo.fact("items-list-prod", env="prod")
     before = prod_fact.read_bytes()
-    httpserver.expect_request("/v1/items").respond_with_json({}, status=500)
+    httpserver.expect_request("/v1/items").respond_with_json({}, status=404)
     clock = Clock()
     for _ in range(4):
         assert outcomes(tick(repo, httpserver, clock=clock)) == {"items-list": "fail"}
@@ -359,15 +359,37 @@ def test_refused_rendered_request_is_an_error_and_a_problem(repo, httpserver):
     assert path.read_bytes() == before
 
 
-def test_foreign_base_url_is_refused(repo, httpserver):
+def unvalidated(monkeypatch, service_overrides, probe_overrides=None):
+    """Bypass the loader's validator gate to reach the runner's own run-time refusals."""
+    from probe_builders import make_service, probe_doc
+
+    import agentfacts.probe.runner as runner_module
+    from agentfacts.probe.loader import LoadedProbe
+    from agentfacts.probe.loader import Repo as LoadedRepo
+    from agentfacts.schema.models import Probe
+
+    service = make_service(**service_overrides)
+    probe = Probe.model_validate(probe_doc(**(probe_overrides or {})))
+    loaded = LoadedRepo(services={"acme": service}, probes=[LoadedProbe(Path("p.yaml"), probe)])
+    monkeypatch.setattr(runner_module, "load_repo", lambda root: loaded)
+
+
+def test_foreign_base_url_is_rejected_by_the_validator(repo, httpserver):
     repo.service(dimensions={"env": {"sandbox": "https://evil.example.org"}})
     repo.key()
     repo.probe()
     report = run_tick(repo.root, repo.state, TickOptions(), keys_dir=repo.keys,
                       sleep=lambda s: None, clock=Clock(), environ={})
-    # the validator does not compare env URLs with hosts; the runner refuses before sending
-    assert not report.ok and report.refused == ["af:acme:probe:items-list"]
-    assert outcomes(report) == {"items-list": "error"}
+    assert not report.ok and report.lines == []
+    assert {p.code for p in report.problems} == {"foreign_env_url", "unknown_service"}
+
+
+def test_foreign_base_url_is_refused_at_run_time_too(repo, httpserver, monkeypatch):
+    unvalidated(monkeypatch, {"dimensions": {"env": {"sandbox": "https://evil.example.org"}}})
+    repo.key()
+    report = run_tick(repo.root, repo.state, TickOptions(), keys_dir=repo.keys,
+                      sleep=lambda s: None, clock=Clock(), environ={})
+    assert report.refused == ["af:acme:probe:items-list"] and not report.ok
     assert report.lines[0].detail.startswith("refused:foreign_host")
     assert httpserver.log == []
 
@@ -449,10 +471,14 @@ def test_secret_is_redacted_before_truncation_and_normalization(repo, httpserver
         assert fragment not in raw, fragment
 
 
-def test_key_must_be_named_after_its_service(repo, httpserver):
+def test_key_must_be_named_after_its_service(repo, httpserver, monkeypatch):
     repo.service(auth={"kind": "bearer", "key_name": "stripe-test", "env": "sandbox"})
-    repo.key("stripe-test")
     repo.probe()
+    assert {p.code for p in tick(repo, httpserver).problems} == {"key_not_bound", "unknown_service"}
+
+    unvalidated(monkeypatch, {"auth": {"kind": "bearer", "key_name": "stripe-test",
+                                       "env": "sandbox"}})
+    repo.key("stripe-test")
     report = tick(repo, httpserver)
     assert outcomes(report) == {"items-list": "error"}
     assert report.lines[0].detail.startswith("refused:key_not_bound")
@@ -471,8 +497,100 @@ def test_key_named_after_the_service_is_accepted(repo, httpserver):
         assert outcomes(tick(repo, httpserver, run_all=True)) == {"items-list": "pass"}, name
 
 
-def test_a_prefix_without_separator_is_not_the_service(repo, httpserver):
-    repo.service(auth={"kind": "bearer", "key_name": "acmecorp-test", "env": "sandbox"})
+def test_a_prefix_without_separator_is_not_the_service(repo, httpserver, monkeypatch):
+    unvalidated(monkeypatch, {"auth": {"kind": "bearer", "key_name": "acmecorp-test",
+                                       "env": "sandbox"}})
     repo.key("acmecorp-test")
-    repo.probe()
     assert outcomes(tick(repo, httpserver)) == {"items-list": "error"}
+    assert httpserver.log == []
+
+
+def test_unexpected_5xx_is_an_error_and_not_evidence(repo, httpserver):
+    repo.service()
+    repo.key()
+    repo.probe()
+    path = repo.fact()
+    before = path.read_bytes()
+    httpserver.expect_request("/v1/items").respond_with_json({"error": "down"}, status=503)
+    report = tick(repo, httpserver)
+    assert outcomes(report) == {"items-list": "error"}
+    assert report.lines[0].detail == "step 1: server error (503)"
+    assert path.read_bytes() == before and report.ok
+
+
+def test_asserted_5xx_is_evidence(repo, httpserver):
+    repo.service()
+    repo.key()
+    repo.probe(**{"assert": [{"step": 1, "status": 503}]})
+    repo.fact()
+    httpserver.expect_request("/v1/items").respond_with_json({}, status=503)
+    assert outcomes(tick(repo, httpserver)) == {"items-list": "pass"}
+
+
+def test_a_bad_header_value_refuses_one_probe_not_the_tick(repo, httpserver):
+    repo.service()
+    repo.key()
+    repo.probe("a-first", steps=[
+        {"do": "http", "method": "GET", "path": "/v1/items"},
+        {"do": "http", "method": "GET", "path": "/v1/items/x",
+         "headers": {"X-Ref": "{{step[1].json.name}}"}},
+    ])
+    repo.probe("b-second", steps=[{"do": "http", "method": "GET", "path": "/v1/redirect"}])
+    httpserver.expect_request("/v1/items").respond_with_json({"name": "caf\u00e9"})
+    httpserver.expect_request("/v1/redirect").respond_with_json({})
+    report = tick(repo, httpserver)
+    assert outcomes(report) == {"a-first": "error", "b-second": "pass"}
+    assert report.lines[0].detail.startswith("refused:invalid_header")
+
+
+def test_a_second_tick_waits_for_the_running_one(repo, httpserver):
+    import fcntl
+
+    repo.service()
+    repo.key()
+    repo.probe()
+    repo.state.mkdir(parents=True)
+    with (repo.state / "probe.lock").open("w") as held:
+        fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        report = tick(repo, httpserver)
+    assert report.busy and report.lines == [] and httpserver.log == []
+    assert not (repo.state / "results.jsonl").exists()
+    httpserver.expect_request("/v1/items").respond_with_json({})
+    assert outcomes(tick(repo, httpserver)) == {"items-list": "pass"}
+
+
+def test_dry_run_never_reads_a_key(repo, httpserver, monkeypatch):
+    import agentfacts.probe.runner as runner_module
+
+    repo.service()
+    repo.key()
+    repo.probe()
+
+    def no_read(*args):
+        raise AssertionError("dry run read a key")
+
+    import agentfacts.probe.keys as keys_module
+
+    monkeypatch.setattr(runner_module, "read_key", no_read)
+    monkeypatch.setattr(keys_module, "read_key", no_read)
+    monkeypatch.setattr(Path, "read_text", lambda self, *a, **k: (
+        no_read() if self.suffix == ".key" else Path.read_bytes(self).decode()))
+    assert outcomes(tick(repo, httpserver, dry_run=True)) == {"items-list": "would-run"}
+
+
+def test_dry_run_counts(repo, httpserver):
+    repo.service(auth={"kind": "none"})
+    repo.probe("a-first")
+    repo.probe("b-same-template")
+    report = tick(repo, httpserver, dry_run=True)
+    assert dict(report.counts) == {"would_run": 1, "not_due": 1}
+
+
+def test_details_are_clipped_after_redaction(repo, httpserver):
+    repo.service()
+    repo.key()
+    repo.probe(**{"assert": [{"step": 1, "json_path": "$.msg", "equals": "x"}]})
+    httpserver.expect_request("/v1/items").respond_with_json({"msg": "m" * 5000})
+    tick(repo, httpserver)
+    line = repo.results()[0]
+    assert len(line["asserts"][0]["detail"]) <= 200 and len(line["detail"]) <= 200

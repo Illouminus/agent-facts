@@ -132,3 +132,10 @@ def test_comments_survive_an_update(tmp_path):
     assert "last_confirmed: 2026-10-20T10:15:30Z\n" in text  # plain, still a YAML timestamp
     assert "confirmations: 2\n" in text
     assert "status: verified:server:prod                               # see table" in text
+
+
+def test_rewrite_keeps_the_file_mode(repo):
+    path = repo.fact()
+    path.chmod(0o644)
+    apply_outcome(path, SANDBOX, "pass", "illouminus", NOW)
+    assert path.stat().st_mode & 0o777 == 0o644

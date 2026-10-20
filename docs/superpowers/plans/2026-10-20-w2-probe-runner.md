@@ -84,6 +84,20 @@ rules), `docs/specs/00-architecture.md` invariants 1, 4, 5, 6, `docs/specs/09-wo
 - **Exit codes:** 0 tick done (assertion failures are data), 1 invalid/refused probes in the tick, 2 usage.
   Kill switch → exit 0 with `kill switch on (…): no requests` on stderr.
 
+Added during implementation (automated security review of each commit, then `/code-review` of the
+whole diff): redaction exemptions name full record paths (not key names at any depth); derived key
+forms (URL-encoded, base64 `user:key`) and case-insensitive exact matching; vendor text redacted
+*before* it is clipped or lowercased, details clipped after redaction; path placeholders may not render
+empty, `.` or `..`; the body is decoded by the runner under the cap (identity asked, gzip/deflate
+bounded, stop at stream end, 4 MiB raw cap, total deadline); header values must be ASCII without line
+breaks (`invalid_header`); an unexpected 5xx is `error` like an unexpected 429 (an outage is not a
+non-reproduction) unless the probe asserts that status; one tick at a time (`probe.lock`, a busy tick
+exits 0); a key file is bound to its service by name (`key_name` = `<service>`, `<service>-…`,
+`<service>_…`) and env/base URLs must be on `hosts` — both checked by the validator in CI
+(`key_not_bound`, `foreign_env_url`) and again by the runner; `has_key` only stats the file, so dry
+runs and `probe list` never read a value; unreadable key files count as missing; assertion details
+show scalars only (objects/arrays by size); fact files keep their mode on rewrite.
+
 ---
 
 ### Task 1: Redaction + keys (TDD)

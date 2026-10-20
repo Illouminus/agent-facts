@@ -50,6 +50,12 @@ def on_vendor_domain(url: str, hosts: Iterable[str]) -> bool:
     return match_host(parts.hostname.lower(), hosts) is not None
 
 
+def key_bound_to_service(key_name: str, service_key: str) -> bool:
+    """A probe key belongs to one service by name: `stripe`, `stripe-test`, `stripe_live` for
+    `stripe`. Without it any new service could name another's key file and send it to its hosts."""
+    return key_name == service_key or key_name.startswith((f"{service_key}-", f"{service_key}_"))
+
+
 def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 

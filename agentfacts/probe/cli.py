@@ -70,6 +70,9 @@ def run(
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(EXIT_USAGE) from None
     report = run_tick(root, state_dir or root / "var", options)
+    if report.busy:
+        typer.echo("another tick is running (probe.lock): nothing to do", err=True)
+        raise typer.Exit(EXIT_OK)
     for problem in report.problems:
         typer.echo(str(problem), err=True)
     for line in report.lines:
@@ -78,9 +81,8 @@ def run(
         started = report.counts["pass"] + report.counts["fail"] + report.counts["error"]
         what = "stopped before the next probe" if started else "no requests"
         typer.echo(f"kill switch on ({report.killed}): {what}", err=True)
-        if not started:
-            raise typer.Exit(EXIT_OK)
-    typer.echo(_summary(report), err=True)
+    else:
+        typer.echo(_summary(report), err=True)
     raise typer.Exit(EXIT_OK if report.ok else EXIT_INVALID)
 
 

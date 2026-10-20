@@ -65,8 +65,18 @@ def _scalar_text(value: Any) -> str:
     return value if isinstance(value, str) else json.dumps(value)
 
 
-def _uses_key(step: HttpStep, service: Service) -> bool:
+def uses_key(step: HttpStep, service: Service) -> bool:
     return step.auth == "service" and service.auth is not None and service.auth.kind != "none"
+
+
+def _header_problem(name: str, value: str) -> str | None:
+    # httpx encodes header values as ASCII; a vendor value rendered into a header must not break
+    # the request (UnicodeEncodeError) or smuggle another header line.
+    if not value.isascii():
+        return f"header {name} is not ASCII"
+    if any(c in value for c in "\r\n\0"):
+        return f"header {name} contains a line break"
+    return None
 
 
 def matching_template(service: Service, method: str, path: str) -> str | None:
@@ -91,6 +101,9 @@ def prepare(step: HttpStep, ctx: RunContext, service: Service, env: str) -> Prep
     except TemplateError as exc:
         raise Refused("template_error", str(exc)) from None
 
+    for name, value in headers.items():
+        if problem := _header_problem(name, value):
+            raise Refused("invalid_header", problem)
     template = matching_template(service, step.method, path)
     if template is None:
         raise Refused(
@@ -101,13 +114,13 @@ def prepare(step: HttpStep, ctx: RunContext, service: Service, env: str) -> Prep
     if violations := http_step_violations(rendered, env):
         _, code, message = violations[0]
         raise Refused(code, message)
-    uses_key = _uses_key(step, service)
-    if uses_key and service.auth.env != env:
+    keyed = uses_key(step, service)
+    if keyed and service.auth.env != env:
         raise Refused(
             "auth_env_mismatch", f"probe env {env} but the {service.key} key reaches "
             f"{service.auth.env}"
         )
-    return PreparedRequest(step.method, path, template, query, form, json_body, headers, uses_key)
+    return PreparedRequest(step.method, path, template, query, form, json_body, headers, keyed)
 
 
 def base_url_for(service: Service, env: str) -> str:
@@ -162,7 +175,9 @@ class _Decoder:
         if not self.compressed:
             return chunk[:limit]
         if self._z is None:
-            wrapped = bool(chunk) and (chunk[0] & 0x0F) == 8
+            # A zlib header: compression method 8 and a 16-bit checksum divisible by 31 (RFC 1950).
+            wrapped = (len(chunk) >= 2 and (chunk[0] & 0x0F) == 8
+                       and ((chunk[0] << 8) | chunk[1]) % 31 == 0)
             self._z = zlib.decompressobj(zlib.MAX_WBITS if wrapped else -zlib.MAX_WBITS)
         try:
             data = self._z.decompress(chunk, limit)

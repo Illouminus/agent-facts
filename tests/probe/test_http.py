@@ -284,6 +284,23 @@ def test_keyed_step_in_another_env_than_the_key_is_refused():
     assert not prepare(step(auth="none"), ctx(), SERVICE, "prod").uses_key
 
 
+@pytest.mark.parametrize("value", ["caf\u00e9", "{{step[1].json.name}}", "a\r\nX-Evil: 1"])
+def test_header_values_must_be_ascii_without_line_breaks(value):
+    c = ctx({1: {"name": "\u65e5\u672c"}}, current_step=2)
+    with pytest.raises(Refused) as exc:
+        prepare(step(headers={"X-Ref": value}), c, SERVICE, "sandbox")
+    assert exc.value.code == "invalid_header"
+
+
+def test_raw_deflate_whose_first_byte_looks_like_zlib():
+    import struct
+
+    # Stored, non-final block starting with byte 0x08 (low nibble 8) but no valid zlib header.
+    stream = b"\x08" + struct.pack("<HH", 3, 0xFFFF ^ 3) + b"abc" + b"\x01\x00\x00\xff\xff"
+    assert (0x08 << 8 | stream[1]) % 31 != 0
+    assert _Decoder("deflate").feed(stream, 100) == b"abc"
+
+
 def test_template_error_is_refused():
     with pytest.raises(Refused) as exc:
         prepare(step(headers={"X-Ref": "{{nope}}"}), ctx(), SERVICE, "sandbox")

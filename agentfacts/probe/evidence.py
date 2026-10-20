@@ -13,6 +13,7 @@ plain timestamps); the result is re-validated as a `Fact` before an atomic repla
 
 import io
 import os
+import stat
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -71,10 +72,12 @@ def dump_text(doc: Any) -> str:
 
 
 def _write_atomic(path: Path, text: str) -> None:
+    mode = stat.S_IMODE(path.stat().st_mode)  # mkstemp makes 0600; keep what readers rely on
     fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(text)
+        os.chmod(tmp, mode)
         os.replace(tmp, path)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
