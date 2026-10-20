@@ -21,8 +21,7 @@ from agentfacts.api.normalize import ExtractedSignal, error_hash, normalize
 from agentfacts.fixes.templates import render_fix
 from agentfacts.schema.models import Fact, Kind, Service, Status
 from agentfacts.schema.registry import ServiceInfo
-from agentfacts.schema.validate import collect_files, default_paths, validate_paths
-from agentfacts.schema.yamlio import load_yaml, plain
+from agentfacts.schema.validate import Report, default_paths, validate_paths
 
 log = logging.getLogger("agentfacts.api")
 
@@ -127,21 +126,21 @@ class FactsIndex:
     @classmethod
     def load(cls, repo: Path, version: str | None = None) -> "FactsIndex":
         paths = default_paths(repo)
-        problems = validate_paths(paths, root=repo).problems if paths else []
-        bad = {p.file.resolve() for p in problems}
-        skipped = sorted({p.file for p in problems})
+        report = validate_paths(paths, root=repo) if paths else Report()
+        skipped = sorted({p.file for p in report.problems})
         for path in skipped:
-            mine = [p for p in problems if p.file == path]
+            mine = [p for p in report.problems if p.file == path]
             log.warning("skipped %s (%d problems), first: %s", path, len(mine), mine[0])
+        bad = set(skipped)
+        documents = {p: d for p, d in report.documents.items() if p not in bad}
 
         services: dict[str, Service] = {}
-        for path in _files(repo / "services", bad):
-            if (svc := _parse(Service, path, skipped)) is not None:
+        for path, document in _under(documents, repo / "services"):
+            if (svc := _parse(Service, path, document, skipped)) is not None:
                 services[svc.key] = svc
         facts: list[tuple[Fact, dict[str, Any]]] = []
-        for path in _files(repo / "facts", bad):
-            document = plain(load_yaml(path))
-            if (fact := _parse(Fact, path, skipped, document)) is None:
+        for path, document in _under(documents, repo / "facts"):
+            if (fact := _parse(Fact, path, document, skipped)) is None:
                 continue
             if fact.service not in services:
                 log.warning("skipped %s: service %s is not loaded", path, fact.service)
@@ -218,7 +217,8 @@ class FactsIndex:
             exact = [
                 f
                 for f in candidates
-                if f.code == signal.error_code and f.status in (None, signal.status)
+                if f.code == signal.error_code
+                and (signal.status is None or f.status in (None, signal.status))
             ]
         if exact:
             return exact, True
@@ -246,15 +246,15 @@ class FactsIndex:
         return [f for f in entry.facts if f.about(sdk) and f.fits(sdk)]
 
 
-def _files(directory: Path, bad: set[Path]) -> list[Path]:
-    if not directory.is_dir():
-        return []
-    return [p for p in collect_files([directory]) if p.resolve() not in bad]
+def _under(
+    documents: dict[Path, dict[str, Any]], directory: Path
+) -> list[tuple[Path, dict[str, Any]]]:
+    return [(p, d) for p, d in documents.items() if p.is_relative_to(directory)]
 
 
-def _parse(model, path: Path, skipped: list[Path], document: Any = None):
+def _parse(model, path: Path, document: dict[str, Any], skipped: list[Path]):
     try:
-        return model.model_validate(document if document is not None else plain(load_yaml(path)))
+        return model.model_validate(document)
     except ValidationError as exc:  # schema and models disagree: trust neither
         log.warning("skipped %s: %s", path, exc.errors()[0]["msg"])
         skipped.append(path)

@@ -82,7 +82,8 @@ class Store:
             if (row := found.fetchone()) is not None:
                 return row[0]
             salt = secrets.token_bytes(SALT_BYTES)
-            self.connection.execute("DELETE FROM salts WHERE day != ?", (day,))
+            # only older days: a late request for yesterday must not delete today's salt
+            self.connection.execute("DELETE FROM salts WHERE day < ?", (day,))
             self.connection.execute("INSERT INTO salts (day, salt) VALUES (?, ?)", (day, salt))
             return salt
 

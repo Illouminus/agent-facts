@@ -265,6 +265,11 @@ def test_streamed_body_over_8kb_is_refused(client, rows):
     assert rows() == 0
 
 
+def test_malformed_content_length_is_a_bad_request(client):
+    r = client.post("/v0/check", content=b"{}", headers={"Content-Length": "abc"})
+    assert r.status_code == 400 and r.json()["error"]["code"] == "invalid_request"
+
+
 def test_body_just_under_8kb_is_fine(client):
     payload = {"target": {"method": "POST", "url": STRIPE_PI},
                "error": {"status": 400, "body_excerpt": "x" * 8000}}

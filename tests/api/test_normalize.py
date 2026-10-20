@@ -93,6 +93,10 @@ def test_secret_shaped_strings_are_redacted(secret):
         ("access_token: abc", "access_token: <redacted>"),
         ("token=abc", "token=<redacted>"),
         ("token: s3cr3tvalue9", "token: <redacted>"),
+        ("invalid session_token=abcd1234efgh", "invalid session_token=<redacted>"),
+        ("csrf_token: x", "csrf_token: <redacted>"),
+        ("X-Auth-Token: abc", "x-auth-token: <redacted>"),
+        ("my_api_key=abc", "my_api_key=<redacted>"),
     ],
 )
 def test_named_secrets_keep_their_name(raw, expected):
@@ -100,7 +104,13 @@ def test_named_secrets_keep_their_name(raw, expected):
 
 
 @pytest.mark.parametrize(
-    "raw", ["Invalid token: expired", "token: missing", "Bearer authentication required"]
+    "raw",
+    [
+        "Invalid token: expired",
+        "token: missing",
+        "Bearer authentication required",
+        "max_tokens: 4096 exceeds the limit",
+    ],
 )
 def test_prose_around_secret_words_survives(raw):
     assert redact_secrets(raw) == raw

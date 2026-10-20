@@ -84,6 +84,15 @@ def test_tier1_vendor_code_when_the_message_differs(repo):
     assert (_ids(facts), hit) == (["af:stripe:customer-not-found"], True)
 
 
+def test_tier1_vendor_code_without_status(repo):
+    index = FactsIndex.load(repo)
+    body = '{"error": {"code": "resource_missing", "message": "other words"}}'
+    facts, hit = index.for_signal(
+        index.services["stripe"], ("GET", "/v1/customers/{id}"), _signal(None, body), None
+    )
+    assert (_ids(facts), hit) == (["af:stripe:customer-not-found"], True)
+
+
 def test_tier2_status_skips_contradicting_codes(repo):
     index = FactsIndex.load(repo)
     stripe = index.services["stripe"]

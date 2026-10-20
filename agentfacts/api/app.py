@@ -30,12 +30,14 @@ from agentfacts.api.facts_index import FactsIndex, IndexedFact, ServiceEntry, Te
 from agentfacts.api.match import (
     HostTarget,
     Locator,
+    Network,
     Target,
     UrlTarget,
     best_template,
     classify_ua,
     client_ip,
     network_of,
+    parse_proxies,
     parse_target,
 )
 from agentfacts.api.models import (
@@ -80,7 +82,7 @@ class _State:
     index: FactsIndex
     store: Store
     daily_cap: int
-    trusted_proxies: tuple[str, ...]
+    trusted_proxies: tuple[Network, ...]
     utcnow: Callable[[], datetime]
 
 
@@ -88,7 +90,7 @@ def _state(request: Request) -> _State:
     return request.app.state.agentfacts
 
 
-def _caller_ip(scope_client: Any, headers: Headers, trusted: tuple[str, ...]) -> str:
+def _caller_ip(scope_client: Any, headers: Headers, trusted: tuple[Network, ...]) -> str:
     peer = scope_client[0] if scope_client else ""
     return client_ip(peer, headers.get("x-forwarded-for"), trusted)
 
@@ -97,7 +99,7 @@ class _CheckGuard:
     """Before FastAPI reads the body of POST /v0/check: rate limit (429), then size (413), so
     neither a flood nor an oversized body costs a parse."""
 
-    def __init__(self, app: ASGIApp, limiter: RateLimiter, trusted: tuple[str, ...]):
+    def __init__(self, app: ASGIApp, limiter: RateLimiter, trusted: tuple[Network, ...]):
         self.app, self.limiter, self.trusted = app, limiter, trusted
         self._key = secrets.token_bytes(16)  # limiter keys: never a raw network, even in memory
 
@@ -115,7 +117,10 @@ class _CheckGuard:
             await response(scope, receive, send)
             return
         length = headers.get("content-length")
-        if length is not None and (not length.isdigit() or int(length) > MAX_BODY):
+        if length is not None and not length.isdigit():
+            await _error(400, "invalid_request", "malformed Content-Length")(scope, receive, send)
+            return
+        if length is not None and int(length) > MAX_BODY:
             await _error(413, "body_too_large", f"body over {MAX_BODY} bytes")(scope, receive, send)
             return
         received = 0
@@ -355,12 +360,8 @@ def create_app(
     utcnow: Callable[[], datetime] | None = None,
 ) -> FastAPI:
     """Arguments override the environment (tests); the index and the store open at startup."""
-    trusted = trusted_proxies or tuple(
-        p.strip()
-        for p in os.environ.get("AGENTFACTS_TRUSTED_PROXIES", ",".join(DEFAULT_TRUSTED_PROXIES))
-        .split(",")
-        if p.strip()
-    )
+    env_proxies = os.environ.get("AGENTFACTS_TRUSTED_PROXIES", ",".join(DEFAULT_TRUSTED_PROXIES))
+    trusted = parse_proxies(trusted_proxies or env_proxies.split(","))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

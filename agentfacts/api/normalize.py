@@ -13,6 +13,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
+from pydantic import ValidationError
+
+from agentfacts.schema.models import Signal
+
 MAX_EXCERPT = 2048  # spec 03: body_excerpt kept, 2 KB in
 MAX_NORMALIZED = 512  # spec 01/03: normalized error stored
 
@@ -45,14 +49,15 @@ _SECRET_PATTERNS = tuple(
         r"\b(?=[A-Za-z0-9_]*[0-9])(?=[A-Za-z0-9_]*[G-Zg-z_])[A-Za-z0-9_]{32,}\b",
     )
 )
-# `name: value` / `name=value` / `"name": "value"`; the name is kept, the value redacted. A
+# `name: value` / `name=value` / `"name": "value"`, also prefixed (`session_token`, `bot-token`);
+# the name is kept, the value redacted. A
 # quoted value runs to its closing quote; an unquoted one to whitespace, a quote or `&`.
 _SECRET_NAMES = (
     r"x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|auth[_-]?token|id[_-]?token"
     r"|client[_-]?secret|secret[_-]?key|private[_-]?key|authorization|password|passwd|pwd|secret"
 )
 _NAMED_SECRET = re.compile(
-    rf"(?i)\b(?P<name>{_SECRET_NAMES}|token)"
+    rf"(?i)\b(?P<name>(?:[a-z0-9]+[_-])*?(?:{_SECRET_NAMES}|token))"
     r"(?P<sep>[\"']?\s*[:=]\s*(?P<quote>[\"'])?)"
     r"(?P<value>(?(quote)[^\"'\n]*|(?:(?:bearer|basic|token)\s+)?[^\s\"'&]+))"
 )
@@ -128,7 +133,6 @@ _CODE_LEAVES = frozenset({"code", "error_code", "errorcode", "type", "reason", "
 _MESSAGE_LEAVES = frozenset(
     {"message", "msg", "detail", "description", "error_description", "error_message"}
 )
-_ERROR_CODE = re.compile(r"^[A-Za-z0-9_.:-]{1,128}(?!\n)$")  # = Signal.error_code in models
 
 
 @dataclass(frozen=True)
@@ -142,6 +146,15 @@ class ExtractedSignal:
     @property
     def empty(self) -> bool:
         return self.status is None and self.normalized is None
+
+
+def _is_error_code(value: str) -> bool:
+    """Same rule as a fact's `signal.error_code`, so a code we extract can equal a fact's."""
+    try:
+        Signal(error_code=value)
+    except ValidationError:
+        return False
+    return True
 
 
 def _path(field: str) -> list[str] | None:
@@ -191,7 +204,7 @@ def extract_signal(
         if code is None and leaf in _CODE_LEAVES and isinstance(value, str | int):
             candidate = str(value)
             # a code is an enum-like vendor word; anything secret-shaped is not one
-            if not isinstance(value, bool) and _ERROR_CODE.match(candidate):
+            if not isinstance(value, bool) and _is_error_code(candidate):
                 if len(candidate) <= 64 and redact_secrets(candidate) == candidate:
                     code = candidate
         elif message is None and leaf in _MESSAGE_LEAVES and isinstance(value, str):

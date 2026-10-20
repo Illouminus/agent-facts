@@ -86,6 +86,12 @@ def test_salt_is_stable_within_a_day_and_rotates_at_utc_midnight(store):
     assert days == ["2026-10-21"]  # yesterday's salt is gone: its hashes cannot be recomputed
 
 
+def test_late_request_for_yesterday_keeps_todays_salt(store):
+    today = store.daily_salt("2026-10-21")
+    store.daily_salt(DAY)  # a request whose clock read 23:59:59.999 the day before
+    assert store.daily_salt("2026-10-21") == today
+
+
 def test_salt_survives_a_restart(tmp_path):
     a = Store(tmp_path / "o.sqlite")
     salt = a.daily_salt(DAY)

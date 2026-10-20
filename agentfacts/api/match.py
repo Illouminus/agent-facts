@@ -10,12 +10,22 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
+from pydantic import TypeAdapter, ValidationError
+
+from agentfacts.schema.models import Hostname, Package, Version
 from agentfacts.schema.registry import match_template
 
-_PACKAGE = re.compile(r"^(@[a-z0-9][a-z0-9._-]*/)?[A-Za-z0-9][A-Za-z0-9._-]{0,127}(?!\n)$")
-_VERSION = re.compile(r"^[A-Za-z0-9.+-]{1,64}(?!\n)$")
-_HOST = re.compile(r"^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}(?!\n)$")
 ECOSYSTEMS = ("pypi", "npm")
+# The registry's own value types, so a locator or host the validator accepts is accepted here.
+_PACKAGE, _VERSION, _HOST = TypeAdapter(Package), TypeAdapter(Version), TypeAdapter(Hostname)
+
+
+def _valid(adapter: TypeAdapter, value: str) -> bool:
+    try:
+        adapter.validate_python(value)
+    except ValidationError:
+        return False
+    return True
 
 
 @dataclass(frozen=True)
@@ -43,7 +53,7 @@ def _locator(ecosystem: str, rest: str) -> Locator | None:
     scoped = rest.startswith("@")
     name, _, version = rest[1:].partition("@") if scoped else rest.partition("@")
     package = f"@{name}" if scoped else name
-    if not _PACKAGE.match(package) or (version and not _VERSION.match(version)):
+    if not _valid(_PACKAGE, package) or (version and not _valid(_VERSION, version)):
         return None
     return Locator(ecosystem, package, version or None)
 
@@ -65,7 +75,7 @@ def parse_target(raw: str) -> Target | None:
     if parts.scheme not in ("http", "https") or parts.username is not None:
         return None
     host = (parts.hostname or "").rstrip(".")
-    if not _HOST.match(host):
+    if not _valid(_HOST, host):
         return None
     if parts.path in ("", "/"):
         return HostTarget(host)
@@ -115,24 +125,25 @@ def network_of(ip: str) -> str:
     return str(ipaddress.ip_network(f"{addr}/{prefix}", strict=False))
 
 
-def _trusted(ip: str, proxies: Iterable[str]) -> bool:
+Network = ipaddress.IPv4Network | ipaddress.IPv6Network
+
+
+def parse_proxies(values: Iterable[str]) -> tuple[Network, ...]:
+    """Trusted proxy IPs/CIDRs, parsed once at startup; a typo fails loudly (ValueError)."""
+    return tuple(ipaddress.ip_network(v.strip(), strict=False) for v in values if v.strip())
+
+
+def _trusted(ip: str, proxies: tuple[Network, ...]) -> bool:
     try:
         addr = ipaddress.ip_address(ip)
     except ValueError:
         return False
-    for proxy in proxies:
-        try:
-            if addr in ipaddress.ip_network(proxy, strict=False):
-                return True
-        except ValueError:
-            continue
-    return False
+    return any(addr in proxy for proxy in proxies)
 
 
-def client_ip(peer: str, forwarded_for: str | None, trusted_proxies: Iterable[str]) -> str:
+def client_ip(peer: str, forwarded_for: str | None, proxies: tuple[Network, ...]) -> str:
     """The caller's address: the socket peer, unless the peer is a trusted proxy, then the
     rightmost `X-Forwarded-For` hop that is not one (a client can prepend anything)."""
-    proxies = tuple(trusted_proxies)
     if not forwarded_for or not _trusted(peer, proxies):
         return peer
     hops = [h.strip() for h in forwarded_for.split(",") if h.strip()]

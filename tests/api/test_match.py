@@ -10,6 +10,7 @@ from agentfacts.api.match import (
     classify_ua,
     client_ip,
     network_of,
+    parse_proxies,
     parse_target,
     version_in,
 )
@@ -126,7 +127,7 @@ def test_network_of(ip, net):
     assert network_of(ip) == net
 
 
-TRUSTED = ("127.0.0.1", "::1")
+TRUSTED = parse_proxies(("127.0.0.1", "::1"))
 
 
 def test_client_ip_ignores_forwarded_for_from_untrusted_peer():
@@ -143,7 +144,12 @@ def test_client_ip_behind_proxy_without_header_is_the_proxy():
 
 
 def test_client_ip_trusts_cidrs():
-    assert client_ip("172.18.0.3", "9.9.9.9", ("172.16.0.0/12",)) == "9.9.9.9"
+    assert client_ip("172.18.0.3", "9.9.9.9", parse_proxies([" 172.16.0.0/12 ", ""])) == "9.9.9.9"
+
+
+def test_bad_proxy_entry_fails_at_startup():
+    with pytest.raises(ValueError):
+        parse_proxies(["127.0.0.1", "proxy.local"])
 
 
 @pytest.mark.parametrize(
