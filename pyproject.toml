@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Open registry of verified facts about machine interfaces (APIs, SDKs, CLIs) for AI agents."
 readme = "README.en.md"
 license = "MIT"
-license-files = ["LICENSE", "LICENSE-DATA"]
+license-files = ["LICENSE"]  # the wheel ships code only; data (CC BY 4.0) stays in the repo
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.150.0",
