@@ -434,3 +434,45 @@ def test_no_llm_client_is_imported_by_the_runner():
                 names = [node.module]
             for name in names:
                 assert not name.startswith(banned), f"{source.name} imports {name}"
+
+
+def test_secret_is_redacted_before_truncation_and_normalization(repo, httpserver):
+    repo.service()
+    repo.key()
+    repo.probe(**{"assert": [{"step": 1, "json_path": "$.error.message", "equals": "x"}]})
+    padding = "p " * 250  # pushes the key across the 512-char error cap
+    httpserver.expect_request("/v1/items").respond_with_json(
+        {"error": {"message": padding + FAKE_KEY + " tail"}}, status=400)
+    tick(repo, httpserver)
+    raw = (repo.state / "results.jsonl").read_text()
+    for fragment in (FAKE_KEY, FAKE_KEY.lower(), FAKE_KEY[:12], FAKE_KEY.lower()[:12]):
+        assert fragment not in raw, fragment
+
+
+def test_key_must_be_named_after_its_service(repo, httpserver):
+    repo.service(auth={"kind": "bearer", "key_name": "stripe-test", "env": "sandbox"})
+    repo.key("stripe-test")
+    repo.probe()
+    report = tick(repo, httpserver)
+    assert outcomes(report) == {"items-list": "error"}
+    assert report.lines[0].detail.startswith("refused:key_not_bound")
+    assert report.refused == ["af:acme:probe:items-list"] and not report.ok
+    assert httpserver.log == []
+    dry = tick(repo, httpserver, dry_run=True, run_all=True)
+    assert outcomes(dry) == {"items-list": "refused"}
+
+
+def test_key_named_after_the_service_is_accepted(repo, httpserver):
+    for name in ("acme", "acme-live", "acme_test"):
+        repo.service(auth={"kind": "bearer", "key_name": name, "env": "sandbox"})
+        repo.key(name)
+        repo.probe()
+        httpserver.expect_request("/v1/items").respond_with_json({})
+        assert outcomes(tick(repo, httpserver, run_all=True)) == {"items-list": "pass"}, name
+
+
+def test_a_prefix_without_separator_is_not_the_service(repo, httpserver):
+    repo.service(auth={"kind": "bearer", "key_name": "acmecorp-test", "env": "sandbox"})
+    repo.key("acmecorp-test")
+    repo.probe()
+    assert outcomes(tick(repo, httpserver)) == {"items-list": "error"}

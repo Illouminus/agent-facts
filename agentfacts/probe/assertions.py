@@ -25,8 +25,6 @@ from agentfacts.schema.models import (
     AssertStatus,
 )
 
-_SHOWN = 80
-
 
 @dataclass(frozen=True)
 class AssertResult:
@@ -47,8 +45,9 @@ def schema_fingerprint(body: Any) -> str | None:
 
 
 def _shown(value: Any) -> str:
-    text = json.dumps(value, ensure_ascii=False) if not isinstance(value, str) else repr(value)
-    return text if len(text) <= _SHOWN else text[: _SHOWN - 1] + "…"
+    # Never truncated here: a cut could leave part of a secret that redaction no longer matches.
+    # The results log clips long strings after redaction.
+    return json.dumps(value, ensure_ascii=False) if not isinstance(value, str) else repr(value)
 
 
 def _same(actual: Any, expected: Any) -> bool:

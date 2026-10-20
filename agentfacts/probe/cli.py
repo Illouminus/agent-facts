@@ -37,7 +37,8 @@ def _summary(report: TickReport) -> str:
     n = report.counts
     rest = f"{n['skipped_no_key']} skipped:no_key, {n['not_due']} not due, {n['deferred']} deferred"
     if report.results_path is None:
-        return f"dry run: {n['would_run']} would run, {rest}"
+        refused = f", {n['refused']} refused" if n["refused"] else ""
+        return f"dry run: {n['would_run']} would run, {rest}{refused}"
     ran = n["pass"] + n["fail"] + n["error"]
     return (
         f"tick: {ran} run ({n['pass']} pass, {n['fail']} fail, {n['error']} error), {rest}; "

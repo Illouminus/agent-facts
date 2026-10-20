@@ -13,7 +13,7 @@ dimensions:
   account_state: [active, test_mode]
 auth:
   kind: bearer
-  key_name: af-fixture-examplepay   # never present: its probes are skipped:no_key
+  key_name: examplepay-fixture   # never present: its probes are skipped:no_key
   env: sandbox
 tos:
   automated_access: allowed

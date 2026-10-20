@@ -34,7 +34,7 @@ from agentfacts.probe.http import (
     prepare,
     send,
 )
-from agentfacts.probe.keys import DEFAULT_KEYS_DIR, has_key, read_key
+from agentfacts.probe.keys import DEFAULT_KEYS_DIR, bound_to, has_key, read_key
 from agentfacts.probe.loader import LoadedProbe, Repo, load_repo
 from agentfacts.probe.redact import Redactor
 from agentfacts.probe.results import (
@@ -81,7 +81,8 @@ class TickOptions:
 @dataclass(frozen=True)
 class ProbeLine:
     probe_id: str
-    outcome: str  # pass, fail, error, skipped:no_key; dry run: would-run, not-due, deferred
+    outcome: str  # pass, fail, error, skipped:no_key; dry run: would-run, not-due, deferred,
+    # refused
     detail: str = ""
 
 
@@ -169,6 +170,11 @@ def _select(
             if used & set(c.templates):
                 plan.append((c, "not-due", "shares a template with a probe in this tick"))
                 continue
+        if c.keyed and not bound_to(c.service.auth.key_name, c.service.key):
+            message = (f"refused:key_not_bound: key {c.service.auth.key_name} is not named after "
+                       f"service {c.service.key}")
+            plan.append((c, "refused", message))
+            continue
         if c.keyed and not has_key(c.service.auth.key_name, keys_dir):
             plan.append((c, "skipped:no_key", f"no key {c.service.auth.key_name}"))
             continue
@@ -199,6 +205,7 @@ def _execute(
     client: httpx.Client,
     sleep: Callable[[float], None],
     now: datetime,
+    redactor: Redactor,
 ) -> _Run:
     probe, service = c.item.probe, c.service
     try:
@@ -225,7 +232,7 @@ def _execute(
         response = send(client, base_url, request, headers, query)
         responses[i] = response
         ctx.responses[i] = response.json
-        run.steps.append(http_step_record(i, request, response, whitelist))
+        run.steps.append(http_step_record(i, request, response, whitelist, redactor))
         if response.error is not None:
             run.detail = f"step {i}: {response.error}"
             return run
@@ -293,6 +300,8 @@ class _Tick:
             for c, decision, detail in plan:
                 if decision == "skipped:no_key":
                     self._skip(c, detail, log)
+                elif decision == "refused":
+                    self._refuse(c, detail, log)
                 elif decision == "run":
                     if reason := kill_reason(self.root, self.environ):
                         self.report.killed = reason
@@ -301,7 +310,7 @@ class _Tick:
                         self.report.counts["skipped_no_key"] += 1
                         self._skip(c, "key unreadable", log)
                     else:
-                        self._probe(c, keys.get(c.service.key), client, log)
+                        self._probe(c, keys.get(c.service.key), client, log, redactor)
 
     def _skip(self, c: _Candidate, detail: str, log: ResultsLog) -> None:
         now = self.clock()
@@ -310,9 +319,25 @@ class _Tick:
         self.state.record(c.id, [], self.options.vantage, now.timestamp(), "skipped:no_key")
         self.report.lines.append(ProbeLine(c.id, "skipped:no_key", redacted["detail"]))
 
-    def _probe(self, c: _Candidate, key: str | None, client: httpx.Client, log: ResultsLog) -> None:
+    def _refuse(self, c: _Candidate, detail: str, log: ResultsLog) -> None:
+        """A probe refused before any request (its key is not bound to its service)."""
         now = self.clock()
-        run = _execute(c, key, self.base_urls, client, self.sleep, now)
+        redacted = log.append(_record(c, self.options.vantage, now, _Run("error", detail)))
+        self.state.record(c.id, [], self.options.vantage, now.timestamp(), "error")
+        self.report.counts["error"] += 1
+        self.report.refused.append(c.id)
+        self.report.lines.append(ProbeLine(c.id, "error", redacted["detail"]))
+
+    def _probe(
+        self,
+        c: _Candidate,
+        key: str | None,
+        client: httpx.Client,
+        log: ResultsLog,
+        redactor: Redactor,
+    ) -> None:
+        now = self.clock()
+        run = _execute(c, key, self.base_urls, client, self.sleep, now, redactor)
         record = _record(c, self.options.vantage, now, run)
         if run.outcome in ("pass", "fail"):
             for loaded in self.repo.facts_citing(c.id):
@@ -362,7 +387,7 @@ def run_tick(
     with BudgetState(state_dir / STATE_FILE, read_only=options.dry_run) as state:
         plan = _select(repo, state, options, clock().timestamp(), keys_dir)
         for _, decision, _ in plan:
-            if decision != "run":
+            if decision not in ("run", "refused") or options.dry_run:
                 report.counts[_count_key(decision)] += 1
         tick = _Tick(root, options, keys_dir, base_urls or {}, sleep, clock, environ, repo, state,
                      report)
@@ -378,7 +403,7 @@ class ProbeStatus:
     probe_id: str
     env: str
     requests: int
-    key: str  # none (keyless), ok, missing
+    key: str  # none (keyless), ok, missing, unbound (key_name not named after the service)
     last_run: tuple[float, str] | None
     wait_s: int  # 0 = due
 
@@ -400,7 +425,9 @@ def probe_status(
         for item in sorted(repo.probes, key=lambda i: i.probe.id):
             c = _candidate(item, repo.services[item.probe.service])
             key = "none"
-            if c.keyed:
+            if c.keyed and not bound_to(c.service.auth.key_name, c.service.key):
+                key = "unbound"
+            elif c.keyed:
                 key = "ok" if has_key(c.service.auth.key_name, keys_dir) else "missing"
             budget = c.service.probe_budget.per_template_seconds
             statuses.append(ProbeStatus(

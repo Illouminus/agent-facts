@@ -3,6 +3,10 @@
 The runner is the only reader (invariant 4). `key_name` is pattern-checked by the service schema
 (`^[a-z0-9][a-z0-9_-]{0,63}$`), so it cannot leave `keys_dir`. A missing or blank file means no key:
 the service's keyed probes are skipped, never an error.
+
+A key is bound to its service by name: `key_name` is the service key or starts with `<service>-` /
+`<service>_` (`stripe-test` for `stripe`). Otherwise a new `services/evil.yaml` could claim
+`stripe-test` and send it to its own hosts; the runner refuses such a service, key unread.
 """
 
 from pathlib import Path
@@ -24,3 +28,7 @@ def read_key(key_name: str, keys_dir: Path) -> str | None:
 
 def has_key(key_name: str, keys_dir: Path) -> bool:
     return read_key(key_name, keys_dir) is not None
+
+
+def bound_to(key_name: str, service_key: str) -> bool:
+    return key_name == service_key or key_name.startswith((f"{service_key}-", f"{service_key}_"))

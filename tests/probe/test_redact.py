@@ -107,3 +107,13 @@ def test_line_scan_catches_strict_patterns_only():
 def test_non_strings_pass_through():
     data = {"n": 3, "ok": True, "x": None}
     assert Redactor(set()).record(data) == data
+
+
+def test_exact_secrets_match_case_insensitively():
+    r = Redactor({"FakeKey-12345678"})
+    assert r.text_strict("lower fakekey-12345678 UPPER FAKEKEY-12345678") == (
+        f"lower {REDACTED} UPPER {REDACTED}")
+
+
+def test_bearer_pattern_is_case_insensitive():
+    assert "abcdefghijklmnop1234" not in Redactor(set()).text_strict("bearer abcdefghijklmnop1234")

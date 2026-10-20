@@ -18,8 +18,8 @@ from urllib.parse import quote, quote_plus
 REDACTED = "[redacted]"
 
 _STRICT = (
-    re.compile(r"sk_[a-z]+_[A-Za-z0-9]{8,}"),
-    re.compile(r"Bearer [A-Za-z0-9._-]{16,}"),
+    re.compile(r"sk_[a-z]+_[A-Za-z0-9]{8,}", re.IGNORECASE),
+    re.compile(r"Bearer [A-Za-z0-9._-]{16,}", re.IGNORECASE),
 )
 _HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
 _B64_RUN = re.compile(r"[A-Za-z0-9+/_=-]{32,}")
@@ -65,12 +65,15 @@ def _generic(match: re.Match[str]) -> str:
 
 class Redactor:
     def __init__(self, secrets: Iterable[str]):
-        cleaned = {s.strip() for s in secrets if s and s.strip()}
-        self._secrets = sorted(cleaned, key=len, reverse=True)
+        cleaned = sorted({s.strip() for s in secrets if s and s.strip()}, key=len, reverse=True)
+        # Case-insensitive: a vendor may echo a key lowercased, and `normalized` lowercases.
+        self._exact = (
+            re.compile("|".join(re.escape(s) for s in cleaned), re.IGNORECASE) if cleaned else None
+        )
 
     def text_strict(self, value: str) -> str:
-        for secret in self._secrets:
-            value = value.replace(secret, REDACTED)
+        if self._exact is not None:
+            value = self._exact.sub(REDACTED, value)
         for pattern in _STRICT:
             value = pattern.sub(REDACTED, value)
         return value

@@ -4,6 +4,10 @@ A step records what spec 04 lists — status, latency, whitelisted headers, body
 string — and never the URL query (it may carry a `query` auth key) or the body itself. Headers kept:
 a fixed rate-limit/content set, the service's `signal_fields` that are header names, and headers the
 probe asserts on; never credentials or cookies.
+
+Order matters for secrets: vendor text is redacted *before* it is clipped or lowercased (a cut or a
+case change would hide a key from exact matching), and the log clips long strings only after the
+whole record has been redacted.
 """
 
 import json
@@ -47,6 +51,7 @@ _ERROR_PATHS = (
 )
 ERROR_MAX = 512
 _TEXT_ERROR_MAX = 200
+FIELD_MAX = 1024  # any string in a record, clipped after redaction
 
 
 def header_whitelist(service: Service, probe: Probe) -> frozenset[str]:
@@ -65,8 +70,9 @@ def _squash(text: str, limit: int = ERROR_MAX) -> str:
     return " ".join(text.split())[:limit]
 
 
-def error_text(response: StepResponse) -> str | None:
-    """The vendor's error message of a ≥ 400 response, or the transport error; squashed."""
+def error_text(response: StepResponse, redactor: Redactor) -> str | None:
+    """The vendor's error message of a ≥ 400 response, or the transport error: redacted, then
+    squashed and clipped."""
     if response.error is not None:
         return response.error
     if response.status is None or response.status < 400:
@@ -78,10 +84,10 @@ def error_text(response: StepResponse) -> str | None:
             except LookupError:
                 continue
             if isinstance(value, str) and value.strip():
-                return _squash(value)
+                return _squash(redactor.text(value))
         return None
-    text = _squash(response.body.decode("utf-8", errors="replace"), _TEXT_ERROR_MAX)
-    return text or None
+    body = redactor.text(response.body.decode("utf-8", errors="replace"))
+    return _squash(body, _TEXT_ERROR_MAX) or None
 
 
 def normalize(text: str) -> str:
@@ -90,9 +96,13 @@ def normalize(text: str) -> str:
 
 
 def http_step_record(
-    index: int, request: PreparedRequest, response: StepResponse, whitelist: frozenset[str]
+    index: int,
+    request: PreparedRequest,
+    response: StepResponse,
+    whitelist: frozenset[str],
+    redactor: Redactor,
 ) -> dict[str, Any]:
-    error = error_text(response)
+    error = error_text(response, redactor)
     return {
         "step": index,
         "do": "http",
@@ -124,14 +134,24 @@ def refused_step_record(index: int, step: HttpStep, refused: Refused) -> dict[st
     }
 
 
+def _clip(data: Any) -> Any:
+    if isinstance(data, str):
+        return data if len(data) <= FIELD_MAX else data[: FIELD_MAX - 1] + "…"
+    if isinstance(data, dict):
+        return {k: _clip(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [_clip(v) for v in data]
+    return data
+
+
 class ResultsLog:
     def __init__(self, path: Path, redactor: Redactor):
         self.path = path
         self.redactor = redactor
 
     def append(self, record: dict[str, Any]) -> dict[str, Any]:
-        """Redact, serialize, scan the line once more, append; returns the redacted record."""
-        redacted = self.redactor.record(record)
+        """Redact, clip, serialize, scan the line once more, append; returns what was written."""
+        redacted = _clip(self.redactor.record(record))
         line = json.dumps(redacted, ensure_ascii=False, separators=(",", ":"))
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("a", encoding="utf-8") as fh:
