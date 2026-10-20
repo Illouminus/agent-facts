@@ -1,0 +1,50 @@
+[project]
+name = "agentfacts"
+dynamic = ["version"]
+description = "Open registry of verified facts about machine interfaces (APIs, SDKs, CLIs) for AI agents."
+readme = "README.en.md"
+license = "MIT"
+license-files = ["LICENSE"]  # the wheel ships code only; data (CC BY 4.0) stays in the repo
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.150.0",
+    "httpx>=0.28.1",
+    "jsonschema>=4.26.0",
+    "pydantic>=2.14.1",
+    "pyyaml>=6.0.3",
+    "ruamel.yaml>=0.19.1",
+    "typer>=0.27.3",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+agentfacts = "agentfacts.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-httpserver>=1.2.0",
+    "ruff>=0.17.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "agentfacts/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agentfacts"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["docs"]  # research scripts and notes are not the package
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["B008"]  # typer.Option / fastapi.Depends in defaults are idiomatic
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
