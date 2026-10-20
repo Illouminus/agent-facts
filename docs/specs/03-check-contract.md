@@ -43,17 +43,25 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 
 1. Parse `target.url` → host, path. Match host against `services/*.yaml::hosts`; path against
    `templates` (path parameters `{id}` match one segment). No match → respond with
-   `unregistered_target`, store nothing, count one anonymous metric.
+   `unregistered_target`, store nothing, count one anonymous daily metric; the hostname is kept in that
+   metric only when it belongs to the seed candidate list (`docs/research/seed-100/candidates.py`),
+   every other host counts as `other` (decision 2026-10-20, Q7).
 2. Extract the signal from `error`: status; vendor error code via the service's `signal_fields` whitelist
-   (JSON pointer list); error string = first whitelisted message field, else first line of
-   `body_excerpt`. Normalize: lowercase, collapse whitespace, digits → `#`, UUID/hex ≥ 16 → `<id>`,
+   (JSON pointer list); error string = first whitelisted message field; a body that is JSON (or
+   truncated JSON) without a whitelisted message field yields **no string**, only the status is kept
+   (Q4); a non-JSON body falls back to its first line. Normalize: lowercase, collapse whitespace, digits → `#`, UUID/hex ≥ 16 → `<id>`,
    emails → `<email>`, URLs → `<url>`, truncate 512. Hash = sha256 of normalized.
 3. Look up facts: exact `(service, template, normalized hash)`, then `(service, template, status)`,
    then `(service, kind in {rate_limit, availability})`. Render fixes.
-4. Store observation (only if step 1 matched): fields from `01`. Reporter net = sha256(daily salt ‖ /16).
+4. Store observation only if step 1 matched **and** the request carries an `error` — pre-flight calls
+   are answered, never stored (Q5). Reporter net = sha256(salt ‖ IPv4 /16 or IPv6 /32) (Q3); the salt
+   rotates weekly, Monday 00:00 UTC, so one network keeps one id inside a quorum window (Q6).
 5. Rate limits: 60 req/min per reporter net, 600/min global; over → 429 with `Retry-After`.
 6. Never store or log: full URL query, request bodies, headers from the caller, raw IP, anything that
    fails the secret-shaped regex filter (replaced by `<redacted>` before any write).
+7. Drop (count, never store) a normalized string that contains a URL outside the service's `hosts` +
+   `doc_hosts` (Q1), or a prompt-injection marker: `ignore previous`, `ignore all/any previous`,
+   `disregard … previous`, `system:`, `assistant:`, `<|im_start|>`, `[INST]` (Q2).
 
 ## Read endpoints
 
@@ -69,4 +77,4 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 | Max request body | 8 KB |
 | `body_excerpt` kept | 2 KB in, 512 chars normalized stored |
 | Rate limit | 60/min per net, 600/min global |
-| Daily salt rotation | 00:00 UTC |
+| Salt rotation | weekly, Monday 00:00 UTC (= quorum window) |

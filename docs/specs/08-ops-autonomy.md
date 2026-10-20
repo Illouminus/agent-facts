@@ -22,7 +22,7 @@ API behind Caddy at `facts.baillot.dev` `[tap: DNS record once]`.
 ```
 agent-facts · week 44
 facts: 112 (+9) · verified 71 · reported 31 · stale 4 · retracted 0
-check(): 143 calls from 27 networks · 11 unregistered targets (top: api.notion.com)
+check(): 143 calls from 27 networks · 11 unregistered targets (top: api.notion.com; hosts known only for seed candidates, the rest is "other")
 probes: 1 840 runs · 0 budget violations · keys missing: [hubspot-test]
 needs a probe (agent-hours): 6 reported facts  → card created
 publications proposed (batch #7, 4 items):

@@ -7,14 +7,16 @@ nothing (tested).
 
 ## Quorum (hourly timer)
 
-Group observations from the last 7 days by key `(service, method, path_template, error_hash)` (for
-status-only signals: `(service, template, status)`).
+Group observations of the **current salt period** (Monday 00:00 UTC → now, at most 7 days; the salt and
+the window coincide by decision 2026-10-20) by key `(service, method, path_template, error_hash)` (for
+status-only signals: `(service, template, status)`). Pre-flight calls are never stored (`03`), so every
+row carries a signal.
 
 | Threshold | Value |
 |-----------|-------|
-| Distinct reporter networks (/16, salted) | ≥ 3 |
+| Distinct reporter networks (IPv4 /16, IPv6 /32, salted per period) | ≥ 3 |
 | Distinct UA classes or SDK packages | ≥ 2 |
-| Window | 7 days |
+| Window | the current salt period (≤ 7 days, Monday–Sunday UTC) |
 | Same group already a fact | refresh `evidence.observations`, no new draft |
 
 A group that meets quorum → `facts/<service>/<slug>.yaml` draft with `status: reported`,
@@ -47,7 +49,7 @@ stays `reported` and is listed in the weekly digest under "needs a probe" (an ag
 ## Abuse controls
 
 - Observations from a single reporter net never exceed 1,000 / day (silently dropped beyond).
-- A normalized error string that contains a URL outside the service's hosts, or looks like a prompt
-  ("ignore previous", "system:", "assistant:") → dropped and counted, never stored (prompt-injection
-  surface: the strings land on pages and in `check()` answers).
+- A normalized error string that contains a URL outside the service's `hosts` + `doc_hosts`, or carries
+  a prompt-injection marker (list in `03` step 7) → dropped and counted, never stored (the strings land
+  on pages and in `check()` answers).
 - Pages and `check()` answers only render the **normalized** string, inside a code span, never raw.
