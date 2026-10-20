@@ -181,6 +181,11 @@ ctx = dict(kind=kind, plural=plural, seller=seller, funder_probe=funder_probe, f
            N_PAYAI_ONLY=CS['payai_only_base_payTo'], top_small=top_small, big_contrast=big_contrast, small=small, ROWS=ROWS, SENS=SENS, sample=sample, S=S, C=C, W=W, FC=FC, FC25=FC25, n=n, usd=usd, n_small=len(small), n_sm_10=n_sm_10, n_sm_rep5=n_sm_rep5,
            n_sm_usd100=n_sm_usd100, CDP=CDP, PAYAI=PAYAI)
 
+# {{выражение}} подставляется ТОЛЬКО в авторский шаблон report-text.md (доверенный текст),
+# никогда в собранный отчёт: там есть строки из чужих данных (адреса, URL продавцов).
+ctx['__builtins__'] = {}
+TEXT = re.sub(r'\{\{(.+?)\}\}', lambda m: str(eval(m.group(1), ctx)), TEXT)
+
 md = f"""Мелкий независимый продавец в x402 получает в медиане **{n(FC['median'])}** {plural(FC['median'], 'уникального чужого плательщика', 'уникальных чужих плательщиков', 'уникальных чужих плательщиков')} за 30 дней (выборка {n(FC['n'])} продавцов: вся совокупность мелких продавцов на Base из двух открытых каталогов; в случайной подвыборке из {FC25['n']} медиана {n(FC25['median'])}; при строгом фильтре обходчиков (≥ 5 продавцов) — {n(SENS[5]['small_all']['foreign_clusters']['median'])}; повторных чужих плательщиков в медиане {n(S['small_all']['foreign_repeat_payers']['median'])}, чужих денег — {usd(S['small_all']['foreign_usd']['median'])}).
 
 # Спрос автономных агентов на платные эндпоинты x402: замер по блокчейну Base, октябрь 2026
@@ -245,7 +250,5 @@ md = f"""Мелкий независимый продавец в x402 получ
 
 {TEXT.split('<!-- SPLIT -->')[1] if TEXT and '<!-- SPLIT -->' in TEXT else ''}
 """
-# в тексте отчёта числа подставляются из данных: {{выражение}}
-md = re.sub(r'\{\{(.+?)\}\}', lambda m: str(eval(m.group(1), ctx)), md)
 OUT.write_text(md)
 print('wrote', OUT, len(md), 'chars')
