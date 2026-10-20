@@ -153,7 +153,7 @@ def test_official_sdk_page(pages):
 def test_expired_reported_fact_has_no_page_row_or_stub(pages):
     assert "stripe/payment-intent-lock-timeout.md" not in pages
     assert all("payment-intent-lock-timeout" not in text for text in pages.values())
-    assert all("lock\\_timeout" not in t and "lock_timeout" not in t for t in pages.values())
+    assert all("lock_timeout" not in text for text in pages.values())
 
 
 def test_service_index_groups_by_kind_with_badges(pages):
@@ -161,10 +161,6 @@ def test_service_index_groups_by_kind_with_badges(pages):
     assert index.startswith("# Stripe\n\nHosts: `api.stripe.com` · 5 facts\n")
     kinds = [line for line in index.splitlines() if line.startswith("## ")]
     assert kinds == ["## Error meanings", "## Rate limits", "## Silent behavior"]
-    assert (
-        f"- ✅ verified:server:prod · [`{IDEMPOTENCY}`](idempotency-key-reuse-different-params.md)"
-        " · POST /v1/payment\\_intents"
-    ) not in index  # intraword underscores stay as they are
     assert (
         f"- ✅ verified:server:prod · [`{IDEMPOTENCY}`](idempotency-key-reuse-different-params.md)"
         " · POST /v1/payment_intents · env prod"

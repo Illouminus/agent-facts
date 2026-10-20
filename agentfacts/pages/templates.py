@@ -111,7 +111,7 @@ def title(fact: Fact) -> str:
     return code_span(normalized) if normalized is not None else md_text(fact.claim)
 
 
-def _plural(n: int, word: str) -> str:
+def plural(n: int, word: str) -> str:
     return f"{n} {word}" if n == 1 else f"{n} {word}s"
 
 
@@ -152,10 +152,10 @@ def _status_line(fact: Fact) -> str:
         parts.append(f"last confirmed {utc_date(evidence.last_confirmed)}")
     vantages = len(evidence.vantages) if evidence.vantages else 0
     if evidence.confirmations is not None:
-        tail = f" from {_plural(vantages, 'vantage')}" if vantages else ""
-        parts.append(_plural(evidence.confirmations, "confirmation") + tail)
+        tail = f" from {plural(vantages, 'vantage')}" if vantages else ""
+        parts.append(plural(evidence.confirmations, "confirmation") + tail)
     elif vantages:
-        parts.append(f"seen from {_plural(vantages, 'vantage')}")
+        parts.append(f"seen from {plural(vantages, 'vantage')}")
     if fact.status is Status.reported:
         parts.append("not yet reproduced by a probe")
     if fact.status is Status.stale:
@@ -298,7 +298,7 @@ def fact_page(fact: Fact, service: Service, siblings: Sequence[Fact] = ()) -> st
 
 def service_index(service: Service, facts: Sequence[Fact]) -> str:
     hosts = ", ".join(code_span(h) for h in service.hosts)
-    header = f"Hosts: {hosts} · {_plural(len(facts), 'fact')}" if facts else f"Hosts: {hosts}"
+    header = f"Hosts: {hosts} · {plural(len(facts), 'fact')}" if facts else f"Hosts: {hosts}"
     blocks = [f"# {md_text(service.name)}", header]
     if not facts:
         blocks.append("No facts yet.")
@@ -323,12 +323,12 @@ def root_index(
 ) -> str:
     total = sum(len(f) for f in facts_by_service.values())
     summary = (
-        f"Registry version {version or 'none yet'} · {_plural(len(services), 'service')} · "
-        f"{_plural(total, 'fact')}."
+        f"Registry version {version or 'none yet'} · {plural(len(services), 'service')} · "
+        f"{plural(total, 'fact')}."
     )
     intro = (
-        "Facts about how APIs, SDKs and CLIs behave, established by deterministic probes. "
-        + summary
+        "Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact "
+        "was established. " + summary
     )
     blocks = ["# agent-facts registry", intro]
     if services:

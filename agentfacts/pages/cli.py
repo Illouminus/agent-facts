@@ -1,6 +1,6 @@
 """`agentfacts pages build`: regenerate `pages/` from the registry, or `--check` it (CI)."""
 
-import re
+from datetime import date
 from pathlib import Path
 from typing import Annotated
 
@@ -12,13 +12,14 @@ EXIT_OK, EXIT_STALE, EXIT_USAGE = 0, 1, 2
 
 
 def _version(value: str | None) -> str | None:
-    if value is not None and not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
-        raise typer.BadParameter("expected YYYY-MM-DD")
-    return value
-
-
-def _pages(n: int) -> str:
-    return "1 page" if n == 1 else f"{n} pages"
+    if value is None:
+        return None
+    try:
+        if len(value) == 10 and date.fromisoformat(value).isoformat() == value:
+            return value
+    except ValueError:
+        pass
+    raise typer.BadParameter("expected a calendar date YYYY-MM-DD")
 
 
 @app.command()
@@ -46,6 +47,7 @@ def build(
     """
     from agentfacts.pages import PagesError
     from agentfacts.pages.build import build_pages, load_registry, sync
+    from agentfacts.pages.templates import plural
 
     out = out if out is not None else root / "pages"
     try:
@@ -65,9 +67,8 @@ def build(
         if not report.clean:
             typer.echo(f"{out} is out of date: run `agentfacts pages build`", err=True)
             raise typer.Exit(EXIT_STALE)
-        typer.echo(f"ok: {out} is up to date ({_pages(len(pages))})", err=True)
+        typer.echo(f"ok: {out} is up to date ({plural(len(pages), 'page')})", err=True)
         return
     written = len(report.changed) + len(report.missing)
-    typer.echo(
-        f"{out}: {_pages(len(pages))} ({written} written, {len(report.extra)} removed)", err=True
-    )
+    counts = f"{written} written, {len(report.extra)} removed"
+    typer.echo(f"{out}: {plural(len(pages), 'page')} ({counts})", err=True)

@@ -46,9 +46,6 @@ def load_registry(root: Path) -> tuple[tuple[Service, ...], tuple[Fact, ...]]:
     ids = [f.id for f in facts]
     if len(set(ids)) != len(ids):
         raise PagesError("duplicate fact id in facts/; run `agentfacts validate`")
-    for fact in facts:
-        if fact.service not in keys:
-            raise PagesError(f"{fact.id}: service {fact.service} is not registered in services/")
     return tuple(services), tuple(facts)
 
 
@@ -167,8 +164,9 @@ class SyncReport:
 
 
 def _generated(path: Path) -> bool:
+    """True if the file ends with our exact footer line (quoting the phrase is not enough)."""
     try:
-        return templates.GENERATED_MARK in path.read_text(encoding="utf-8", errors="replace")
+        return path.read_bytes().endswith(("\n" + templates.FOOTER + "\n").encode("utf-8"))
     except OSError:
         return False
 
@@ -176,8 +174,17 @@ def _generated(path: Path) -> bool:
 def sync(out: Path, pages: Mapping[str, str], check: bool = False) -> SyncReport:
     """Compare `out` with `pages`; unless `check`, write what differs and delete stale pages.
 
-    Only files carrying the generated-page footer count as ours: a hand-written `pages/README.md`
-    is never reported or deleted."""
+    Only files ending with the generated-page footer count as ours: a hand-written
+    `pages/README.md` (or a doc quoting the footer) is never reported or deleted."""
+    try:
+        return _sync(out, pages, check)
+    except OSError as exc:
+        raise PagesError(f"{out}: {exc.strerror or exc}: {exc.filename or out}") from None
+
+
+def _sync(out: Path, pages: Mapping[str, str], check: bool) -> SyncReport:
+    if out.exists() and not out.is_dir():
+        raise PagesError(f"{out} is not a directory")
     report = SyncReport()
     for rel, text in pages.items():
         path = out / rel

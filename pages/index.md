@@ -1,6 +1,6 @@
 # agent-facts registry
 
-Facts about how APIs, SDKs and CLIs behave, established by deterministic probes. Registry version none yet · 0 services · 0 facts.
+Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version none yet · 0 services · 0 facts.
 
 No services registered yet.
 

@@ -5,6 +5,7 @@ Exit codes: 0 ok / up to date, 1 out of date or unreadable registry, 2 usage err
 
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from agentfacts.cli import app
@@ -103,9 +104,29 @@ def test_registry_version_option(fixture_root, tmp_path):
     assert "Registry version 2026-11-01" in (out / "index.md").read_text(encoding="utf-8")
 
 
-def test_bad_registry_version_is_a_usage_error(tmp_path):
-    result = _pages("--root", str(tmp_path), "--registry-version", "yesterday")
-    assert result.exit_code == 2
+@pytest.mark.parametrize("value", ["yesterday", "2026-13-45", "2026-02-30", "20261020"])
+def test_bad_registry_version_is_a_usage_error(tmp_path, value):
+    result = _pages("--root", str(tmp_path), "--registry-version", value)
+    assert result.exit_code == 2, result.output
+
+
+def test_footer_quoted_in_a_document_is_not_ours(fixture_root, tmp_path):
+    """Spec 06 itself quotes the footer phrase: only an exact final footer line marks a page."""
+    out = tmp_path / "out"
+    doc = out / "notes" / "spec.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text("Template ends with: This page is generated; edit the YAML, not the page.\n")
+    assert _pages("--root", str(fixture_root), "--out", str(out)).exit_code == 0
+    assert doc.is_file()
+
+
+def test_out_that_is_a_file_is_an_error_not_a_traceback(fixture_root, tmp_path):
+    out = tmp_path / "out.md"
+    out.write_text("x\n", encoding="utf-8")
+    result = _pages("--root", str(fixture_root), "--out", str(out))
+    assert result.exit_code == 1
+    assert "not a directory" in result.stderr
+    assert result.exception is None or isinstance(result.exception, SystemExit)
 
 
 def test_invalid_registry_exits_1_with_a_validate_hint(fixture_root, tmp_path):
