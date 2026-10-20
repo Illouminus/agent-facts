@@ -18,7 +18,7 @@ from jsonschema.exceptions import ValidationError as SchemaError
 from ruamel.yaml.error import MarkedYAMLError, YAMLError
 
 from agentfacts.schema import validator_for
-from agentfacts.schema.models import JsonRpcRead, http_step_violations
+from agentfacts.schema.models import http_step_violations
 from agentfacts.schema.registry import (
     Registry,
     ServiceInfo,
@@ -268,8 +268,8 @@ def _service_checks(doc: _Doc, registry: Registry) -> list[Problem]:
         message = f"key {name} is not named after the service ({key}, {key}-…, {key}_…)"
         problems.append(doc.problem(["auth", "key_name"], "key_not_bound", message))
     service = registry.services[key]
-    if service.jsonrpc and not service.has_template("POST", service.jsonrpc[0]):
-        message = f"jsonrpc endpoint POST {service.jsonrpc[0]} is not a template of {key}"
+    if service.jsonrpc and not service.has_template("POST", service.jsonrpc.path):
+        message = f"jsonrpc endpoint POST {service.jsonrpc.path} is not a template of {key}"
         problems.append(
             doc.problem(["surfaces", "http", "jsonrpc", "path"], "unregistered_template", message)
         )
@@ -379,7 +379,7 @@ def _probe_checks(doc: _Doc, registry: Registry) -> list[Problem]:
             problems.append(doc.problem(["assert", i, "step"], "unknown_step", message))
 
     known = registry.services.get(service_key)
-    jsonrpc = JsonRpcRead(*known.jsonrpc) if known is not None and known.jsonrpc else None
+    jsonrpc = known.jsonrpc if known is not None else None
     for i, step in enumerate(steps):
         if step["do"] == "http":
             for name, code, message in http_step_violations(step, data["env"], jsonrpc):

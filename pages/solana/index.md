@@ -11,7 +11,7 @@ Hosts: `api.mainnet-beta.solana.com`, `api.mainnet.solana.com` · 14 facts
 
 ## Rate limits
 
-- ✅ verified:server:prod · [Public mainnet responses carry x-ratelimit-\* headers with a per-method limit: on 2026-10-20 x-ratelimit-method-limit was 150 for getHealth and 6 for getBlock, with x-ratelimit-conn-limit 40 and tier free.](per-method-rate-limit-headers.md) · POST / · env prod
+- ✅ verified:server:prod · [Public mainnet responses carry x-ratelimit-\* headers: tier free, a per-method limit (x-ratelimit-method-limit), a per-IP rate limit (x-ratelimit-rps-limit) and x-ratelimit-conn-limit 40.](per-method-rate-limit-headers.md) · POST / · env prod
 - 🔵 official · [The public mainnet endpoint allows 100 requests per 10 s per IP, 40 per 10 s per IP for a single RPC method, 40 concurrent connections and 100 MB per 30 s; exceeding them returns HTTP 429 with Retry-After.](public-mainnet-rate-limits.md) · POST / · env prod
 
 ## Silent behavior

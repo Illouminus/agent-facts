@@ -7,7 +7,6 @@ integer).
 """
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated, Any, ClassVar, Literal
 
@@ -22,7 +21,7 @@ from pydantic import (
     model_validator,
 )
 
-from agentfacts.schema.registry import match_template
+from agentfacts.schema.registry import JsonRpcRead, match_template
 
 
 class _Closed(BaseModel):
@@ -501,14 +500,6 @@ READ_ONLY_METHODS = frozenset({"GET", "HEAD"})
 JSONRPC_REQUEST_KEYS = frozenset({"jsonrpc", "id", "method", "params"})
 
 
-@dataclass(frozen=True)
-class JsonRpcRead:
-    """The service's JSON-RPC endpoint template and its read-only methods."""
-
-    path: str
-    methods: frozenset[str]
-
-
 SHAPE_ONLY = JsonRpcRead("", frozenset())  # the `Probe` model: no service known, shape only
 
 
@@ -526,6 +517,11 @@ def _jsonrpc_read_problem(step: Mapping[str, Any], jsonrpc: JsonRpcRead | None) 
     method = body.get("method")
     if body.get("jsonrpc") != "2.0" or not isinstance(method, str):
         return "a prod POST body must be a JSON-RPC 2.0 request with a method"
+    request_id = body.get("id")
+    if isinstance(request_id, bool) or not isinstance(request_id, str | int | None):
+        return "a JSON-RPC id is a string, an integer or null"
+    if "params" in body and not isinstance(body["params"], list | Mapping):
+        return "JSON-RPC params are an array or an object"
     if jsonrpc is SHAPE_ONLY:
         return None
     if jsonrpc is None:

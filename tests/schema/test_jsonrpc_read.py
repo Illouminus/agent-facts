@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agentfacts.schema.models import JsonRpcRead, Probe, http_step_violations
+from agentfacts.schema.models import Probe, http_step_violations
+from agentfacts.schema.registry import JsonRpcRead
 from agentfacts.schema.validate import validate_paths
 
 SERVICE = """\
@@ -67,6 +68,7 @@ def test_listed_jsonrpc_read_passes(tmp_path):
         (READ, "headers: {X-HTTP-Method-Override: PUT}, "),
         ('{jsonrpc: "2.0", id: 1, method: getHealth, Method: sendTransaction}', ""),  # extra key
         ('{jsonrpc: "2.0", id: 1, method: getHealth, data: x}', ""),
+        ('{jsonrpc: "2.0", id: 1, method: getHealth, params: x}', ""),  # params not array/object
     ],
 )
 def test_anything_else_in_a_prod_post_is_refused(tmp_path, body, extra):
@@ -134,6 +136,9 @@ def test_model_checks_the_shape_without_the_service():
         Probe.model_validate(_probe([{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}]))
     with pytest.raises(ValidationError, match="prod_probe_not_readonly"):
         Probe.model_validate(_probe({"jsonrpc": "2.0", "method": "getHealth", "Method": "x"}))
+    for bad in ({"id": True}, {"id": {"a": 1}}, {"params": "x"}):
+        with pytest.raises(ValidationError, match="prod_probe_not_readonly"):
+            Probe.model_validate(_probe({"jsonrpc": "2.0", "method": "getHealth", **bad}))
 
 
 def test_violations_name_the_method():

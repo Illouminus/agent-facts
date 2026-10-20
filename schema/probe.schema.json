@@ -30,8 +30,8 @@
                   "required": ["jsonrpc", "method"],
                   "additionalProperties": false,
                   "properties": {
-                    "id": {"type": ["string", "integer", "null"]},
-                    "params": {"type": ["array", "object"]},
+                    "id": {"type": ["string", "integer", "null"], "x-error-codes": {"type": "prod_probe_not_readonly"}},
+                    "params": {"type": ["array", "object"], "x-error-codes": {"type": "prod_probe_not_readonly"}},
                     "jsonrpc": {"const": "2.0", "x-error-codes": {"const": "prod_probe_not_readonly"}},
                     "method": {"type": "string", "x-error-codes": {"type": "prod_probe_not_readonly"}}
                   },

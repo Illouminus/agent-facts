@@ -2,7 +2,7 @@
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 403 `403`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-20 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-20 · 2 confirmations from 1 vantage
 
 > On 2026-10-20 getProgramAccounts on the public mainnet endpoint returned HTTP 403 with error Your IP or provider is blocked from this endpoint to an IP whose other calls were served.
 

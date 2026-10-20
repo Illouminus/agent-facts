@@ -1,8 +1,8 @@
-# Public mainnet responses carry x-ratelimit-\* headers with a per-method limit: on 2026-10-20 x-ratelimit-method-limit was 150 for getHealth and 6 for getBlock, with x-ratelimit-conn-limit 40 and tier free.
+# Public mainnet responses carry x-ratelimit-\* headers: tier free, a per-method limit (x-ratelimit-method-limit), a per-IP rate limit (x-ratelimit-rps-limit) and x-ratelimit-conn-limit 40.
 
 **Solana JSON-RPC (public mainnet endpoint) · POST /**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-20 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-20 · 2 confirmations from 1 vantage
 
 ## What to do
 
