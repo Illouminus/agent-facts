@@ -13,7 +13,9 @@ from werkzeug import Request, Response
 
 from agentfacts.probe import USER_AGENT
 from agentfacts.probe.http import (
+    MAX_RAW_BYTES,
     Refused,
+    _Decoder,
     auth_for,
     base_url_for,
     make_client,
@@ -195,6 +197,25 @@ def test_gzip_and_deflate_json_bodies_are_parsed(httpserver):
         Response(zlib.compress(payload), 200, {"Content-Encoding": "deflate"}))
     assert run(httpserver, step()).json == {"ok": 1}
     assert run(httpserver, step(path="/v1/big")).json == {"ok": 1}
+
+
+def test_decoder_stops_at_end_of_stream_and_on_corrupt_data():
+    d = _Decoder("gzip")
+    assert d.feed(gzip.compress(b"abc"), 100) == b"abc" and d.done
+    bad = _Decoder("gzip")
+    assert bad.feed(b"not gzip at all", 100) == b"" and bad.done
+    raw = _Decoder("deflate")
+    deflater = zlib.compressobj(wbits=-zlib.MAX_WBITS)
+    assert raw.feed(deflater.compress(b"xyz") + deflater.flush(), 100) == b"xyz"
+    plain = _Decoder(None)
+    assert plain.feed(b"abcdef", 3) == b"abc" and not plain.done
+
+
+def test_trailing_garbage_after_gzip_is_not_read(httpserver):
+    junk = gzip.compress(json.dumps({"ok": 1}).encode()) + b"\x00" * (2 * MAX_RAW_BYTES)
+    httpserver.expect_request("/v1/items").respond_with_response(
+        Response(junk, 200, {"Content-Encoding": "gzip"}))
+    assert run(httpserver, step()).json == {"ok": 1}
 
 
 def test_unknown_encoding_is_kept_raw(httpserver):

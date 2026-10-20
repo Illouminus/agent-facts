@@ -13,7 +13,6 @@ import base64
 import json
 import time
 import zlib
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -26,6 +25,7 @@ from agentfacts.schema.registry import match_template, on_vendor_domain
 
 TIMEOUT_S = 20.0
 MAX_BODY_BYTES = 1024 * 1024
+MAX_RAW_BYTES = 4 * MAX_BODY_BYTES  # what we read off the wire, compressed or not
 
 
 class Refused(Exception):
@@ -146,28 +146,31 @@ def _error_name(exc: httpx.HTTPError) -> str:
     return "http_error:" + type(exc).__name__
 
 
-def _decoder(content_encoding: str | None) -> Callable[[bytes, int], bytes]:
-    """Bounded decoder: returns at most `limit` decoded bytes per call. Unknown encodings (br,
-    zstd) stay raw — the body is then simply not JSON."""
-    encoding = (content_encoding or "identity").strip().lower()
-    if encoding in ("gzip", "x-gzip"):
-        z = zlib.decompressobj(16 + zlib.MAX_WBITS)
-    elif encoding == "deflate":
-        z = None  # zlib-wrapped or (some servers) raw deflate: decided on the first chunk
-    else:
-        return lambda chunk, limit: chunk[:limit]
+class _Decoder:
+    """Bounded decoder: `feed` returns at most `limit` decoded bytes; `done` turns true at the end
+    of a compressed stream or on corrupt data, after which nothing more is read. Unknown encodings
+    (br, zstd) stay raw — the body is then simply not JSON."""
 
-    def decode(chunk: bytes, limit: int) -> bytes:
-        nonlocal z
-        if z is None:
+    def __init__(self, content_encoding: str | None):
+        encoding = (content_encoding or "identity").strip().lower()
+        self.compressed = encoding in ("gzip", "x-gzip", "deflate")
+        self.done = False
+        # deflate is zlib-wrapped or (some servers) raw: decided on the first chunk.
+        self._z = zlib.decompressobj(16 + zlib.MAX_WBITS) if encoding != "deflate" else None
+
+    def feed(self, chunk: bytes, limit: int) -> bytes:
+        if not self.compressed:
+            return chunk[:limit]
+        if self._z is None:
             wrapped = bool(chunk) and (chunk[0] & 0x0F) == 8
-            z = zlib.decompressobj(zlib.MAX_WBITS if wrapped else -zlib.MAX_WBITS)
+            self._z = zlib.decompressobj(zlib.MAX_WBITS if wrapped else -zlib.MAX_WBITS)
         try:
-            return z.decompress(chunk, limit)
+            data = self._z.decompress(chunk, limit)
         except zlib.error:
+            self.done = True
             return b""
-
-    return decode
+        self.done = self._z.eof
+        return data
 
 
 def _parse(body: bytes) -> Any:
@@ -193,7 +196,7 @@ def send(
     headers["Accept-Encoding"] = "identity"
     url = base_url.rstrip("/") + request.path
     params = {**request.query, **auth_query}
-    total = client.timeout.read
+    total = client.timeout.read or TIMEOUT_S
     started = time.perf_counter()
 
     def failed(error: str) -> StepResponse:
@@ -209,13 +212,14 @@ def send(
             json=request.json_body,
             headers=headers,
         ) as response:
-            decode = _decoder(response.headers.get("content-encoding"))
-            body = bytearray()
+            decoder = _Decoder(response.headers.get("content-encoding"))
+            body, raw = bytearray(), 0
             for chunk in response.iter_raw():
-                if total is not None and time.perf_counter() - started > total:
+                if time.perf_counter() - started > total:
                     return failed("timeout")
-                body.extend(decode(chunk, MAX_BODY_BYTES - len(body)))
-                if len(body) >= MAX_BODY_BYTES:
+                raw += len(chunk)
+                body.extend(decoder.feed(chunk, MAX_BODY_BYTES - len(body)))
+                if decoder.done or len(body) >= MAX_BODY_BYTES or raw >= MAX_RAW_BYTES:
                     break
             status, response_headers = response.status_code, response.headers
     except httpx.HTTPError as exc:
