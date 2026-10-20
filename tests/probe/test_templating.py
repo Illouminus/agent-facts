@@ -87,6 +87,16 @@ def test_path_placeholders_are_percent_encoded_per_segment():
     assert render_path("/v1/items/{{run_uuid}}", c) == "/v1/items/" + c.run_uuid
 
 
+@pytest.mark.parametrize("value", ["", ".", ".."])
+def test_path_placeholder_may_not_render_a_dot_or_empty_segment(value):
+    with pytest.raises(TemplateError):
+        render_path("/v1/items/{{step[1].json.id}}", ctx(responses={1: {"id": value}}))
+
+
+def test_dots_inside_a_value_are_fine_in_paths():
+    assert render_path("/v1/{{step[1].json.id}}", ctx(responses={1: {"id": "a..b"}})) == "/v1/a..b"
+
+
 def test_lookup():
     doc = {"a": [{"b": 1}], "c-d": {"e": None}}
     assert lookup(doc, ".a[0].b") == 1

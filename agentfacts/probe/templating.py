@@ -106,7 +106,12 @@ def _render_str(value: str, ctx: RunContext, keep_type: bool, encode: bool) -> A
 
     def substitute(match: re.Match[str]) -> str:
         text = _text(_resolve(match.group(1), ctx))
-        return quote(text, safe="") if encode else text
+        if not encode:
+            return text
+        if text in ("", ".", ".."):
+            # quote() leaves dots alone: a dot segment would resolve to another endpoint.
+            raise TemplateError(f"{{{{{match.group(1)}}}}} renders a path to {text!r}")
+        return quote(text, safe="")
 
     return _PLACEHOLDER.sub(substitute, value)
 
@@ -124,6 +129,7 @@ def render(value: Any, ctx: RunContext, *, keep_type: bool = False) -> Any:
 
 
 def render_path(path: str, ctx: RunContext) -> str:
-    """Render a URL path; each substituted value is percent-encoded as one segment, so a `/` or
-    `..` inside a value can never reach another (unregistered) path."""
+    """Render a URL path; each substituted value is percent-encoded as one segment and may not be
+    empty, `.` or `..`, so a value can never reach another (unregistered) path. The caller still
+    matches the result against the service's templates."""
     return _render_str(path, ctx, keep_type=False, encode=True)
