@@ -1,8 +1,10 @@
 """HTTP steps against a local `httpserver`: every request field, auth kinds, refusals (spec 04)."""
 
 import base64
+import gzip
 import json
 import time
+import zlib
 
 import httpx
 import pytest
@@ -169,6 +171,52 @@ def test_body_is_capped(httpserver):
     httpserver.expect_request("/v1/big").respond_with_data(b"x" * (3 * 1024 * 1024))
     r = run(httpserver, step(path="/v1/big"))
     assert r.status == 200 and len(r.body) == 1024 * 1024 and r.json is NOT_JSON
+
+
+def test_gzip_body_is_decoded_but_capped_and_identity_is_asked(httpserver):
+    bomb = gzip.compress(b"0" * (8 * 1024 * 1024))
+    cap = Capture()
+
+    def handler(request):
+        cap.requests.append(request)
+        return Response(bomb, 200, {"Content-Encoding": "gzip"})
+
+    httpserver.expect_request("/v1/big").respond_with_handler(handler)
+    r = run(httpserver, step(path="/v1/big"))
+    assert r.status == 200 and len(r.body) == 1024 * 1024 and set(r.body) == {ord("0")}
+    assert cap.requests[0].headers["Accept-Encoding"] == "identity"
+
+
+def test_gzip_and_deflate_json_bodies_are_parsed(httpserver):
+    payload = json.dumps({"ok": 1}).encode()
+    httpserver.expect_request("/v1/items").respond_with_response(
+        Response(gzip.compress(payload), 200, {"Content-Encoding": "gzip"}))
+    httpserver.expect_request("/v1/big").respond_with_response(
+        Response(zlib.compress(payload), 200, {"Content-Encoding": "deflate"}))
+    assert run(httpserver, step()).json == {"ok": 1}
+    assert run(httpserver, step(path="/v1/big")).json == {"ok": 1}
+
+
+def test_unknown_encoding_is_kept_raw(httpserver):
+    httpserver.expect_request("/v1/items").respond_with_response(
+        Response(b"\x00\x01raw", 200, {"Content-Encoding": "br"}))
+    r = run(httpserver, step())
+    assert r.body == b"\x00\x01raw" and r.json is NOT_JSON
+
+
+def test_slow_drip_body_hits_the_total_deadline(httpserver):
+    def drip(request):
+        def chunks():
+            for _ in range(40):
+                time.sleep(0.05)
+                yield b"x" * 10
+        return Response(chunks(), 200)
+
+    httpserver.expect_request("/v1/slow").respond_with_handler(drip)
+    started = time.perf_counter()
+    r = run(httpserver, step(path="/v1/slow"), timeout=0.3)
+    assert r.error == "timeout" and r.status is None
+    assert time.perf_counter() - started < 1.5
 
 
 def test_non_json_body(httpserver):

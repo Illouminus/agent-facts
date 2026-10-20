@@ -4,12 +4,16 @@
 validator saw only the template: the path must instantiate a registered template for the method,
 a prod probe stays read-only (`http_step_violations`), and a step that uses the service key must run
 in the env that key reaches. `send` adds credentials and the runner's User-Agent last, never follows
-redirects (a key never follows a `Location`), ignores proxy/netrc environment, caps the body.
+redirects (a key never follows a `Location`), ignores proxy/netrc environment, asks for an identity
+encoding and decodes gzip/deflate itself under the body cap (no decompression bomb), and stops a
+body that drips past the timeout as a whole.
 """
 
 import base64
 import json
 import time
+import zlib
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -142,6 +146,30 @@ def _error_name(exc: httpx.HTTPError) -> str:
     return "http_error:" + type(exc).__name__
 
 
+def _decoder(content_encoding: str | None) -> Callable[[bytes, int], bytes]:
+    """Bounded decoder: returns at most `limit` decoded bytes per call. Unknown encodings (br,
+    zstd) stay raw — the body is then simply not JSON."""
+    encoding = (content_encoding or "identity").strip().lower()
+    if encoding in ("gzip", "x-gzip"):
+        z = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    elif encoding == "deflate":
+        z = None  # zlib-wrapped or (some servers) raw deflate: decided on the first chunk
+    else:
+        return lambda chunk, limit: chunk[:limit]
+
+    def decode(chunk: bytes, limit: int) -> bytes:
+        nonlocal z
+        if z is None:
+            wrapped = bool(chunk) and (chunk[0] & 0x0F) == 8
+            z = zlib.decompressobj(zlib.MAX_WBITS if wrapped else -zlib.MAX_WBITS)
+        try:
+            return z.decompress(chunk, limit)
+        except zlib.error:
+            return b""
+
+    return decode
+
+
 def _parse(body: bytes) -> Any:
     if not body:
         return NOT_JSON
@@ -162,9 +190,16 @@ def send(
     for name, value in auth_headers.items():
         headers[name] = value
     headers["User-Agent"] = USER_AGENT
+    headers["Accept-Encoding"] = "identity"
     url = base_url.rstrip("/") + request.path
     params = {**request.query, **auth_query}
+    total = client.timeout.read
     started = time.perf_counter()
+
+    def failed(error: str) -> StepResponse:
+        latency = int((time.perf_counter() - started) * 1000)
+        return StepResponse(None, httpx.Headers(), b"", NOT_JSON, latency, error)
+
     try:
         with client.stream(
             request.method,
@@ -174,14 +209,16 @@ def send(
             json=request.json_body,
             headers=headers,
         ) as response:
+            decode = _decoder(response.headers.get("content-encoding"))
             body = bytearray()
-            for chunk in response.iter_bytes():
-                body.extend(chunk[: MAX_BODY_BYTES - len(body)])
+            for chunk in response.iter_raw():
+                if total is not None and time.perf_counter() - started > total:
+                    return failed("timeout")
+                body.extend(decode(chunk, MAX_BODY_BYTES - len(body)))
                 if len(body) >= MAX_BODY_BYTES:
                     break
             status, response_headers = response.status_code, response.headers
     except httpx.HTTPError as exc:
-        latency = int((time.perf_counter() - started) * 1000)
-        return StepResponse(None, httpx.Headers(), b"", NOT_JSON, latency, _error_name(exc))
+        return failed(_error_name(exc))
     latency = int((time.perf_counter() - started) * 1000)
     return StepResponse(status, response_headers, bytes(body), _parse(bytes(body)), latency)
