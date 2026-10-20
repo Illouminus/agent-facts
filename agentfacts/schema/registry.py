@@ -33,6 +33,11 @@ def match_template(path: str, template: str) -> bool:
     return True
 
 
+def match_host(host: str, hosts: Iterable[str]) -> str | None:
+    """The entry of `hosts` that `host` is, or is a subdomain of (most specific wins)."""
+    return max((h for h in hosts if host == h or host.endswith("." + h)), key=len, default=None)
+
+
 def on_vendor_domain(url: str, hosts: Iterable[str]) -> bool:
     """True if `url` is on one of `hosts` or a subdomain of one. The allowlist is explicit (the
     service's `hosts` + `doc_hosts`): no parent-domain guessing, which public suffixes break."""
@@ -42,8 +47,7 @@ def on_vendor_domain(url: str, hosts: Iterable[str]) -> bool:
         return False
     if parts.username is not None or parts.password is not None or not parts.hostname:
         return False
-    host = parts.hostname.lower()
-    return any(host == h or host.endswith("." + h) for h in hosts)
+    return match_host(parts.hostname.lower(), hosts) is not None
 
 
 def _mapping(value: Any) -> Mapping[str, Any]:

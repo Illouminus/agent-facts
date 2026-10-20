@@ -6,7 +6,7 @@ from typing import Annotated
 
 import typer
 
-from agentfacts import __version__
+from agentfacts import __version__, cli_check
 from agentfacts.pages.cli import app as pages_app
 
 app = typer.Typer(
@@ -18,6 +18,7 @@ app = typer.Typer(
 EXIT_OK, EXIT_INVALID, EXIT_USAGE = 0, 1, 2
 
 app.add_typer(pages_app, name="pages")
+app.command("check")(cli_check.check)
 
 
 @app.callback()
@@ -86,3 +87,4 @@ def render_fix(
             typer.echo(str(problem))
         raise typer.Exit(EXIT_INVALID)
     typer.echo(render(fix))
+

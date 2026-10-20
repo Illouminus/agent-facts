@@ -26,3 +26,8 @@ jobs:
       - run: uv run pytest -q
       - run: uv run agentfacts validate
       - run: uv run agentfacts pages build --check  # pages/ must match services/ + facts/
+      - name: pytest plugin (own uv project, agentfacts as editable path dependency)
+        working-directory: plugins/pytest
+        run: |
+          uv sync --locked
+          uv run pytest -q
