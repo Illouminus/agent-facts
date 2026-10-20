@@ -1,0 +1,13 @@
+# Anonymous repository responses: shared-cacheable for 60 s, Vary without X-GitHub-Api-Version.
+id: af:github:probe:repo-cache-headers
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, header: Cache-Control, matches: "(^|[ ,])public([ ,]|$)"}
+  - {step: 1, header: Cache-Control, matches: "s-maxage=60([ ,]|$)"}
+  - {step: 1, header: Vary, matches: "^(?![\\s\\S]*(?i:x-github-api-version))"}
+  - {step: 1, header: X-GitHub-Api-Version-Selected, present: true}

@@ -4,11 +4,11 @@
 
 Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-20 · 1 confirmation from 1 vantage
 
-> GET /repos/{owner}/{repo} returns HTTP 404 Not Found both for a repository that does not exist and for a private one requested without valid authentication, never 403.
+> An anonymous GET /repos/{owner}/{repo} for a repository that does not exist returns HTTP 404 with message Not Found.
 
 ## What to do
 
-1. Request OAuth scope repo.
+1. No client-side fix known (by design).
 
 ## Dimensions
 
@@ -16,7 +16,7 @@ env: prod · plan: any · region: any · account_state: anonymous
 
 ## Evidence
 
-Probe `af:github:probe:repo-not-found` (declarative, [source](../../probes/github/repo-not-found.yaml)) · official doc: <https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api#404-not-found-for-an-existing-resource>
+Probe `af:github:probe:repo-not-found` (declarative, [source](../../probes/github/repo-not-found.yaml))
 
 Observations: none from reporters yet.
 
@@ -28,7 +28,7 @@ curl -s https://facts.baillot.dev/v0/check \
   -d '{"target":{"method":"GET","url":"https://api.github.com/repos/{owner}/{repo}"},"error":{"status":404,"body_excerpt":"not found"}}'
 ```
 
-YAML: [facts/github/missing-or-private-repo-404.yaml](../../facts/github/missing-or-private-repo-404.yaml)
+YAML: [facts/github/missing-repo-404.yaml](../../facts/github/missing-repo-404.yaml)
 
 ---
 

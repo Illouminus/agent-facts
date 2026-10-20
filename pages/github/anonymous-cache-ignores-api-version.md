@@ -1,4 +1,4 @@
-# Anonymous GET /repos/{owner}/{repo} responses are publicly cached for 60 s and Vary omits X-GitHub-Api-Version, so a request can get a cached body of another API version; X-GitHub-Api-Version-Selected names the one served.
+# Anonymous GET /repos/{owner}/{repo} responses are shared-cacheable for 60 s (public, s-maxage=60) and Vary does not list X-GitHub-Api-Version, so by HTTP caching rules a cache may serve a body of another API version.
 
 **GitHub REST API · GET /repos/{owner}/{repo} · HTTP 200**
 
@@ -15,7 +15,7 @@ env: prod · plan: any · region: any · account_state: anonymous
 
 ## Evidence
 
-Probe `af:github:probe:repo-anonymous` (declarative, [source](../../probes/github/repo-anonymous.yaml))
+Probe `af:github:probe:repo-cache-headers` (declarative, [source](../../probes/github/repo-cache-headers.yaml))
 
 Observations: none from reporters yet.
 

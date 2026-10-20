@@ -5,7 +5,7 @@ target:
   surface: http
   method: GET
   path_template: /search/repositories
-claim: "Anonymous calls to the search endpoints count against a separate search resource with x-ratelimit-limit 10 per minute, independent of the core limit of 60 per hour."
+claim: "Anonymous calls to the search endpoints count against a separate search resource with x-ratelimit-limit 10 (documented as 10 requests per minute), not against core."
 dimensions:
   env: prod
   account_state: anonymous
@@ -14,10 +14,10 @@ fixes:
 status: verified:server:prod
 evidence:
   probe: af:github:probe:search-query-too-long
-  first_seen: 2026-10-20T08:59:24Z
+  first_seen: 2026-10-20T09:01:24Z
   confirmations: 1
   official_url: https://docs.github.com/en/rest/search/search#rate-limit
-  last_confirmed: 2026-10-20T08:59:24Z
+  last_confirmed: 2026-10-20T09:01:24Z
   stale_counter: 0
   vantages: [mac-dev]
 provenance:

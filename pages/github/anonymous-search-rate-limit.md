@@ -1,4 +1,4 @@
-# Anonymous calls to the search endpoints count against a separate search resource with x-ratelimit-limit 10 per minute, independent of the core limit of 60 per hour.
+# Anonymous calls to the search endpoints count against a separate search resource with x-ratelimit-limit 10 (documented as 10 requests per minute), not against core.
 
 **GitHub REST API · GET /search/repositories**
 

@@ -1,10 +1,10 @@
 # agent-facts registry
 
-Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-20 · 1 service · 21 facts.
+Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-20 · 1 service · 23 facts.
 
 | Service | Facts | ✅ verified | 🔵 official | 🟡 reported | ⚪ stale | ⛔ retracted |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| [GitHub REST API](github/index.md) | 21 | 16 | 5 | 0 | 0 | 0 |
+| [GitHub REST API](github/index.md) | 23 | 16 | 7 | 0 | 0 | 0 |
 
 ## Machine access
 

@@ -1,4 +1,4 @@
-# REST error bodies carry a status field holding the HTTP code as a JSON string, such as "404" or "422", not as a number.
+# REST error bodies carry a status field holding the HTTP code as a JSON string, such as "404", not as a number.
 
 **GitHub REST API · GET /repos/{owner}/{repo} · HTTP 404**
 

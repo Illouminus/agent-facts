@@ -7,7 +7,7 @@ target:
   path_template: "/repos/{owner}/{repo}"
 signal:
   status: 404
-claim: "REST error bodies carry a status field holding the HTTP code as a JSON string, such as \"404\" or \"422\", not as a number."
+claim: "REST error bodies carry a status field holding the HTTP code as a JSON string, such as \"404\", not as a number."
 dimensions:
   env: prod
   account_state: anonymous
@@ -16,9 +16,9 @@ fixes:
 status: verified:server:prod
 evidence:
   probe: af:github:probe:repo-not-found
-  first_seen: 2026-10-20T08:59:23Z
+  first_seen: 2026-10-20T09:01:23Z
   confirmations: 1
-  last_confirmed: 2026-10-20T08:59:23Z
+  last_confirmed: 2026-10-20T09:01:23Z
   stale_counter: 0
   vantages: [mac-dev]
 provenance:
