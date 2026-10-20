@@ -1,0 +1,10 @@
+id: af:solana:probe:program-accounts-blocked
+service: solana
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getProgramAccounts, params: [TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA]}}
+assert:
+  - {step: 1, status: 403}
+  - {step: 1, json_path: $.error.code, equals: 403}
+  - {step: 1, json_path: $.error.message, equals: Your IP or provider is blocked from this endpoint}

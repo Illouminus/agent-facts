@@ -1,0 +1,22 @@
+id: af:solana:public-endpoint-not-for-production
+service: solana
+kind: availability
+target:
+  surface: http
+  method: POST
+  path_template: /
+claim: "The public RPC endpoints are not intended for production applications, and their rate limits are subject to change without prior notice."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: official
+evidence:
+  first_seen: 2026-10-20T09:35:00Z
+  official_url: https://solana.com/docs/references/clusters#mainnet-rate-limits
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

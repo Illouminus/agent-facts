@@ -1,0 +1,16 @@
+id: af:solana:probe:rate-limit-headers
+service: solana
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getHealth}}
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getBlock, params: [1, {transactionDetails: none, rewards: false, maxSupportedTransactionVersion: 0}]}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.result, equals: ok}
+  - {step: 1, header: X-RateLimit-Tier, equals: free}
+  - {step: 1, header: X-RateLimit-Method-Limit, equals: "150"}
+  - {step: 1, header: X-RateLimit-Conn-Limit, equals: "40"}
+  - {step: 1, header: X-RateLimit-Rps-Limit, matches: "^[0-9]+$"}
+  - {step: 2, status: 200}
+  - {step: 2, header: X-RateLimit-Method-Limit, equals: "6"}

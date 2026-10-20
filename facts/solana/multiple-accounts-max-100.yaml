@@ -1,0 +1,31 @@
+id: af:solana:multiple-accounts-max-100
+service: solana
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /
+signal:
+  status: 200
+  error_code: "-32602"
+  error_string: "Too many inputs provided; max 100"
+  normalized: "too many inputs provided; max ###"
+claim: "getMultipleAccounts with more than 100 public keys returns JSON-RPC error -32602 Too many inputs provided; max 100."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: reduce_payload, field: "params[0]", max_items: 100}
+status: verified:server:prod
+evidence:
+  probe: af:solana:probe:multiple-accounts-limit
+  first_seen: 2026-10-20T09:15:16Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:15:16Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

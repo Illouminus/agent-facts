@@ -1,0 +1,28 @@
+id: af:solana:jsonrpc-errors-use-http-200
+service: solana
+kind: silent_behavior
+target:
+  surface: http
+  method: POST
+  path_template: /
+signal:
+  status: 200
+claim: "JSON-RPC errors from the public mainnet endpoint, such as -32601 Method not found, arrive with HTTP status 200; only the error object in the body signals the failure."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:solana:probe:methods-removed
+  first_seen: 2026-10-20T09:15:16Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:15:16Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

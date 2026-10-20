@@ -1,0 +1,26 @@
+id: af:solana:per-method-rate-limit-headers
+service: solana
+kind: rate_limit
+target:
+  surface: http
+  method: POST
+  path_template: /
+claim: "Public mainnet responses carry x-ratelimit-* headers with a per-method limit: on 2026-10-20 x-ratelimit-method-limit was 150 for getHealth and 6 for getBlock, with x-ratelimit-conn-limit 40 and tier free."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: retry_after_header, unit: s, max_attempts: 3}
+status: verified:server:prod
+evidence:
+  probe: af:solana:probe:rate-limit-headers
+  first_seen: 2026-10-20T09:15:16Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:15:16Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

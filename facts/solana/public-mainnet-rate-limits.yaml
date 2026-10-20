@@ -1,0 +1,24 @@
+id: af:solana:public-mainnet-rate-limits
+service: solana
+kind: rate_limit
+target:
+  surface: http
+  method: POST
+  path_template: /
+signal:
+  status: 429
+claim: "The public mainnet endpoint allows 100 requests per 10 s per IP, 40 per 10 s per IP for a single RPC method, 40 concurrent connections and 100 MB per 30 s; exceeding them returns HTTP 429 with Retry-After."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: retry_after_header, unit: s, max_attempts: 5}
+status: official
+evidence:
+  first_seen: 2026-10-20T09:35:00Z
+  official_url: https://solana.com/docs/references/clusters#mainnet-rate-limits
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

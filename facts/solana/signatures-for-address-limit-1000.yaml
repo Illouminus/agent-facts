@@ -1,0 +1,31 @@
+id: af:solana:signatures-for-address-limit-1000
+service: solana
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /
+signal:
+  status: 200
+  error_code: "-32602"
+  error_string: "Invalid limit; max 1000"
+  normalized: "invalid limit; max ####"
+claim: "getSignaturesForAddress with limit above 1000 returns JSON-RPC error -32602 Invalid limit; max 1000 instead of capping the page."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: paginate_with, cursor_field: signature, param_name: before, page_size_max: 1000}
+status: verified:server:prod
+evidence:
+  probe: af:solana:probe:signatures-limit
+  first_seen: 2026-10-20T09:15:16Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T09:15:16Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]
