@@ -87,3 +87,11 @@ def test_fail_keeps_a_reported_fact_reported(repo):
     for _ in range(3):
         apply_outcome(path, probe, "fail", "illouminus", T0)
     assert plain(load_yaml(path))["status"] == "reported"
+
+
+def test_probe_on_another_endpoint_never_promotes(repo):
+    path = repo.fact(env="sandbox", status="reported",
+                     target={"surface": "http", "method": "GET", "path_template": "/v1/items/{id}"})
+    probe = Probe.model_validate(probe_doc())  # GET /v1/items
+    assert apply_outcome(path, probe, "pass", "illouminus", T0) == "confirmed"
+    assert plain(load_yaml(path))["status"] == "reported"

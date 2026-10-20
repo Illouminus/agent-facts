@@ -28,7 +28,8 @@ from ruamel.yaml.error import YAMLError
 from ruamel.yaml.representer import RoundTripRepresenter
 
 from agentfacts.probe.templating import rfc3339
-from agentfacts.schema.models import VERIFIED_STATUSES, Fact, Probe, Status
+from agentfacts.schema.models import VERIFIED_STATUSES, Fact, HttpStep, Probe, Status
+from agentfacts.schema.registry import match_template
 from agentfacts.schema.yamlio import plain
 
 Outcome = Literal["pass", "fail"]
@@ -104,7 +105,22 @@ def _same_dimension(fact: Fact, probe: Probe) -> bool:
             and fact.dimensions.account_state == (probe.account_state or "any"))
 
 
-def _confirm(doc: CommentedMap, probe: Probe, vantage: str, now: datetime) -> str:
+def _reproduces(fact: Fact, probe: Probe) -> bool:
+    """The probe hits the fact's own endpoint: same service, a step with the fact's method on an
+    instance of its path template. Only then may a pass promote a `reported` fact."""
+    target = fact.target
+    return fact.service == probe.service and any(
+        isinstance(step, HttpStep)
+        and step.method == target.method
+        and target.path_template is not None
+        and match_template(step.path, target.path_template)
+        for step in probe.steps
+    )
+
+
+def _confirm(
+    doc: CommentedMap, fact: Fact, probe: Probe, vantage: str, now: datetime
+) -> str:
     evidence = doc["evidence"]
     evidence["last_confirmed"] = Stamp(rfc3339(now))
     evidence["confirmations"] = (evidence.get("confirmations") or 0) + 1
@@ -116,7 +132,7 @@ def _confirm(doc: CommentedMap, probe: Probe, vantage: str, now: datetime) -> st
         evidence["vantages"] = vantages
     if vantage not in vantages:
         vantages.append(vantage)
-    if doc["status"] == Status.reported:
+    if doc["status"] == Status.reported and _reproduces(fact, probe):
         doc["status"] = f"verified:server:{probe.env}"
         _history(doc).append({
             "date": Stamp(now.date().isoformat()),
@@ -172,7 +188,10 @@ def apply_outcome(path: Path, probe: Probe, outcome: Outcome, vantage: str, now:
     if fact.status is Status.retracted:
         return "untouched"
     now = now.astimezone(UTC)
-    change = _confirm(doc, probe, vantage, now) if outcome == "pass" else _fail(doc, now)
+    if outcome == "pass":
+        change = _confirm(doc, fact, probe, vantage, now)
+    else:
+        change = _fail(doc, now)
     try:
         save_fact(path, doc)
     except ValueError:
