@@ -100,8 +100,8 @@ POST api.stripe.com/v1/payment_intents → 400 idempotency_error
 ```
 
 Target line: method, host + matched template path (else the scrubbed path), `→ status`, the error code of
-the first fact with that status. Badges: ✅ verified:*, 📘 official, 🟡 reported, ⚪ stale, ✖ retracted,
-• anything else. ≤ 5 facts, then `… N more facts`. Every server string is stripped of control characters
+the first fact with that status. Badges reused from `agentfacts.pages.templates.BADGES` (W5: ✅
+verified:*, 🔵 official, 🟡 reported, ⚪ stale), • for anything else; retracted facts are not shown. ≤ 5 facts, then `… N more facts`. Every server string is stripped of control characters
 and collapsed to one line; page URL only when `id` matches `af:<service>:<slug>`.
 
 ---

@@ -96,7 +96,7 @@ def test_badges():
     statuses = {
         "verified:server:sandbox": "✅",
         "verified:client": "✅",
-        "official": "📘",
+        "official": "🔵",
         "reported": "🟡",
         "stale": "⚪",
         "something-new": "•",

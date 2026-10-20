@@ -15,14 +15,6 @@ from agentfacts.client.request import Signal
 TITLE = "Known facts (agent-facts, CC BY 4.0)"
 PAGES = "https://github.com/Illouminus/agent-facts/blob/main/pages"
 MAX_FACTS = 5
-BADGES = {
-    "verified:server:prod": "✅",
-    "verified:server:sandbox": "✅",
-    "verified:client": "✅",
-    "official": "📘",
-    "reported": "🟡",
-    "stale": "⚪",
-}
 
 _FACT_ID = re.compile(r"^af:([a-z0-9][a-z0-9-]{0,63}):([a-z0-9][a-z0-9-]{0,127})$")
 _SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
@@ -55,6 +47,8 @@ def _fix_lines(fact: Mapping[str, Any]) -> list[str]:
 
 
 def _fact_lines(fact: Mapping[str, Any]) -> list[str]:
+    from agentfacts.pages.templates import BADGES  # one badge per status, pages and plugin alike
+
     status = _clean(fact.get("status"), 32)
     claim = _clean(fact.get("claim"))
     if not claim or status == "retracted":
