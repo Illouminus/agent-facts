@@ -128,7 +128,10 @@ def test_excerpt_of_huge_input_is_fast_and_bounded():
     "url, expected",
     [
         ("https://api.stripe.com/v1/payment_intents", "https://api.stripe.com/v1/payment_intents"),
-        ("https://user:pw@API.Stripe.com:443/v1/charges?key=abc#x", "https://api.stripe.com/v1/charges"),
+        (
+            "https://user:pw@API.Stripe.com:443/v1/charges?key=abc#x",
+            "https://api.stripe.com/v1/charges",
+        ),
         ("http://example.org", "http://example.org/"),
         (
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaX",
@@ -170,7 +173,10 @@ def test_make_signal_builds_spec_03_payload():
     assert signal.host == "api.stripe.com"
     payload = signal.payload()
     assert set(payload) == {"target", "error"}
-    assert payload["target"] == {"method": "POST", "url": "https://api.stripe.com/v1/payment_intents"}
+    assert payload["target"] == {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/payment_intents",
+    }
     assert payload["error"]["status"] == 400
     assert "sk_test_abcdefgh1234" not in payload["error"]["body_excerpt"]
 
@@ -203,3 +209,37 @@ def test_signal_is_frozen():
     signal = Signal(url="https://x.org/")
     with pytest.raises(AttributeError):
         signal.url = "https://evil.example/"
+
+
+@pytest.mark.parametrize(
+    "text, leaked",
+    [
+        ('{"password": "correct horse battery staple"}', "horse"),
+        ("{'client_secret': 'two words'}", "words"),
+        ("db error: postgres://admin:hunter2@db.internal:5432/app failed", "hunter2"),
+        ("see https://bob:pw123@api.example.org/v1/x?token=abc", "pw123"),
+        ("redis://:s3cret@cache:6379/0?x=1", "s3cret"),
+        ("user jane.doe%40example.com not found", "jane.doe"),
+    ],
+)
+def test_review_findings_do_not_leak(text, leaked):
+    assert leaked not in redact(text)
+
+
+def test_userinfo_and_query_dropped_for_any_scheme():
+    assert redact("connect postgres://admin:pw@db:5432/app?sslmode=x ok") == (
+        "connect postgres://db:5432/app ok"
+    )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://api.example.org/users/jane%40example.com",
+        "https://api.example.org/bot123456789%3AAAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw/send",
+    ],
+)
+def test_percent_encoded_path_secrets_are_redacted(url):
+    scrubbed = scrub_url(url)
+    assert "<redacted>" in scrubbed
+    assert "jane" not in scrubbed and "AAHdq" not in scrubbed

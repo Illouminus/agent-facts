@@ -9,7 +9,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from typing import Any
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import unquote, urlsplit, urlunsplit
 
 EXCERPT_BYTES = 2048  # spec 03: body_excerpt kept, 2 KB in
 RAW_CHARS = 16_384  # redaction runs on this prefix; output is cut far inside it
@@ -22,7 +22,7 @@ _TOKEN_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 _PEM = re.compile(
     r"-----BEGIN[A-Z0-9 ]*PRIVATE KEY-----.*?(?:-----END[A-Z0-9 ]*PRIVATE KEY-----|\Z)", re.S
 )
-_URL_TAIL = re.compile(r"(https?://[^\s?#\"'<>]*)[?#][^\s\"'<>]*", re.I)
+_URL = re.compile(r"\b[A-Za-z][A-Za-z0-9+.-]{1,15}://[^\s\"'<>]*")
 # Vendor token shapes; every branch is anchored so a long run is scanned once.
 _SHAPES = re.compile(
     "|".join(
@@ -50,12 +50,16 @@ _STRICT_NAMES = (
     r"api[_-]?key|apikey|access[_-]?token|refresh[_-]?token|auth[_-]?token|id[_-]?token"
     r"|client[_-]?secret|secret[_-]?key|private[_-]?key|password|passwd"
 )
+# A quoted value runs to its closing quote (it may hold spaces), a bare one to a delimiter.
 _NAMED = re.compile(
-    rf"(?<![A-Za-z0-9])((?:{_STRICT_NAMES}|secret|token)[\"']?\s*[:=]\s*[\"']?)([^\s\"'&,;{{}}<>]+)",
+    rf"(?<![A-Za-z0-9])((?:{_STRICT_NAMES}|secret|token)[\"']?\s*[:=]\s*)"
+    r"(\"[^\"\n]*\"|'[^'\n]*'|[^\s\"'&,;{}<>]+)",
     re.I,
 )
 _STRICT_NAME = re.compile(rf"(?:{_STRICT_NAMES})", re.I)
-_EMAIL = re.compile(r"(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
+_EMAIL = re.compile(
+    r"(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+(?:@|%40)[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", re.I
+)
 _RUN = re.compile(r"(?<![A-Za-z0-9+/_=-])[A-Za-z0-9+/_=-]{32,}")
 _HEX_RUN = re.compile(r"[0-9a-fA-F-]+")
 _DIGIT, _LETTER = re.compile(r"[0-9]"), re.compile(r"[A-Za-z]")
@@ -78,6 +82,15 @@ def _looks_secret(value: str) -> bool:
     )
 
 
+def _url(match: re.Match[str]) -> str:
+    """Any scheme: drop userinfo (`user:pass@`), query and fragment."""
+    url = match.group(0)
+    cut = min((i for i in (url.find("?"), url.find("#")) if i >= 0), default=len(url))
+    scheme, _, rest = url[:cut].partition("://")
+    authority, slash, path = rest.partition("/")
+    return f"{scheme}://{authority.rpartition('@')[2]}{slash}{path}"
+
+
 def _auth_scheme(match: re.Match[str]) -> str:
     scheme, space, value = match.groups()
     return f"{scheme}{space}{REDACTED}" if _looks_secret(value) else match.group(0)
@@ -85,9 +98,10 @@ def _auth_scheme(match: re.Match[str]) -> str:
 
 def _named(match: re.Match[str]) -> str:
     prefix, value = match.groups()
-    strict = _STRICT_NAME.match(prefix) is not None
-    if strict or _looks_secret(value) or len(value) >= 12:
-        return prefix + REDACTED
+    quote = value[0] if value[:1] in ("'", '"') else ""
+    bare = value.strip("'\"")
+    if _STRICT_NAME.match(prefix) or _looks_secret(bare) or len(bare) >= 12:
+        return f"{prefix}{quote}{REDACTED}{quote}"
     return match.group(0)
 
 
@@ -103,7 +117,7 @@ def _run(match: re.Match[str]) -> str:
 def redact(text: str) -> str:
     """Replace secret-shaped substrings; keep everything else byte for byte."""
     text = _PEM.sub(REDACTED, text)
-    text = _URL_TAIL.sub(r"\1", text)
+    text = _URL.sub(_url, text)
     text = _SHAPES.sub(REDACTED, text)
     text = _AUTH_SCHEME.sub(_auth_scheme, text)
     text = _NAMED.sub(_named, text)
@@ -124,6 +138,7 @@ def excerpt(text: str) -> str:
 
 
 def _scrub_segment(segment: str) -> str:
+    segment = unquote(segment)  # judge what the server will decode, not the encoding
     if "@" in segment or _SHAPES.search(segment):
         return REDACTED
     for run in _SEGMENT_RUN.findall(segment):
