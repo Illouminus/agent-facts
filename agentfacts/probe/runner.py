@@ -55,6 +55,12 @@ KILL_FILE = Path("ops") / "KILL"
 _VANTAGE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 
 
+def check_vantage(vantage: str) -> str:
+    if not _VANTAGE.match(vantage):
+        raise ValueError(f"vantage {vantage!r} is not a slug ([a-z0-9-], ≤ 64 chars)")
+    return vantage
+
+
 @dataclass(frozen=True)
 class TickOptions:
     run_all: bool = False
@@ -65,8 +71,7 @@ class TickOptions:
     timeout_s: float = TIMEOUT_S
 
     def __post_init__(self) -> None:
-        if not _VANTAGE.match(self.vantage):
-            raise ValueError(f"vantage {self.vantage!r} is not a slug ([a-z0-9-], ≤ 64)")
+        check_vantage(self.vantage)
         if self.max_probes < 0 or self.max_requests < 0:
             raise ValueError("max_probes and max_requests must be ≥ 0")
         if self.timeout_s <= 0:
@@ -131,6 +136,10 @@ def _candidate(item: LoadedProbe, service: Service) -> _Candidate:
 
 def _utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+def rfc3339_epoch(epoch: float) -> str:
+    return rfc3339(datetime.fromtimestamp(epoch, UTC))
 
 
 def _select(
@@ -362,3 +371,44 @@ def run_tick(
         else:
             tick.run(plan, results)
     return report
+
+
+@dataclass(frozen=True)
+class ProbeStatus:
+    probe_id: str
+    env: str
+    requests: int
+    key: str  # none (keyless), ok, missing
+    last_run: tuple[float, str] | None
+    wait_s: int  # 0 = due
+
+
+def probe_status(
+    root: Path,
+    state_dir: Path,
+    vantage: str = DEFAULT_VANTAGE,
+    *,
+    keys_dir: Path = DEFAULT_KEYS_DIR,
+    clock: Callable[[], datetime] = _utcnow,
+) -> tuple[list[ProbeStatus], list[Problem]]:
+    """What `probe run --due` would consider, without writing anything."""
+    check_vantage(vantage)
+    repo = load_repo(root)
+    epoch = clock().timestamp()
+    statuses = []
+    with BudgetState(state_dir / STATE_FILE, read_only=True) as state:
+        for item in sorted(repo.probes, key=lambda i: i.probe.id):
+            c = _candidate(item, repo.services[item.probe.service])
+            key = "none"
+            if c.keyed:
+                key = "ok" if has_key(c.service.auth.key_name, keys_dir) else "missing"
+            budget = c.service.probe_budget.per_template_seconds
+            statuses.append(ProbeStatus(
+                c.id,
+                item.probe.env.value,
+                c.requests,
+                key,
+                state.last_run(c.id, vantage),
+                state.wait_seconds(c.id, c.templates, vantage, budget, epoch),
+            ))
+    return statuses, repo.problems

@@ -1,0 +1,9 @@
+id: af:example:probe:status-ok
+service: example
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1/status, query: {verbose: true}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.status, equals: ok}
+  - {step: 1, latency_ms: {lt: 2000}}

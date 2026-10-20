@@ -1,0 +1,9 @@
+id: af:example:probe:item-missing
+service: example
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1/items/does-not-exist}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error.code, equals: not_found}
+  - {step: 1, header: Content-Type, matches: "^application/json"}

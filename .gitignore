@@ -20,6 +20,9 @@ build/
 node_modules/
 coverage/
 
+# probe runner state (results.jsonl, probe-state.sqlite): transient, never in git
+var/
+
 # local scratch
 .DS_Store
 tmp/

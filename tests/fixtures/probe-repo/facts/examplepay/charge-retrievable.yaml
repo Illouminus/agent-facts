@@ -1,0 +1,21 @@
+id: af:examplepay:charge-retrievable
+service: examplepay
+kind: silent_behavior
+target: {surface: http, method: GET, path_template: "/v1/charges/{id}"}
+signal: {status: 200}
+claim: A sandbox charge is retrievable by id one second after it was created.
+dimensions: {env: sandbox, plan: any, region: any, account_state: any}
+fixes:
+  - {action: wait_for_state, account_state: active, typical_delay_s: 1}
+status: verified:server:sandbox
+evidence:
+  probe: af:examplepay:probe:charge-roundtrip
+  first_seen: 2026-10-20T09:00:00Z
+  last_confirmed: 2026-10-20T09:00:00Z
+  confirmations: 1
+  vantages: [illouminus]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]
