@@ -15,11 +15,11 @@ status: verified:server:prod
 evidence:
   probe: af:github:probe:rate-limit
   first_seen: 2026-10-20T09:01:22Z
-  confirmations: 1
+  confirmations: 2
   official_url: https://docs.github.com/en/rest/rate-limit/rate-limit
-  last_confirmed: 2026-10-20T09:01:22Z
+  last_confirmed: 2026-10-20T13:57:57Z
   stale_counter: 0
-  vantages: [mac-dev]
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot

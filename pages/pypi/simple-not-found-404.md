@@ -2,7 +2,7 @@
 
 **PyPI (Python Package Index) · GET /simple/{project}/ · HTTP 404**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-20 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-20 · 2 confirmations from 2 vantages
 
 > GET /simple/{project}/ for a project that does not exist returns HTTP 404 with the plain-text body 404 Not Found, not JSON.
 
