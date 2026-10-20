@@ -61,6 +61,15 @@ def _blob(root: Path, rev: str, path: str) -> str | None:
         return None
 
 
+def already_on(root: Path, change: Change, base: str = BASE) -> bool:
+    """`base` already holds exactly this change (a bot PR merged while the checkout was not yet
+    synced): nothing to publish, and not a conflict either."""
+    on_base = _blob(root, base, change.path)
+    if change.deleted:
+        return on_base is None
+    return on_base is not None and git(root, "hash-object", "--", change.path).strip() == on_base
+
+
 def drifted(root: Path, changes: Sequence[Change], base: str = BASE) -> list[str]:
     """Paths whose committed version differs between HEAD and `base`: `main` changed them after
     this checkout was synced, so publishing the local file would overwrite that change."""

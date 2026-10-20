@@ -23,6 +23,7 @@ from agentfacts.bot.collect import (
     Change,
     FactRow,
     GitError,
+    already_on,
     auto_mergeable,
     changed_facts,
     drifted,
@@ -163,6 +164,9 @@ def publish(
         return PublishReport("nothing")
     if not dry_run:
         git(root, "fetch", "--quiet", "origin", "main")
+    changes = [c for c in changes if not already_on(root, c)]
+    if not changes:
+        return PublishReport("nothing", detail="every change is already on main")
     skipped = drifted(root, changes)
     changes = [c for c in changes if c.path not in skipped]
     if not changes:
@@ -203,10 +207,14 @@ def publish(
         shutil.rmtree(scratch, ignore_errors=True)
 
     title = f"facts: {len(rows)} fact file{'s' if len(rows) != 1 else ''} ({today})"
-    gh(["label", "create", LABEL, "--force", "--color", "0E8A16",
-        "--description", "Fact files published by agent-facts-bot"])
-    report.url = gh(["pr", "create", "--base", "main", "--head", report.branch, "--title", title,
-                     "--body", body, "--label", LABEL]).strip()
+    try:
+        gh(["label", "create", LABEL, "--force", "--color", "0E8A16",
+            "--description", "Fact files published by agent-facts-bot"])
+        report.url = gh(["pr", "create", "--base", "main", "--head", report.branch, "--title",
+                         title, "--body", body, "--label", LABEL]).strip()
+    except GitError:  # no PR: drop the branch, or the next run would push a duplicate
+        git(root, "push", "--quiet", "origin", "--delete", report.branch)
+        raise
     if auto:
         gh(["pr", "merge", report.url, "--auto", "--squash"])
     report.action = "opened"

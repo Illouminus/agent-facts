@@ -9,7 +9,7 @@ import yaml
 from bot_repo import Checkout, FakeGh, sh
 from typer.testing import CliRunner
 
-from agentfacts.bot.collect import Change, changed_facts, fact_rows
+from agentfacts.bot.collect import Change, GitError, changed_facts, fact_rows
 from agentfacts.bot.pr import branch_name, publish, render_body
 from agentfacts.cli import app
 
@@ -215,3 +215,27 @@ def test_cli_kill_switch(repo):
     r = CliRunner().invoke(app, ["bot", "publish", "--root", str(repo.work)],
                            env={"AGENTFACTS_KILL": "1"})
     assert r.exit_code == 0 and "killed (AGENTFACTS_KILL=1)" in r.output
+
+
+def test_changes_already_merged_on_main_are_not_republished(repo, tmp_path):
+    """The bot's PR merged; the runner's checkout is not synced yet: nothing to do, no refusal."""
+    repo.write(DRAFT, draft())
+    report = run(repo, FakeGh())
+    sh(repo.origin, "update-ref", "refs/heads/main", f"refs/heads/{report.branch}")  # "merged"
+    gh = FakeGh()
+    again = run(repo, gh)
+    assert (again.action, again.detail) == ("nothing", "every change is already on main")
+    assert gh.calls == []
+
+
+def test_failed_pr_create_drops_the_pushed_branch(repo):
+    class Failing(FakeGh):
+        def __call__(self, args):
+            if list(args[:2]) == ["pr", "create"]:
+                raise GitError("gh pr create: HTTP 502")
+            return super().__call__(args)
+
+    repo.write(DRAFT, draft())
+    with pytest.raises(GitError):
+        run(repo, Failing())
+    assert repo.remote_branches() == ["main"]

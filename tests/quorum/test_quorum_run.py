@@ -192,3 +192,9 @@ def test_probe_run_confirms_the_draft(root, db, observe, httpserver):
     assert validate_paths(default_paths(root), root=root).ok
     results = [json.loads(x) for x in (root / "var" / "results.jsonl").read_text().splitlines()]
     assert {"id": f"af:stripe:{SLUG}", "change": "verified"} in results[0]["facts"]
+
+
+def test_kill_switch_from_the_process_environment(root, db, observe, monkeypatch):
+    observe(*quorum_rows())
+    monkeypatch.setenv("AGENTFACTS_KILL", "1")
+    assert run_quorum(root, db, root / "var", now=NOW).killed == "AGENTFACTS_KILL=1"

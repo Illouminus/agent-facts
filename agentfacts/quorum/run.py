@@ -5,6 +5,7 @@ For each group: below quorum → nothing; already a fact → refresh its evidenc
 reproduce it) requested due for the next runner tick. A dry run reads only: no file, no state.
 """
 
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -72,7 +73,7 @@ def run_quorum(
     check_vantage(vantage)
     window = period_window(now, since)
     report = QuorumReport(window)
-    if reason := kill_reason(root, environ if environ is not None else {}):
+    if reason := kill_reason(root, os.environ if environ is None else environ):
         report.killed = reason
         return report
     groups = group_observations(load_observations(db, *window))
