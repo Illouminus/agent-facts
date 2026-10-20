@@ -111,7 +111,9 @@ def prepare(step: HttpStep, ctx: RunContext, service: Service, env: str) -> Prep
         )
     rendered = {"method": step.method, "headers": headers, "query": query, "form": form,
                 "json": json_body}
-    if violations := http_step_violations(rendered, env):
+    jsonrpc = service.surfaces.http.jsonrpc_read if service.surfaces.http else None
+    rendered["path"] = path
+    if violations := http_step_violations(rendered, env, jsonrpc):
         _, code, message = violations[0]
         raise Refused(code, message)
     keyed = uses_key(step, service)

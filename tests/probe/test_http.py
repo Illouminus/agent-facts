@@ -324,3 +324,41 @@ def test_client_ignores_environment_proxies_and_netrc():
         assert isinstance(client, httpx.Client)
         assert client.trust_env is False
         assert client.follow_redirects is False
+
+
+RPC_SERVICE = make_service(
+    auth={"kind": "none"},
+    surfaces={
+        "http": {
+            "base_url": "https://api.acme.example",
+            "templates": [
+                {"method": "POST", "path": "/rpc"},
+                {"method": "POST", "path": "/v1/items"},
+            ],
+            "jsonrpc": {"path": "/rpc", "read_methods": ["getHealth"]},
+        }
+    },
+)
+
+
+def test_prod_jsonrpc_read_is_prepared():
+    body = {"jsonrpc": "2.0", "id": 1, "method": "getHealth"}
+    request = prepare(step(method="POST", path="/rpc", json=body), ctx(), RPC_SERVICE, "prod")
+    assert request.json_body == body
+
+
+def test_rendered_jsonrpc_method_off_the_list_is_refused(httpserver):
+    # The validator saw a placeholder; the runner re-checks the rendered method before sending.
+    c = ctx({1: {"next": "sendTransaction"}}, current_step=2)
+    body = {"jsonrpc": "2.0", "id": 1, "method": "{{step[1].json.next}}"}
+    with pytest.raises(Refused) as exc:
+        prepare(step(method="POST", path="/rpc", json=body), c, RPC_SERVICE, "prod")
+    assert exc.value.code == "prod_probe_not_readonly"
+    assert httpserver.log == []
+
+
+def test_jsonrpc_read_on_another_post_template_is_refused():
+    body = {"jsonrpc": "2.0", "id": 1, "method": "getHealth"}
+    with pytest.raises(Refused) as exc:
+        prepare(step(method="POST", path="/v1/items", json=body), ctx(), RPC_SERVICE, "prod")
+    assert exc.value.code == "prod_probe_not_readonly"

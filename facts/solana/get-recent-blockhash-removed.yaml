@@ -1,0 +1,32 @@
+id: af:solana:get-recent-blockhash-removed
+service: solana
+kind: deprecation
+target:
+  surface: http
+  method: POST
+  path_template: /
+signal:
+  status: 200
+  error_code: "-32601"
+  error_string: "Method not found"
+  normalized: "method not found"
+claim: "getRecentBlockhash is removed from mainnet RPC nodes: calling it returns JSON-RPC error -32601 Method not found; its replacement is getLatestBlockhash."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_param, name: method, value_source: "literal:getLatestBlockhash", location: body}
+status: verified:server:prod
+evidence:
+  probe: af:solana:probe:methods-removed
+  first_seen: 2026-10-20T09:15:16Z
+  confirmations: 2
+  official_url: https://solana.com/docs/rpc/deprecated#migration-summary
+  last_confirmed: 2026-10-20T09:17:15Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

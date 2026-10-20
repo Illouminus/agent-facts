@@ -1,0 +1,44 @@
+# Solana mainnet public JSON-RPC (keyless). JSON-RPC has no GET form: prod probes POST one request
+# to the declared endpoint with a read-only method only (surfaces.http.jsonrpc).
+key: solana
+name: Solana JSON-RPC (public mainnet endpoint)
+hosts: [api.mainnet-beta.solana.com, api.mainnet.solana.com]
+doc_hosts: [solana.com]
+surfaces:
+  http:
+    base_url: https://api.mainnet-beta.solana.com
+    templates:
+      - {method: POST, path: /}
+    jsonrpc:
+      path: /
+      read_methods:
+        - getHealth
+        - getBalance
+        - getBlock
+        - getMultipleAccounts
+        - getMinimumBalanceForRentExemption
+        - getProgramAccounts
+        - getSignaturesForAddress
+        - getConfirmedBlock
+        - getConfirmedTransaction
+        - getRecentBlockhash
+    signal_fields:
+      - status
+      - error.code
+      - error.message
+      - retry-after
+      - x-ratelimit-tier
+      - x-ratelimit-method-limit
+      - x-ratelimit-method-remaining
+      - x-ratelimit-rps-limit
+      - x-ratelimit-rps-remaining
+      - x-ratelimit-conn-limit
+dimensions:
+  env: {prod: https://api.mainnet-beta.solana.com}
+  account_state: [anonymous]
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://solana.com/docs/references/clusters#mainnet-rate-limits
+probe_budget: {per_template_seconds: 300}

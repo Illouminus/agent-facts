@@ -267,6 +267,12 @@ def _service_checks(doc: _Doc, registry: Registry) -> list[Problem]:
     if (name := auth.get("key_name")) and not key_bound_to_service(name, key):
         message = f"key {name} is not named after the service ({key}, {key}-…, {key}_…)"
         problems.append(doc.problem(["auth", "key_name"], "key_not_bound", message))
+    service = registry.services[key]
+    if service.jsonrpc and not service.has_template("POST", service.jsonrpc.path):
+        message = f"jsonrpc endpoint POST {service.jsonrpc.path} is not a template of {key}"
+        problems.append(
+            doc.problem(["surfaces", "http", "jsonrpc", "path"], "unregistered_template", message)
+        )
     return problems
 
 
@@ -372,9 +378,11 @@ def _probe_checks(doc: _Doc, registry: Registry) -> list[Problem]:
             message = f"step {a['step']} does not exist ({len(steps)} steps)"
             problems.append(doc.problem(["assert", i, "step"], "unknown_step", message))
 
+    known = registry.services.get(service_key)
+    jsonrpc = known.jsonrpc if known is not None else None
     for i, step in enumerate(steps):
         if step["do"] == "http":
-            for name, code, message in http_step_violations(step, data["env"]):
+            for name, code, message in http_step_violations(step, data["env"], jsonrpc):
                 problems.append(doc.problem(["steps", i, name], code, message))
 
     service, missing = _service_of(doc, registry)

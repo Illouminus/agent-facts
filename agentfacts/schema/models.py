@@ -21,6 +21,8 @@ from pydantic import (
     model_validator,
 )
 
+from agentfacts.schema.registry import JsonRpcRead, match_template
+
 
 class _Closed(BaseModel):
     """Every record is closed: unknown fields are errors (`additionalProperties: false`)."""
@@ -371,10 +373,26 @@ class Template(_Closed):
     path: PathTemplate
 
 
+class JsonRpcEndpoint(_Closed):
+    """A JSON-RPC 2.0 endpoint (`POST path`) and the methods on it that only read state."""
+
+    path: PathTemplate
+    read_methods: Annotated[
+        tuple[_pattern(r"^[A-Za-z][A-Za-z0-9_]{0,63}$"), ...], Field(min_length=1)
+    ]
+
+
 class HttpSurface(_Closed):
     base_url: HttpsUrl
     templates: Annotated[tuple[Template, ...], Field(min_length=1)]
     signal_fields: tuple[_pattern(r"^[A-Za-z0-9_./-]{1,64}$"), ...] | None = None
+    jsonrpc: "JsonRpcEndpoint | None" = None
+
+    @property
+    def jsonrpc_read(self) -> "JsonRpcRead | None":
+        if self.jsonrpc is None:
+            return None
+        return JsonRpcRead(self.jsonrpc.path, frozenset(self.jsonrpc.read_methods))
 
 
 class SdkPackage(_Closed):
@@ -479,19 +497,65 @@ METHOD_OVERRIDE_PARAMS = frozenset({"_method"})
 READ_ONLY_METHODS = frozenset({"GET", "HEAD"})
 
 
-def http_step_violations(step: Mapping[str, Any], env: str) -> list[tuple[str, str, str]]:
+JSONRPC_REQUEST_KEYS = frozenset({"jsonrpc", "id", "method", "params"})
+
+
+SHAPE_ONLY = JsonRpcRead("", frozenset())  # the `Probe` model: no service known, shape only
+
+
+def _jsonrpc_read_problem(step: Mapping[str, Any], jsonrpc: JsonRpcRead | None) -> str | None:
+    """Why a prod POST is not a JSON-RPC read, or None. A JSON-RPC API (Solana) has no GET form,
+    so a prod probe may POST exactly one JSON-RPC 2.0 request (keys jsonrpc, id, method, params
+    only) to the service's declared JSON-RPC endpoint, with a method the service lists as
+    read-only (`surfaces.http.jsonrpc`). With `SHAPE_ONLY` (the `Probe` model, which has no
+    service) only the body shape is checked; validator and runner pass the service's endpoint."""
+    body = step.get("json")
+    if not isinstance(body, Mapping):
+        return "a prod JSON-RPC body must be one request object (no batch)"
+    if extra := sorted(str(k) for k in body if k not in JSONRPC_REQUEST_KEYS):
+        return f"a prod JSON-RPC request has only jsonrpc, id, method, params (not {extra[0]})"
+    method = body.get("method")
+    if body.get("jsonrpc") != "2.0" or not isinstance(method, str):
+        return "a prod POST body must be a JSON-RPC 2.0 request with a method"
+    request_id = body.get("id")
+    if isinstance(request_id, bool) or not isinstance(request_id, str | int | None):
+        return "a JSON-RPC id is a string, an integer or null"
+    if "params" in body and not isinstance(body["params"], list | Mapping):
+        return "JSON-RPC params are an array or an object"
+    if jsonrpc is SHAPE_ONLY:
+        return None
+    if jsonrpc is None:
+        return "the service declares no JSON-RPC endpoint (surfaces.http.jsonrpc)"
+    if not match_template(str(step.get("path", "")), jsonrpc.path):
+        return f"POST {step.get('path')} is not the service's JSON-RPC endpoint {jsonrpc.path}"
+    if method not in jsonrpc.methods:
+        return f"JSON-RPC method {method} is not a read_method of the service"
+    return None
+
+
+def http_step_violations(
+    step: Mapping[str, Any], env: str, jsonrpc: JsonRpcRead | None = None
+) -> list[tuple[str, str, str]]:
     """Rules on one http step that JSON Schema cannot state case-insensitively.
 
-    Returns `(field, code, message)` triples; shared by `Probe` and `agentfacts validate`.
+    Returns `(field, code, message)` triples; shared by `Probe` (with `SHAPE_ONLY`),
+    `agentfacts validate` and the runner's re-check of the rendered request (both with the
+    service's `jsonrpc`). In prod a step is read-only: GET/HEAD without a body, or a POST of one
+    JSON-RPC read (see `_jsonrpc_read_problem`).
     """
     found: list[tuple[str, str, str]] = []
     headers = {str(name).lower() for name in (step.get("headers") or {})}
     for name in sorted(headers & FORBIDDEN_PROBE_HEADERS):
         found.append(("headers", "forbidden_header", f"probes may not set {name}; the runner does"))
     if env == Env.prod:
-        if step.get("method") not in READ_ONLY_METHODS:
-            found.append(("method", "prod_probe_not_readonly", "prod probes may only GET or HEAD"))
-        for body in ("form", "json"):
+        rpc_post = step.get("method") == "POST" and step.get("json") is not None
+        if rpc_post:
+            if problem := _jsonrpc_read_problem(step, jsonrpc):
+                found.append(("json", "prod_probe_not_readonly", problem))
+        elif step.get("method") not in READ_ONLY_METHODS:
+            message = "prod probes may only GET or HEAD, or POST a listed JSON-RPC read method"
+            found.append(("method", "prod_probe_not_readonly", message))
+        for body in ("form",) if rpc_post else ("form", "json"):
             if step.get(body) is not None:
                 found.append((body, "prod_probe_not_readonly", f"prod probes may not send {body}"))
         for name in sorted(headers & METHOD_OVERRIDE_HEADERS):
@@ -586,7 +650,7 @@ class Probe(_Closed):
         for i, step in enumerate(self.steps, 1):
             if isinstance(step, HttpStep):
                 data = step.model_dump(by_alias=True, exclude_none=True)
-                for field, code, message in http_step_violations(data, self.env):
+                for field, code, message in http_step_violations(data, self.env, SHAPE_ONLY):
                     raise ValueError(f"steps[{i}].{field}: {code}: {message}")
         for a in self.assertions:
             if a.step > len(self.steps):

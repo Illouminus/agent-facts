@@ -1,0 +1,17 @@
+# JSON-RPC errors arrive with HTTP 200; the status of the HTTP layer says nothing.
+id: af:solana:probe:methods-removed
+service: solana
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getRecentBlockhash}}
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getConfirmedBlock, params: [1]}}
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getConfirmedTransaction, params: ["5kV4NF6HuXJgNHWNzHVzZXNHe3XCpVdtEnzvRu9Kbt4pJsBqCa5qNPm3Ao5BJWUdqqASd3BSzdDNZk8DfEQYBRta"]}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.error.code, equals: -32601}
+  - {step: 1, json_path: $.error.message, equals: Method not found}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.error.code, equals: -32601}
+  - {step: 3, status: 200}
+  - {step: 3, json_path: $.error.code, equals: -32601}

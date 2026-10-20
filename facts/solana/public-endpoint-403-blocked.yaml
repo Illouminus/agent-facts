@@ -1,0 +1,24 @@
+id: af:solana:public-endpoint-403-blocked
+service: solana
+kind: availability
+target:
+  surface: http
+  method: POST
+  path_template: /
+signal:
+  status: 403
+claim: "On the public RPC endpoints HTTP 403 means the IP address or website has been blocked; high-traffic websites may be blocked without prior notice."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: vendor_side}
+status: official
+evidence:
+  first_seen: 2026-10-20T09:35:00Z
+  official_url: https://solana.com/docs/references/clusters#common-http-error-codes
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

@@ -69,6 +69,22 @@ def _strings(value: Any) -> tuple[str, ...]:
 
 
 @dataclass(frozen=True)
+class JsonRpcRead:
+    """A service's JSON-RPC endpoint template and the methods on it that only read state."""
+
+    path: str
+    methods: frozenset[str]
+
+
+def _jsonrpc(value: Any) -> JsonRpcRead | None:
+    endpoint = _mapping(value)
+    path = endpoint.get("path")
+    if not isinstance(path, str):
+        return None
+    return JsonRpcRead(path, frozenset(_strings(endpoint.get("read_methods"))))
+
+
+@dataclass(frozen=True)
 class ServiceInfo:
     key: str
     hosts: tuple[str, ...]
@@ -78,6 +94,7 @@ class ServiceInfo:
     envs: frozenset[str]
     auth_kind: str
     auth_env: str | None
+    jsonrpc: JsonRpcRead | None = None
 
     @classmethod
     def from_document(cls, doc: Mapping[str, Any]) -> "ServiceInfo":
@@ -100,6 +117,7 @@ class ServiceInfo:
             envs=frozenset(_strings(dimensions.get("env"))),
             auth_kind=auth.get("kind", "none"),
             auth_env=auth.get("env"),
+            jsonrpc=_jsonrpc(http.get("jsonrpc")),
         )
 
     @property

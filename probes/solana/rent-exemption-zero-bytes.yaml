@@ -1,0 +1,9 @@
+id: af:solana:probe:rent-exemption-zero-bytes
+service: solana
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getMinimumBalanceForRentExemption, params: [0]}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.result, equals: 650240}

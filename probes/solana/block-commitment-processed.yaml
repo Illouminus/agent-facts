@@ -1,0 +1,10 @@
+id: af:solana:probe:block-commitment-processed
+service: solana
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: POST, path: /, json: {jsonrpc: "2.0", id: 1, method: getBlock, params: [1, {commitment: processed}]}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.error.code, equals: -32602}
+  - {step: 1, json_path: $.error.message, equals: "Method does not support commitment below `confirmed`"}
