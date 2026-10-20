@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# ops/deploy.sh — host side of "merge = deployed" for agent-facts on illouminus (spec 08, W8).
+#
+# Reached from GitHub Actions ONLY through a forced command (ops/README.md):
+#   command="/home/ubuntu/apps/agent-facts/ops/deploy.sh",restrict ssh-ed25519 AAAA… gha-deploy-agent-facts
+# The client's string lands in $SSH_ORIGINAL_COMMAND and is untrusted input: exactly one 40-hex
+# sha that is on origin/main is accepted, nothing else. By hand: ops/deploy.sh <sha>.
+#
+# Steps: fetch → the sha must be on origin/main → keep the probe runner's uncommitted edits under
+# facts/ as a patch → checkout --detach <sha> → re-apply the patch (if it no longer applies it is
+# parked in var/deploy/facts-unapplied-*.patch, never lost) → uv sync --frozen --no-dev →
+# daemon-reload when ops/systemd/ changed → restart agentfacts-api → poll /healthz. Failure → the
+# same steps back to the previous sha, exit 1: a red deploy means "prod alive on the old version".
+# Success → var/deploy/deployed + one journal entry in megabrain state (ops/state_journal.py; its
+# failure is logged and never fails the deploy).
+#
+# Everything runs inside main(): bash has parsed the whole body before `git checkout` replaces this
+# file. `restrict` means no profile is sourced, hence the pinned PATH. Must also run under macOS
+# bash 3.2 (tests/ops/test_deploy_sh.py): no mapfile, no [[ =~ ]], flock only when present.
+#
+# Exit: 0 deployed (or already deployed and healthy), 1 failed and rolled back, 2 refused input,
+#       3 failed and the rollback failed too (prod down), 75 another deploy is running.
+
+main() {
+  set -uo pipefail
+  export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+  local app deploy_dir sha prev
+  app="$(cd "$(dirname "$0")/.." && pwd -P)"
+  deploy_dir="$app/var/deploy"
+  HEALTH_URL="${AGENTFACTS_HEALTH_URL:-http://127.0.0.1:8795/healthz}"
+  HEALTH_TRIES="${AGENTFACTS_HEALTH_TRIES:-20}"
+  HEALTH_SLEEP="${AGENTFACTS_HEALTH_SLEEP:-1}"
+  STATE_DIR="$HOME/claude-hub/state"
+  mkdir -p "$deploy_dir" || { echo "deploy: cannot create $deploy_dir" >&2; return 1; }
+  LOG="$deploy_dir/deploy.log"
+
+  sha="${SSH_ORIGINAL_COMMAND:-${1:-}}"
+  case "$sha" in
+    *[!0-9a-f]* | "") refuse "expected one 40-hex sha, got '${sha:0:60}'"; return 2 ;;
+  esac
+  [ "${#sha}" -eq 40 ] || { refuse "expected one 40-hex sha, got ${#sha} characters"; return 2; }
+
+  exec 9>"$deploy_dir/lock"
+  if command -v flock >/dev/null 2>&1 && ! flock -n 9; then
+    log "busy: another deploy holds $deploy_dir/lock"
+    return 75
+  fi
+
+  cd "$app" || return 1
+  if ! git fetch --quiet origin main 2>>"$LOG"; then
+    log "git fetch origin main failed (see $LOG); nothing changed"
+    return 1
+  fi
+  if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then
+    refuse "$sha is not on origin/main (unknown commit)"
+    return 2
+  fi
+  if ! git merge-base --is-ancestor "$sha" origin/main; then
+    refuse "$sha is not on origin/main"
+    return 2
+  fi
+  prev="$(git rev-parse HEAD)"
+
+  if [ "$prev" = "$sha" ] && healthy; then
+    log "already deployed and healthy: $sha"
+    return 0
+  fi
+
+  log "deploying $sha (was $prev)"
+  if switch "$prev" "$sha"; then
+    printf '%s\n' "$sha" >"$deploy_dir/deployed"
+    log "deployed $sha, /healthz ok"
+    journal "$app" "$sha"
+    return 0
+  fi
+  log "release $sha unhealthy or failed; rolling back to $prev"
+  if switch "$sha" "$prev"; then
+    log "rolled back to $prev, /healthz ok; $sha is NOT deployed"
+    return 1
+  fi
+  log "ROLLBACK FAILED: prod is down (HEAD $(git rev-parse --short HEAD))"
+  return 3
+}
+
+log() {
+  local line
+  line="$(date -u +%Y-%m-%dT%H:%M:%SZ) deploy: $*"
+  printf '%s\n' "$line"
+  printf '%s\n' "$line" >>"$LOG" 2>/dev/null || true
+}
+
+refuse() {
+  log "REFUSED: $*"
+}
+
+healthy() {
+  local i=0 body
+  while [ "$i" -lt "$HEALTH_TRIES" ]; do
+    if body="$(curl -fsS -m 3 "$HEALTH_URL" 2>/dev/null)"; then
+      case "$body" in *'"ok":true'*) return 0 ;; esac
+    fi
+    i=$((i + 1))
+    [ "$i" -lt "$HEALTH_TRIES" ] && sleep "$HEALTH_SLEEP"
+  done
+  return 1
+}
+
+# switch <from> <to>: carry facts/ edits, check out, sync, reload units if needed, restart, health.
+switch() {
+  local from="$1" to="$2" patch parked
+  patch="$(dirname "$LOG")/facts-carry.patch"
+  git diff --binary HEAD -- facts >"$patch" || return 1
+  if ! git checkout --quiet --force --detach "$to"; then
+    log "git checkout $to failed"
+    return 1
+  fi
+  if [ -s "$patch" ]; then
+    if git apply --check "$patch" 2>/dev/null && git apply "$patch"; then
+      log "carried uncommitted facts/ edits across the checkout"
+    else
+      parked="$(dirname "$LOG")/facts-unapplied-$(date -u +%Y%m%dT%H%M%SZ).patch"
+      mv "$patch" "$parked"
+      log "WARN: uncommitted facts/ edits conflict with $to; parked in $parked"
+    fi
+  fi
+  rm -f "$patch"
+  if ! uv sync --frozen --no-dev --quiet >>"$LOG" 2>&1; then
+    log "uv sync failed (see $LOG)"
+    return 1
+  fi
+  if ! git diff --quiet "$from" "$to" -- ops/systemd; then
+    systemctl --user daemon-reload || { log "daemon-reload failed"; return 1; }
+  fi
+  if ! systemctl --user restart agentfacts-api.service; then
+    log "restart agentfacts-api.service failed"
+    return 1
+  fi
+  healthy || { log "/healthz not ok after $HEALTH_TRIES tries"; return 1; }
+}
+
+journal() {
+  local app="$1" sha="$2" subject
+  if [ ! -x "$app/.venv/bin/python" ] || [ ! -d "$STATE_DIR" ]; then
+    log "journal hook skipped (no .venv or no $STATE_DIR)"
+    return 0
+  fi
+  subject="$(git log -1 --format=%s "$sha")"
+  if ! "$app/.venv/bin/python" "$app/ops/state_journal.py" --sha "$sha" --subject "$subject" \
+      --root "$app" --state-dir "$STATE_DIR" >>"$LOG" 2>&1; then
+    log "WARN: journal hook failed (deploy is fine; see $LOG)"
+  fi
+}
+
+main "$@"
+exit $?
