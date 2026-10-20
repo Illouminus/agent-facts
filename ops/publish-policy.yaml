@@ -1,4 +1,4 @@
-# ops/publish-policy.yaml — DRAFT, NOT APPROVED (W8, 2026-10-20).
+# ops/publish-policy.yaml — approved by Edouard on 2026-10-20 ("утверждаю как есть", session; W8 draft).
 #
 # What the weekly digest may propose for outward publication, in one batch, for one tap
 # (spec 08 "Rules for the batch", D-082). Approval is Edouard's alone (spec 09: blast-radius);
@@ -10,9 +10,9 @@
 # outline); this file only fixes the rules they will have to follow.
 
 version: 1
-approved: false
-approved_by: null       # "edouard" once approved
-approved_on: null       # YYYY-MM-DD
+approved: true
+approved_by: edouard
+approved_on: 2026-10-20
 
 # Wave-1 vendors (D-084). issue_tracker: a public tracker where a vendor_issue may be opened;
 # null = no vendor issues for this vendor, Stack Overflow answers only.
