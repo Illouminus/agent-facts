@@ -30,8 +30,8 @@ def test_dry_run_all_on_the_fixture(tmp_path):
     result = invoke("run", "--all", "--dry-run", "--root", str(FIXTURE), "--state-dir", str(state))
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
-        "would-run af:example:probe:item-missing — 1 requests",
-        "would-run af:example:probe:status-ok — 1 requests",
+        "would-run af:example:probe:item-missing — 1 request",
+        "would-run af:example:probe:status-ok — 1 request",
         "skipped:no_key af:examplepay:probe:charge-roundtrip — no key examplepay-fixture",
     ]
     assert "dry run: 2 would run, 1 skipped:no_key, 0 not due, 0 deferred" in result.stderr

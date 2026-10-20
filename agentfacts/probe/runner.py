@@ -181,7 +181,7 @@ def _select(
         if started >= options.max_probes or requests + c.requests > options.max_requests:
             plan.append((c, "deferred", "tick budget spent"))
             continue
-        plan.append((c, "run", f"{c.requests} requests"))
+        plan.append((c, "run", f"{c.requests} request" + ("s" if c.requests != 1 else "")))
         started += 1
         requests += c.requests
         used |= set(c.templates)
