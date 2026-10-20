@@ -1,0 +1,45 @@
+[project]
+name = "agentfacts-pytest"
+dynamic = ["version"]
+description = "pytest plugin: a test failing on an HTTP error prints the known facts from the agent-facts registry."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "agentfacts>=0.1.0",
+    "pytest>=8.0",
+]
+classifiers = ["Framework :: Pytest"]
+
+[project.urls]
+Repository = "https://github.com/Illouminus/agent-facts"
+
+[project.entry-points.pytest11]
+agentfacts = "agentfacts_pytest.plugin"  # name used by `-p agentfacts` / `-p no:agentfacts`
+
+[dependency-groups]
+dev = [
+    "pytest-httpserver>=1.2.0",
+    "requests>=2.32.0",
+]
+
+[tool.uv.sources]
+agentfacts = { path = "../..", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "agentfacts_pytest/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agentfacts_pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-p", "pytester", "-p", "no:agentfacts"]  # inner pytester runs load it from the entry point
+
+[tool.ruff]
+extend = "../../pyproject.toml"
+src = [".", "tests"]  # agentfacts_pytest is first-party here; agentfacts is a dependency
