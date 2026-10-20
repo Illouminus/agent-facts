@@ -157,9 +157,11 @@ def _select(
     """(candidate, decision, detail) for every probe, in run order."""
     candidates = [_candidate(item, repo.services[item.probe.service]) for item in repo.probes]
 
-    def age(c: _Candidate) -> tuple[float, str]:
+    def age(c: _Candidate) -> tuple[bool, float, str]:
+        """Requested by the quorum first (spec 05), then oldest last run, then id."""
         last = state.last_run(c.id, options.vantage)
-        return (last[0] if last else float("-inf"), c.id)
+        asked = state.requested(c.id, options.vantage)
+        return (not asked, last[0] if last else float("-inf"), c.id)
 
     plan: list[tuple[_Candidate, str, str]] = []
     used: set[TemplateKey] = set()

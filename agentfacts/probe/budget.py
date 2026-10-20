@@ -5,6 +5,9 @@ A probe is due when its own last run *and* the last run of every template it hit
 the service's `per_template_seconds` ago (invariant 6: ≤ 1 request / 5 min per service, endpoint
 template and vantage — two probes on one template must not double the rate). Transient state:
 losing the file makes every probe due once, nothing verified is lost.
+
+The quorum job (spec 05) may *request* a probe: the next tick runs it ahead of older probes, but
+only once its budget allows; any recorded run clears the request.
 """
 
 import math
@@ -23,6 +26,9 @@ CREATE TABLE IF NOT EXISTS template_runs (
     service TEXT NOT NULL, method TEXT NOT NULL, template TEXT NOT NULL, vantage TEXT NOT NULL,
     at REAL NOT NULL,
     PRIMARY KEY (service, method, template, vantage));
+CREATE TABLE IF NOT EXISTS due_requests (
+    probe_id TEXT NOT NULL, vantage TEXT NOT NULL, at REAL NOT NULL,
+    PRIMARY KEY (probe_id, vantage));
 """
 
 
@@ -87,12 +93,32 @@ class BudgetState:
             return 0
         return max(0, math.ceil(latest + budget_s - now))
 
+    def requested(self, probe_id: str, vantage: str) -> bool:
+        row = self._one(
+            "SELECT 1 FROM due_requests WHERE probe_id = ? AND vantage = ?", (probe_id, vantage)
+        )
+        return row is not None
+
+    def request_due(self, probe_id: str, vantage: str, at: float) -> None:
+        """Ask the next tick to run `probe_id` first (budget still applies); idempotent."""
+        if self.read_only or self._db is None:
+            return
+        with self._db:
+            self._db.execute(
+                "INSERT INTO due_requests VALUES (?, ?, ?) ON CONFLICT (probe_id, vantage)"
+                " DO NOTHING",
+                (probe_id, vantage, at),
+            )
+
     def record(
         self, probe_id: str, templates: Iterable[TemplateKey], vantage: str, at: float, outcome: str
     ) -> None:
         if self.read_only or self._db is None:
             return
         with self._db:
+            self._db.execute(
+                "DELETE FROM due_requests WHERE probe_id = ? AND vantage = ?", (probe_id, vantage)
+            )
             self._db.execute(
                 "INSERT INTO probe_runs VALUES (?, ?, ?, ?) ON CONFLICT (probe_id, vantage)"
                 " DO UPDATE SET at = excluded.at, outcome = excluded.outcome",
