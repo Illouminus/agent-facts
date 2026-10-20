@@ -9,6 +9,7 @@ import typer
 from agentfacts import __version__, cli_check
 from agentfacts.pages.cli import app as pages_app
 from agentfacts.probe.cli import app as probe_app
+from agentfacts.quorum.cli import app as quorum_app
 
 app = typer.Typer(
     help="agent-facts: verified facts about machine interfaces for AI agents.",
@@ -21,6 +22,7 @@ EXIT_OK, EXIT_INVALID, EXIT_USAGE = 0, 1, 2
 app.add_typer(pages_app, name="pages")
 app.command("check")(cli_check.check)
 app.add_typer(probe_app, name="probe")
+app.add_typer(quorum_app, name="quorum")
 
 
 @app.callback()

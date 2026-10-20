@@ -67,7 +67,7 @@ class IndexedFact:
         return ref is not None and (ref.ecosystem, ref.package) == (sdk.ecosystem, sdk.package)
 
 
-def _hashes(fact: Fact) -> frozenset[str]:
+def fact_hashes(fact: Fact) -> frozenset[str]:
     """A fact answers the hash of its error string and of its own `normalized` (normalized
     again: authors may drop punctuation the rules keep, as the spec 01 example does)."""
     signal = fact.signal
@@ -77,7 +77,7 @@ def _hashes(fact: Fact) -> frozenset[str]:
 
 def _indexed(fact: Fact, document: dict[str, Any]) -> IndexedFact:
     rendered = [render_fix(f) for f in fact.fixes]
-    return IndexedFact(fact, {**document, "fixes_rendered": rendered}, _hashes(fact))
+    return IndexedFact(fact, {**document, "fixes_rendered": rendered}, fact_hashes(fact))
 
 
 @dataclass(frozen=True)
