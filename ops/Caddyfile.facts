@@ -1,0 +1,21 @@
+# facts.baillot.dev — agent-facts check() API (W8). Appended to /etc/caddy/Caddyfile by hand
+# (ops/README.md → Caddy). DNS: facts.baillot.dev resolves through the *.baillot.dev wildcard to
+# illouminus (A only, no AAAA; checked 2026-10-20), so no record of its own is needed.
+#
+# No `log` directive on purpose: Caddy keeps no access log for this site, so caller IPs never reach
+# a disk (spec 03: never store or log raw IPs; uvicorn runs with --no-access-log for the same
+# reason). Caddy does not trust an incoming X-Forwarded-For (no trusted_proxies here) and sends the
+# caller's address itself; the API believes X-Forwarded-For only from 127.0.0.1/::1.
+facts.baillot.dev {
+	encode zstd gzip
+	request_body {
+		max_size 16KB
+	}
+	reverse_proxy 127.0.0.1:8795
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+}

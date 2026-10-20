@@ -30,3 +30,6 @@ tmp/
 # check() API state (never in git)
 observations.sqlite
 observations.sqlite-*
+
+# kill switch (spec 04): a host-local file, never committed
+ops/KILL

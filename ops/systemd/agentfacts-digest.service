@@ -1,0 +1,10 @@
+# Weekly digest (spec 08): report into megabrain state/reviews (+ state-commit --as agent-facts)
+# and a 5–8 line ping through the Telegram gateway. Dry run by hand: ops/digest.py --dry-run.
+[Unit]
+Description=agent-facts weekly digest
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/apps/agent-facts
+ExecStart=%h/apps/agent-facts/.venv/bin/python %h/apps/agent-facts/ops/digest.py --root %h/apps/agent-facts
+TimeoutStartSec=300

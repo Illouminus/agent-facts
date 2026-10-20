@@ -1,0 +1,71 @@
+# ops/publish-policy.yaml — DRAFT, NOT APPROVED (W8, 2026-10-20).
+#
+# What the weekly digest may propose for outward publication, in one batch, for one tap
+# (spec 08 "Rules for the batch", D-082). Approval is Edouard's alone (spec 09: blast-radius);
+# until `approved: true` the digest only counts candidates and shows no button, and nothing is
+# ever published without the tap. `approved` must be the YAML boolean true — any other value
+# reads as "not approved".
+#
+# The publishing script and the Telegram button do not exist yet (megabrain card with the patch
+# outline); this file only fixes the rules they will have to follow.
+
+version: 1
+approved: false
+approved_by: null       # "edouard" once approved
+approved_on: null       # YYYY-MM-DD
+
+# Wave-1 vendors (D-084). issue_tracker: a public tracker where a vendor_issue may be opened;
+# null = no vendor issues for this vendor, Stack Overflow answers only.
+vendors:
+  stripe: {issue_tracker: null}          # stripe-python issues are for the SDK, not the API
+  google-calendar: {issue_tracker: null}
+  pypi: {issue_tracker: "https://github.com/pypi/warehouse/issues"}
+  github: {issue_tracker: null}
+  solana: {issue_tracker: null}
+  firebase: {issue_tracker: null}
+  google-sheets: {issue_tracker: null}
+  salesforce: {issue_tracker: null}
+  telegram: {issue_tracker: null}
+  google-gemini: {issue_tracker: null}
+
+rules:
+  # only facts a probe reproduced; official/reported/stale/retracted are never proposed
+  statuses: [verified:server:prod, verified:server:sandbox, verified:client]
+  # auth behaviour can read as a security report: never in a batch, only by hand
+  exclude_kinds: [auth_quirk]
+  # stable facts only: confirmed at least this many times, stale_counter 0
+  min_confirmations: 3
+  max_items_per_batch: 5
+  # what an item must not contain (checked by the publisher, enforced by the templates below:
+  # every placeholder is a fact field, there is no free text)
+  forbidden: [vendor opinions or ratings, vulnerabilities or security reports, personal data, keys]
+
+# Placeholders: {claim} {claim_short} (first 80 characters) {fact_id} {fact_url} {method}
+# {path_template} {status} {error_string} {first_seen} {last_confirmed} {confirmations} {vantages}
+# {probe_url}. Nothing else is filled in.
+templates:
+  vendor_issue:
+    title: "{method} {path_template}: {claim_short}"
+    body: |
+      Observed behaviour, reproduced by an automated read-only probe:
+
+      {claim}
+
+      - endpoint: `{method} {path_template}`
+      - signal: HTTP {status} `{error_string}`
+      - first seen {first_seen}, last confirmed {last_confirmed}, {confirmations} confirmations from {vantages}
+      - probe definition: {probe_url}
+
+      Source: agent-facts registry, {fact_url} (data CC BY 4.0). This report states what the API
+      returns; it does not judge whether the behaviour is intended.
+  so_answer:
+    body: |
+      {claim}
+
+      This is reproduced by a read-only probe (`{method} {path_template}` → HTTP {status}
+      `{error_string}`), last confirmed {last_confirmed}. Details and the probe: {fact_url}
+      (agent-facts registry, CC BY 4.0).
+
+# Published items, one JSON line each ({"fact": <id>, "where": <url>, "date": <YYYY-MM-DD>}),
+# so a fact is proposed once. Lives on the host, outside git.
+ledger: var/publications.jsonl
