@@ -93,3 +93,9 @@ def test_bad_sha_is_a_usage_error(registry, state):
     rc = state_journal.main(["--sha", "nope", "--subject", "x", "--root", str(registry.root),
                              "--state-dir", str(state.root)])
     assert rc == 2
+
+
+def test_remove_entry_drops_only_the_marked_block():
+    text = ("## Журнал\n\n### b — новая\n\n- отчёт (x/r-2)\n\n### a — старая\n\n- было\n")
+    assert state_journal.remove_entry(text, "x/r-2)") == "## Журнал\n\n### a — старая\n\n- было\n"
+    assert state_journal.remove_entry(text, "nothing") == text

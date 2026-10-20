@@ -38,13 +38,21 @@ main() {
 
   sha="${SSH_ORIGINAL_COMMAND:-${1:-}}"
   case "$sha" in
-    *[!0-9a-f]* | "") refuse "expected one 40-hex sha, got '${sha:0:60}'"; return 2 ;;
+    *[!0-9a-f]* | "") refuse "expected one 40-hex sha, got ${#sha} characters that are not all hex"; return 2 ;;
   esac
   [ "${#sha}" -eq 40 ] || { refuse "expected one 40-hex sha, got ${#sha} characters"; return 2; }
 
   exec 9>"$deploy_dir/lock"
   if command -v flock >/dev/null 2>&1 && ! flock -n 9; then
     log "busy: another deploy holds $deploy_dir/lock"
+    return 75
+  fi
+  # The probe runner's tick lock (var/probe.lock, fcntl.flock): a tick writes facts/ — wait for it
+  # to finish so the checkout neither loses its edits nor swaps code under a running tick. A tick
+  # that starts meanwhile sees the lock busy and exits quietly.
+  exec 8>>"$app/var/probe.lock"
+  if command -v flock >/dev/null 2>&1 && ! flock -w "${AGENTFACTS_PROBE_LOCK_WAIT:-900}" 8; then
+    log "busy: a probe tick still holds var/probe.lock; nothing changed"
     return 75
   fi
 
@@ -117,6 +125,8 @@ healthy() {
 switch() {
   local from="$1" to="$2" patch parked
   patch="$(dirname "$LOG")/facts-carry.patch"
+  # untracked files under facts/ (bot drafts) go into the patch too: intent-to-add first
+  git ls-files -z --others --exclude-standard -- facts | xargs -0 git add -N -- 2>/dev/null
   git diff --binary HEAD -- facts >"$patch" || return 1
   if ! git checkout --quiet --force --detach "$to"; then
     log "git checkout $to failed"

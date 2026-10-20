@@ -80,7 +80,7 @@ class Window:
         return self.start <= moment < self.end
 
     def contains_date(self, day: date) -> bool:
-        return day.isoformat() in self.days
+        return self.start.date() <= day <= (self.end - timedelta(microseconds=1)).date()
 
 
 def salt_window(now: datetime, current: bool = False) -> Window:
@@ -639,8 +639,6 @@ def _write_if_changed(path: Path, text: str) -> bool:
 def _journal(state_dir: Path, d: Digest, reports_url: str) -> bool:
     path = state_dir / state_journal.PROJECT_FILE
     text = path.read_text(encoding="utf-8")
-    if f"/{d.report_id})" in text:
-        return False
     f = d.facts
     title = f"{d.today.isoformat()} — дайджест, неделя {d.window.week}"
     if not d.window.complete:
@@ -650,7 +648,12 @@ def _journal(state_dir: Path, d: Digest, reports_url: str) -> bool:
         f"{_needs_probe_line(d)}; {_publications_line(d)}.",
         f"- отчёт: [{d.report_id}]({reports_url.rstrip('/')}/{d.report_id})",
     ]
-    path.write_text(state_journal.insert_entry(text, title, bullets), encoding="utf-8")
+    # a re-run on the same day replaces its own entry, so journal and report agree
+    updated = state_journal.insert_entry(
+        state_journal.remove_entry(text, f"/{d.report_id})"), title, bullets)
+    if updated == text:
+        return False
+    path.write_text(updated, encoding="utf-8")
     return True
 
 

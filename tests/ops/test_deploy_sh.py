@@ -2,6 +2,7 @@
 in `$HOME/.local/bin` (first on the PATH the script pins); git is real. Runs under macOS bash 3.2
 too."""
 
+import fcntl
 import os
 import shutil
 import subprocess
@@ -186,4 +187,35 @@ def test_ssh_refuses_a_downgrade_but_by_hand_rollback_works(host):
     assert "downgrade over ssh" in result.stdout
     assert host.head() == c2
     assert host.deploy(host.c1).returncode == 0  # by hand
+    assert host.head() == host.c1
+
+
+def test_untracked_files_under_facts_survive_a_deploy(host):
+    (host.app / "facts" / "s" / "draft.yaml").write_text("draft: 1\n", encoding="utf-8")
+    host.write("README", "two\n")
+    c2 = host.commit("c2")
+    assert host.deploy(c2).returncode == 0
+    assert (host.app / "facts" / "s" / "draft.yaml").read_text(encoding="utf-8") == "draft: 1\n"
+
+
+def test_untracked_draft_that_main_now_tracks_is_parked(host):
+    (host.app / "facts" / "s" / "draft.yaml").write_text("draft: host\n", encoding="utf-8")
+    host.write("facts/s/draft.yaml", "draft: merged\n")
+    c2 = host.commit("c2")
+    assert host.deploy(c2).returncode == 0
+    assert (host.app / "facts" / "s" / "draft.yaml").read_text(encoding="utf-8") == \
+        "draft: merged\n"
+    (parked,) = (host.app / "var" / "deploy").glob("facts-unapplied-*.patch")
+    assert "+draft: host" in parked.read_text(encoding="utf-8")
+
+
+@pytest.mark.skipif(shutil.which("flock") is None, reason="flock(1) only on Linux")
+def test_waits_for_a_running_probe_tick_then_gives_up(host):
+    host.write("README", "two\n")
+    c2 = host.commit("c2")
+    (host.app / "var").mkdir(exist_ok=True)
+    with (host.app / "var" / "probe.lock").open("a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)  # what the runner does during a tick
+        result = host.deploy(c2, AGENTFACTS_PROBE_LOCK_WAIT="1")
+    assert result.returncode == 75
     assert host.head() == host.c1

@@ -60,6 +60,22 @@ def insert_entry(text: str, title: str, bullets: Sequence[str]) -> str:
     return "\n".join([*lines[: at + 1], *block, *rest]) + "\n"
 
 
+def remove_entry(text: str, marker: str) -> str:
+    """Drop the `### ` entry whose block contains `marker` (up to the next `##`/`###` heading)."""
+    lines = text.splitlines()
+    start = None
+    for i, line in enumerate(lines):
+        if line.startswith("### "):
+            start = i
+        elif line.startswith("## "):
+            start = None
+        if marker in line and start is not None:
+            later = range(i + 1, len(lines))
+            end = next((j for j in later if lines[j].startswith(("## ", "### "))), len(lines))
+            return "\n".join(lines[:start] + lines[end:]) + "\n"
+    return text
+
+
 def git_blob_sha(data: bytes) -> str:
     """What `git hash-object` prints for `data` (state-commit --expect-sha compares it)."""
     return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()

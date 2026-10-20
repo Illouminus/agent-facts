@@ -443,3 +443,15 @@ def test_main_sends_once_and_reports_a_diverted_ping_without_failing(registry, s
     assert run_main(registry, state, "--gateway", httpserver.url_for("/mcp")) == 0
     assert len(httpserver.log) == 1
     assert "diverted" in capsys.readouterr().err
+
+
+def test_rerun_with_new_numbers_replaces_its_journal_entry(registry, state):
+    registry.fact("verified-a")
+    assert run_main(registry, state, "--no-send") == 0
+    registry.fact("verified-b")
+    assert run_main(registry, state, "--no-send") == 0
+    journal = state.journal.read_text(encoding="utf-8")
+    assert journal.count("дайджест, неделя 43") == 1
+    assert "- факты 2 (+2)" in journal
+    assert "### 2026-10-20 — старая запись" in journal
+    assert len(state.calls()) == 2
