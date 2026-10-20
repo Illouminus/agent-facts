@@ -20,6 +20,9 @@ sys.path.insert(0, str(REPO / "ops"))  # ops/*.py are scripts, imported here as 
 # One verified fact with a probe and one reported fact without; tests derive the rest from these.
 VERIFIED = plain(load_yaml(VALID / "fact-idempotency-key-reuse-different-params.yaml"))
 REPORTED = plain(load_yaml(VALID / "fact-customer-retrieve-rate-limit.yaml"))
+STALE = plain(load_yaml(VALID / "fact-deleted-customer-returns-200.yaml"))
+RETRACTED = plain(load_yaml(VALID / "fact-amount-too-small-retracted.yaml"))
+OFFICIAL = plain(load_yaml(VALID / "fact-example-sdk-v2-legacy-endpoint.yaml"))
 STRIPE = plain(load_yaml(VALID / "service-stripe.yaml"))
 
 JOURNAL = """---
@@ -54,10 +57,10 @@ class Registry:
         (root / "services" / "stripe.yaml").write_text(yaml.safe_dump(STRIPE), encoding="utf-8")
 
     def fact(self, slug: str, base: dict[str, Any] = VERIFIED, **changes: Any) -> dict[str, Any]:
-        """Write facts/stripe/<slug>.yaml from `base`; `evidence__probe=...` edits a nested
+        """Write facts/<service>/<slug>.yaml from `base`; `evidence__probe=...` edits a nested
         field, a value of None deletes it."""
         doc = copy.deepcopy(base)
-        doc["id"] = f"af:stripe:{slug}"
+        doc["id"] = f"af:{doc['service']}:{slug}"
         for dotted, value in changes.items():
             *parents, leaf = dotted.split("__")
             node = doc
@@ -67,7 +70,7 @@ class Registry:
                 node.pop(leaf, None)
             else:
                 node[leaf] = value
-        path = self.root / "facts" / "stripe" / f"{slug}.yaml"
+        path = self.root / "facts" / doc["service"] / f"{slug}.yaml"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
         return doc
