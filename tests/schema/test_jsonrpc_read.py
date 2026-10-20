@@ -1,13 +1,13 @@
-"""Prod JSON-RPC reads: a prod probe may POST one JSON-RPC 2.0 request whose method the service
-lists in `surfaces.http.jsonrpc_read_methods` (Solana RPC has no GET form); everything else a prod
-POST could carry stays refused (`prod_probe_not_readonly`)."""
+"""Prod JSON-RPC reads: a prod probe may POST one JSON-RPC 2.0 request to the endpoint the service
+declares in `surfaces.http.jsonrpc`, with one of its read_methods (Solana RPC has no GET form);
+everything else a prod POST could carry stays refused (`prod_probe_not_readonly`)."""
 
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from agentfacts.schema.models import Probe, http_step_violations
+from agentfacts.schema.models import JsonRpcRead, Probe, http_step_violations
 from agentfacts.schema.validate import validate_paths
 
 SERVICE = """\
@@ -20,7 +20,7 @@ surfaces:
     templates:
       - {method: POST, path: /}
       - {method: GET, path: /health}
-    jsonrpc_read_methods: [getHealth, getSlot]
+    jsonrpc: {path: /, read_methods: [getHealth, getSlot]}
 dimensions:
   env: {prod: https://rpc.example.com}
 auth: {kind: none}
@@ -65,6 +65,8 @@ def test_listed_jsonrpc_read_passes(tmp_path):
         ('{jsonrpc: "2.0", id: 1}', ""),  # no method
         (READ, "form: {a: b}, "),  # form beside the body
         (READ, "headers: {X-HTTP-Method-Override: PUT}, "),
+        ('{jsonrpc: "2.0", id: 1, method: getHealth, Method: sendTransaction}', ""),  # extra key
+        ('{jsonrpc: "2.0", id: 1, method: getHealth, data: x}', ""),
     ],
 )
 def test_anything_else_in_a_prod_post_is_refused(tmp_path, body, extra):
@@ -72,8 +74,26 @@ def test_anything_else_in_a_prod_post_is_refused(tmp_path, body, extra):
 
 
 def test_service_without_a_read_list_gets_no_prod_post(tmp_path):
-    service = SERVICE.replace("    jsonrpc_read_methods: [getHealth, getSlot]\n", "")
+    service = SERVICE.replace("    jsonrpc: {path: /, read_methods: [getHealth, getSlot]}\n", "")
     assert _codes(tmp_path, service, READ) == {"prod_probe_not_readonly"}
+
+
+def test_listed_method_on_another_post_template_is_refused(tmp_path):
+    service = SERVICE.replace(
+        "      - {method: GET, path: /health}", "      - {method: POST, path: /admin}"
+    )
+    probe = PROBE.replace("path: /,", "path: /admin,") % READ
+    (tmp_path / "s.yaml").write_text(service, encoding="utf-8")
+    (tmp_path / "p.yaml").write_text(probe, encoding="utf-8")
+    report = validate_paths([tmp_path / "s.yaml", tmp_path / "p.yaml"], root=tmp_path / "none")
+    assert {p.code for p in report.problems} == {"prod_probe_not_readonly"}
+
+
+def test_jsonrpc_endpoint_must_be_a_post_template(tmp_path):
+    service = SERVICE.replace("jsonrpc: {path: /,", "jsonrpc: {path: /rpc,")
+    (tmp_path / "s.yaml").write_text(service, encoding="utf-8")
+    report = validate_paths([tmp_path / "s.yaml"], root=tmp_path / "none")
+    assert {p.code for p in report.problems} == {"unregistered_template"}
 
 
 def test_get_with_a_jsonrpc_body_is_still_refused(tmp_path):
@@ -112,10 +132,13 @@ def test_model_checks_the_shape_without_the_service():
     Probe.model_validate(_probe({"jsonrpc": "2.0", "id": 1, "method": "anything"}))
     with pytest.raises(ValidationError, match="prod_probe_not_readonly"):
         Probe.model_validate(_probe([{"jsonrpc": "2.0", "id": 1, "method": "getHealth"}]))
+    with pytest.raises(ValidationError, match="prod_probe_not_readonly"):
+        Probe.model_validate(_probe({"jsonrpc": "2.0", "method": "getHealth", "Method": "x"}))
 
 
 def test_violations_name_the_method():
-    step = {"method": "POST", "json": {"jsonrpc": "2.0", "method": "sendTransaction"}}
-    [(field, code, message)] = http_step_violations(step, "prod", frozenset({"getHealth"}))
+    step = {"method": "POST", "path": "/", "json": {"jsonrpc": "2.0", "method": "sendTransaction"}}
+    endpoint = JsonRpcRead("/", frozenset({"getHealth"}))
+    [(field, code, message)] = http_step_violations(step, "prod", endpoint)
     assert (field, code) == ("json", "prod_probe_not_readonly")
     assert "sendTransaction" in message

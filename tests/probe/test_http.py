@@ -331,8 +331,11 @@ RPC_SERVICE = make_service(
     surfaces={
         "http": {
             "base_url": "https://api.acme.example",
-            "templates": [{"method": "POST", "path": "/rpc"}],
-            "jsonrpc_read_methods": ["getHealth"],
+            "templates": [
+                {"method": "POST", "path": "/rpc"},
+                {"method": "POST", "path": "/v1/items"},
+            ],
+            "jsonrpc": {"path": "/rpc", "read_methods": ["getHealth"]},
         }
     },
 )
@@ -352,3 +355,10 @@ def test_rendered_jsonrpc_method_off_the_list_is_refused(httpserver):
         prepare(step(method="POST", path="/rpc", json=body), c, RPC_SERVICE, "prod")
     assert exc.value.code == "prod_probe_not_readonly"
     assert httpserver.log == []
+
+
+def test_jsonrpc_read_on_another_post_template_is_refused():
+    body = {"jsonrpc": "2.0", "id": 1, "method": "getHealth"}
+    with pytest.raises(Refused) as exc:
+        prepare(step(method="POST", path="/v1/items", json=body), ctx(), RPC_SERVICE, "prod")
+    assert exc.value.code == "prod_probe_not_readonly"
