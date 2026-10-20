@@ -135,6 +135,8 @@ switch() {
   if [ -s "$patch" ]; then
     if git apply --check "$patch" 2>/dev/null && git apply "$patch"; then
       log "carried uncommitted facts/ edits across the checkout"
+    elif git apply --reverse --check "$patch" 2>/dev/null; then
+      log "uncommitted facts/ edits are already in $to (bot PR merged); dropped the copy"
     else
       parked="$(dirname "$LOG")/facts-unapplied-$(date -u +%Y%m%dT%H%M%SZ).patch"
       mv "$patch" "$parked"

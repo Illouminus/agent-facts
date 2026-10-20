@@ -78,6 +78,12 @@ def test_quorum_is_prepared_but_marked_not_enabled(name):
     assert "NOT ENABLED" in text
 
 
+def test_quorum_service_reads_the_api_database():
+    exec_start = unit("agentfacts-quorum.service")["Service"]["ExecStart"]
+    assert f"quorum run --root {APP} --db {APP}/var/observations.sqlite" in exec_start
+    assert f"bot publish --root {APP}" in exec_start
+
+
 def test_quorum_timer_hourly():
     assert unit("agentfacts-quorum.timer")["Timer"]["OnCalendar"] == "hourly"
 

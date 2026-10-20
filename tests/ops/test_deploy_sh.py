@@ -219,3 +219,17 @@ def test_waits_for_a_running_probe_tick_then_gives_up(host):
         result = host.deploy(c2, AGENTFACTS_PROBE_LOCK_WAIT="1")
     assert result.returncode == 75
     assert host.head() == host.c1
+
+
+def test_edits_that_main_already_has_are_dropped_not_parked(host):
+    edited = "value: 1\nnote: a\n\n\n\n\nother: bot\n"
+    (host.app / "facts" / "s" / "a.yaml").write_text(edited, encoding="utf-8")
+    (host.app / "facts" / "s" / "draft.yaml").write_text("draft: 1\n", encoding="utf-8")
+    host.write("facts/s/a.yaml", edited)  # the bot's PR, merged
+    host.write("facts/s/draft.yaml", "draft: 1\n")
+    c2 = host.commit("bot facts")
+    result = host.deploy(c2)
+    assert result.returncode == 0
+    assert "already in" in result.stdout
+    assert list((host.app / "var" / "deploy").glob("facts-unapplied-*.patch")) == []
+    assert git(host.app, "status", "--porcelain", "--", "facts") == ""

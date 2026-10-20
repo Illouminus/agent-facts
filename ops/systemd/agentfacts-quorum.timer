@@ -1,6 +1,7 @@
-# NOT ENABLED: waits for W4 (see agentfacts-quorum.service). Hourly per spec 08.
+# NOT ENABLED: switched on after a green dry run on the host (see agentfacts-quorum.service).
+# Hourly per spec 08.
 [Unit]
-Description=agent-facts quorum + bot hourly (W4, not enabled)
+Description=agent-facts quorum + bot hourly (not enabled)
 
 [Timer]
 OnCalendar=hourly

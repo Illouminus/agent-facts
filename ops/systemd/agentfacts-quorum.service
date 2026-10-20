@@ -1,13 +1,17 @@
-# NOT ENABLED: W4 (agentfacts quorum / agentfacts bot, spec 05) is not merged yet; these commands
-# do not exist on main. Enable the timer only after W4 lands and its dry run is green:
+# NOT ENABLED: W4 (quorum + bot, spec 05) is merged (#10, #11) but the hourly job opens PRs from
+# this host, so it is switched on as its own step after a green dry run on the host:
+#   .venv/bin/agentfacts quorum run --root . --db var/observations.sqlite --dry-run
+#   .venv/bin/agentfacts bot publish --root . --dry-run
 #   systemctl --user enable --now agentfacts-quorum.timer
+# The bot needs git push + gh on the host and "Allow auto-merge" on the repo (W4 hand-over).
 [Unit]
-Description=agent-facts quorum + bot (W4, not enabled)
+Description=agent-facts quorum + bot (spec 05; not enabled)
 After=network-online.target
 
 [Service]
 Type=oneshot
 WorkingDirectory=%h/apps/agent-facts
-ExecStart=/bin/sh -c '%h/apps/agent-facts/.venv/bin/agentfacts quorum run && %h/apps/agent-facts/.venv/bin/agentfacts bot publish'
+Environment=AGENTFACTS_DB=%h/apps/agent-facts/var/observations.sqlite
+ExecStart=/bin/sh -c '%h/apps/agent-facts/.venv/bin/agentfacts quorum run --root %h/apps/agent-facts --db %h/apps/agent-facts/var/observations.sqlite && %h/apps/agent-facts/.venv/bin/agentfacts bot publish --root %h/apps/agent-facts'
 Nice=10
 TimeoutStartSec=1800
