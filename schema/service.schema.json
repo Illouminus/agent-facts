@@ -120,6 +120,12 @@
           "type": "array",
           "uniqueItems": true,
           "items": {"type": "string", "pattern": "^[A-Za-z0-9_./-]{1,64}(?!\\n)$"}
+        },
+        "jsonrpc_read_methods": {
+          "description": "JSON-RPC methods that only read state. A prod probe may POST one JSON-RPC 2.0 request to a registered POST template only when its method is on this list (prod probes are otherwise GET/HEAD only).",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}(?!\\n)$"}
         }
       }
     },

@@ -111,7 +111,9 @@ def prepare(step: HttpStep, ctx: RunContext, service: Service, env: str) -> Prep
         )
     rendered = {"method": step.method, "headers": headers, "query": query, "form": form,
                 "json": json_body}
-    if violations := http_step_violations(rendered, env):
+    http = service.surfaces.http
+    rpc_read_methods = http.rpc_read_methods if http else frozenset()
+    if violations := http_step_violations(rendered, env, rpc_read_methods):
         _, code, message = violations[0]
         raise Refused(code, message)
     keyed = uses_key(step, service)

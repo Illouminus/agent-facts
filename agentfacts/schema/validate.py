@@ -372,9 +372,11 @@ def _probe_checks(doc: _Doc, registry: Registry) -> list[Problem]:
             message = f"step {a['step']} does not exist ({len(steps)} steps)"
             problems.append(doc.problem(["assert", i, "step"], "unknown_step", message))
 
+    known = registry.services.get(service_key)
+    rpc_read_methods = known.rpc_read_methods if known is not None else frozenset()
     for i, step in enumerate(steps):
         if step["do"] == "http":
-            for name, code, message in http_step_violations(step, data["env"]):
+            for name, code, message in http_step_violations(step, data["env"], rpc_read_methods):
                 problems.append(doc.problem(["steps", i, name], code, message))
 
     service, missing = _service_of(doc, registry)

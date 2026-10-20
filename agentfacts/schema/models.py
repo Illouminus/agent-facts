@@ -375,6 +375,11 @@ class HttpSurface(_Closed):
     base_url: HttpsUrl
     templates: Annotated[tuple[Template, ...], Field(min_length=1)]
     signal_fields: tuple[_pattern(r"^[A-Za-z0-9_./-]{1,64}$"), ...] | None = None
+    jsonrpc_read_methods: tuple[_pattern(r"^[A-Za-z][A-Za-z0-9_]{0,63}$"), ...] | None = None
+
+    @property
+    def rpc_read_methods(self) -> frozenset[str]:
+        return frozenset(self.jsonrpc_read_methods or ())
 
 
 class SdkPackage(_Closed):
@@ -479,19 +484,44 @@ METHOD_OVERRIDE_PARAMS = frozenset({"_method"})
 READ_ONLY_METHODS = frozenset({"GET", "HEAD"})
 
 
-def http_step_violations(step: Mapping[str, Any], env: str) -> list[tuple[str, str, str]]:
+def _jsonrpc_read_problem(body: Any, rpc_read_methods: frozenset[str] | None) -> str | None:
+    """Why a prod POST body is not a JSON-RPC read, or None. A JSON-RPC API (Solana) has no GET
+    form, so a prod probe may POST one JSON-RPC 2.0 request whose method the service lists as
+    read-only (`surfaces.http.jsonrpc_read_methods`). `rpc_read_methods=None`: the service is not
+    known here (the `Probe` model), only the shape is checked; validator and runner pass the
+    list."""
+    if not isinstance(body, Mapping):
+        return "a prod JSON-RPC body must be one request object (no batch)"
+    method = body.get("method")
+    if body.get("jsonrpc") != "2.0" or not isinstance(method, str):
+        return "a prod POST body must be a JSON-RPC 2.0 request with a method"
+    if rpc_read_methods is not None and method not in rpc_read_methods:
+        return f"JSON-RPC method {method} is not in the service's jsonrpc_read_methods"
+    return None
+
+
+def http_step_violations(
+    step: Mapping[str, Any], env: str, rpc_read_methods: frozenset[str] | None = None
+) -> list[tuple[str, str, str]]:
     """Rules on one http step that JSON Schema cannot state case-insensitively.
 
-    Returns `(field, code, message)` triples; shared by `Probe` and `agentfacts validate`.
+    Returns `(field, code, message)` triples; shared by `Probe`, `agentfacts validate` and the
+    runner's re-check of the rendered request. In prod a step is read-only: GET/HEAD without a
+    body, or a POST of one JSON-RPC read (see `_jsonrpc_read_problem`).
     """
     found: list[tuple[str, str, str]] = []
     headers = {str(name).lower() for name in (step.get("headers") or {})}
     for name in sorted(headers & FORBIDDEN_PROBE_HEADERS):
         found.append(("headers", "forbidden_header", f"probes may not set {name}; the runner does"))
     if env == Env.prod:
-        if step.get("method") not in READ_ONLY_METHODS:
-            found.append(("method", "prod_probe_not_readonly", "prod probes may only GET or HEAD"))
-        for body in ("form", "json"):
+        rpc_post = step.get("method") == "POST" and step.get("json") is not None
+        if rpc_post:
+            if problem := _jsonrpc_read_problem(step.get("json"), rpc_read_methods):
+                found.append(("json", "prod_probe_not_readonly", problem))
+        elif step.get("method") not in READ_ONLY_METHODS:
+            message = "prod probes may only GET or HEAD, or POST a listed JSON-RPC read method"
+            found.append(("method", "prod_probe_not_readonly", message))
+        for body in ("form",) if rpc_post else ("form", "json"):
             if step.get(body) is not None:
                 found.append((body, "prod_probe_not_readonly", f"prod probes may not send {body}"))
         for name in sorted(headers & METHOD_OVERRIDE_HEADERS):

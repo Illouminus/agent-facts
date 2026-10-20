@@ -78,6 +78,7 @@ class ServiceInfo:
     envs: frozenset[str]
     auth_kind: str
     auth_env: str | None
+    rpc_read_methods: frozenset[str] = frozenset()
 
     @classmethod
     def from_document(cls, doc: Mapping[str, Any]) -> "ServiceInfo":
@@ -100,6 +101,7 @@ class ServiceInfo:
             envs=frozenset(_strings(dimensions.get("env"))),
             auth_kind=auth.get("kind", "none"),
             auth_env=auth.get("env"),
+            rpc_read_methods=frozenset(_strings(http.get("jsonrpc_read_methods"))),
         )
 
     @property
