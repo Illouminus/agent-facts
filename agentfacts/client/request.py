@@ -83,11 +83,19 @@ def _looks_secret(value: str) -> bool:
 
 
 def _url(match: re.Match[str]) -> str:
-    """Any scheme: drop userinfo (`user:pass@`), query and fragment."""
+    """Any scheme: drop query and fragment; a URL that may carry credentials goes whole.
+
+    No guessing where userinfo ends (a password may hold `/ ? #`, a query may hold `@`): any `@`,
+    or a non-numeric port, redacts the URL. Nothing is lost: the server normalizes URLs to <url>.
+    """
     scheme, _, rest = match.group(0).partition("://")
-    rest = rest.rpartition("@")[2]  # a password may hold / ? or #: cut at the last @ first
-    cut = min((i for i in (rest.find("?"), rest.find("#")) if i >= 0), default=len(rest))
-    return f"{scheme}://{rest[:cut]}"
+    if "@" in rest:
+        return f"{scheme}://{REDACTED}"
+    rest = rest[: min((i for i in (rest.find("?"), rest.find("#")) if i >= 0), default=len(rest))]
+    _, colon, port = rest.split("/", 1)[0].rpartition(":")
+    if colon and not port.isdigit():
+        return f"{scheme}://{REDACTED}"
+    return f"{scheme}://{rest}"
 
 
 def _auth_scheme(match: re.Match[str]) -> str:

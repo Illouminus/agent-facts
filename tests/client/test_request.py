@@ -221,6 +221,8 @@ def test_signal_is_frozen():
         ("redis://:s3cret@cache:6379/0?x=1", "s3cret"),
         ("postgres://user:pa/ss@db/app", "pa"),
         ("amqp://user:p?w#d@mq/vhost", "p?w"),
+        ("https://host/p?email=a@b.com&token=SECRET", "SECRET"),
+        ("redis://user:pa ss@cache", "pa"),
         ("user jane.doe%40example.com not found", "jane.doe"),
     ],
 )
@@ -228,10 +230,15 @@ def test_review_findings_do_not_leak(text, leaked):
     assert leaked not in redact(text)
 
 
-def test_userinfo_and_query_dropped_for_any_scheme():
+def test_urls_that_may_carry_credentials_are_redacted_whole():
     assert redact("connect postgres://admin:pw@db:5432/app?sslmode=x ok") == (
-        "connect postgres://db:5432/app ok"
+        "connect postgres://<redacted> ok"
     )
+    assert redact("see https://host/p?email=a@b.com&token=SECRET end") == (
+        "see https://<redacted> end"
+    )
+    assert redact("dsn mysql://root:pa ss@db").startswith("dsn mysql://<redacted>")
+    assert redact("db at postgres://db:5432/app?x=1 down") == "db at postgres://db:5432/app down"
 
 
 @pytest.mark.parametrize(
