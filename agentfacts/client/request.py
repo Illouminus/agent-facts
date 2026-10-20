@@ -22,6 +22,10 @@ _TOKEN_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 _PEM = re.compile(
     r"-----BEGIN[A-Z0-9 ]*PRIVATE KEY-----.*?(?:-----END[A-Z0-9 ]*PRIVATE KEY-----|\Z)", re.S
 )
+# `user:pa ss@host`: a raw space in a password would end the URL match before the `@`.
+_SPACED_USERINFO = re.compile(
+    r"\b([A-Za-z][A-Za-z0-9+.-]{1,15}://)[^\s\"'<>/@:]*:[^\s\"'<>/@]*(?:\s+[^\s\"'<>/@]{1,64}){1,3}@"
+)
 _URL = re.compile(r"\b[A-Za-z][A-Za-z0-9+.-]{1,15}://[^\s\"'<>]*")
 # Vendor token shapes; every branch is anchored so a long run is scanned once.
 _SHAPES = re.compile(
@@ -124,6 +128,7 @@ def _run(match: re.Match[str]) -> str:
 def redact(text: str) -> str:
     """Replace secret-shaped substrings; keep everything else byte for byte."""
     text = _PEM.sub(REDACTED, text)
+    text = _SPACED_USERINFO.sub(rf"\1{REDACTED}@", text)
     text = _URL.sub(_url, text)
     text = _SHAPES.sub(REDACTED, text)
     text = _AUTH_SCHEME.sub(_auth_scheme, text)

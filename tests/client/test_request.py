@@ -252,3 +252,23 @@ def test_percent_encoded_path_secrets_are_redacted(url):
     scrubbed = scrub_url(url)
     assert "<redacted>" in scrubbed
     assert "jane" not in scrubbed and "AAHdq" not in scrubbed
+
+
+@pytest.mark.parametrize(
+    "text, fragments",
+    [
+        ("dsn postgres://u:123 45@db/app failed", ("123", "45")),
+        ("dsn redis://u:pa ss@cache", ("pa", "ss")),
+        ("dsn redis://:a b c@cache:6379/0", (":a", " b ", "c@")),
+    ],
+)
+def test_passwords_with_raw_spaces_leave_nothing(text, fragments):
+    out = redact(text)
+    assert out.startswith("dsn ") and "<redacted>" in out
+    for fragment in fragments:
+        assert fragment not in out, (fragment, out)
+
+
+def test_ordinary_text_after_a_url_is_kept():
+    text = "Visit https://docs.stripe.com/x or contact support for help"
+    assert redact(text) == text
