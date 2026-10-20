@@ -7,7 +7,7 @@ integer).
 """
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import (
     BaseModel,
@@ -210,3 +210,363 @@ Fix = Annotated[
     | NoneKnown,
     Field(discriminator="action"),
 ]
+
+
+# ── documents (docs/specs/01-fact-schema.md) ─────────────────────────────────────────────────────
+
+Slug = _pattern(r"^[a-z0-9][a-z0-9-]{0,63}$")
+FactId = _pattern(r"^af:[a-z0-9][a-z0-9-]{0,63}:[a-z0-9][a-z0-9-]{0,127}$")
+ProbeId = _pattern(r"^af:[a-z0-9][a-z0-9-]{0,63}:probe:[a-z0-9][a-z0-9-]{0,127}$")
+DimensionValue = _pattern(r"^[A-Za-z0-9_.-]{1,64}$")
+Date = _pattern(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
+DateTime = _pattern(
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+)
+Author = _pattern(r"^(bot|producer:[a-z0-9][a-z0-9-]{0,63}|human:[A-Za-z0-9][A-Za-z0-9-]{0,38})$")
+Hostname = _pattern(r"^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$", max_length=253)
+Sha256 = _pattern(r"^[0-9a-f]{64}$")
+HttpStatus = Annotated[StrictInt, Field(ge=100, le=599)]
+NonNegative = Annotated[StrictInt, Field(ge=0)]
+
+
+class Kind(StrEnum):
+    error_meaning = "error_meaning"
+    rate_limit = "rate_limit"
+    breaking_change = "breaking_change"
+    silent_behavior = "silent_behavior"
+    auth_quirk = "auth_quirk"
+    pagination = "pagination"
+    sandbox_divergence = "sandbox_divergence"
+    deprecation = "deprecation"
+    availability = "availability"
+    schema_drift = "schema_drift"
+    latency_profile = "latency_profile"
+
+
+class Status(StrEnum):
+    verified_server_prod = "verified:server:prod"
+    verified_server_sandbox = "verified:server:sandbox"
+    verified_client = "verified:client"
+    reported = "reported"
+    official = "official"
+    stale = "stale"
+    retracted = "retracted"
+
+
+VERIFIED_STATUSES = frozenset(
+    {Status.verified_server_prod, Status.verified_server_sandbox, Status.verified_client}
+)
+
+
+class Surface(StrEnum):
+    http = "http"
+    sdk = "sdk"
+    cli = "cli"
+
+
+class Source(StrEnum):
+    probe = "probe"
+    observation_quorum = "observation_quorum"
+    producer = "producer"
+    manual = "manual"
+
+
+class SdkRef(_Closed):
+    package: Package
+    ecosystem: Ecosystem
+    versions: VersionConstraint | None = None
+
+
+class Target(_Closed):
+    surface: Surface
+    method: HttpMethod | None = None
+    path_template: PathTemplate | None = None
+    sdk: SdkRef | None = None
+
+    @model_validator(mode="after")
+    def _surface_fields(self) -> "Target":
+        if self.surface is Surface.http and (self.method is None or self.path_template is None):
+            raise ValueError("surface http requires method and path_template")
+        if self.surface is Surface.sdk and self.sdk is None:
+            raise ValueError("surface sdk requires sdk")
+        return self
+
+
+class Signal(_Closed):
+    status: HttpStatus | None = None
+    error_code: _pattern(r"^[A-Za-z0-9_.:-]{1,128}$") | None = None
+    error_string: Annotated[str, StringConstraints(min_length=1, max_length=512)] | None = None
+    normalized: Annotated[str, StringConstraints(min_length=1, max_length=512)] | None = None
+
+    @model_validator(mode="after")
+    def _not_empty(self) -> "Signal":
+        if not self.model_fields_set:
+            raise ValueError("signal needs at least one field")
+        return self
+
+
+class Dimensions(_Closed):
+    env: Env
+    plan: DimensionValue = "any"
+    region: DimensionValue = "any"
+    account_state: DimensionValue = "any"
+
+
+class Evidence(_Closed):
+    probe: ProbeId | None = None
+    first_seen: DateTime
+    last_confirmed: DateTime | None = None
+    confirmations: NonNegative | None = None
+    stale_counter: NonNegative | None = None
+    vantages: tuple[Slug, ...] | None = None
+    official_url: HttpsUrl | None = None
+    observations: NonNegative | None = None
+
+
+class HistoryEntry(_Closed):
+    date: Date
+    change: _pattern(r"^[a-z][a-z0-9_:.-]{0,63}$")
+    by: Author
+    previous_status: Status | None = None
+
+
+class Provenance(_Closed):
+    source: Source
+    author: Author
+    created: Date
+    history: tuple[HistoryEntry, ...] | None = None
+
+
+class Fact(_Closed):
+    id: FactId
+    service: Slug
+    kind: Kind
+    target: Target
+    signal: Signal | None = None
+    claim: Annotated[str, StringConstraints(min_length=1, max_length=300)]
+    dimensions: Dimensions
+    fixes: Annotated[tuple[Fix, ...], Field(min_length=1, max_length=3)]
+    status: Status
+    evidence: Evidence
+    provenance: Provenance
+
+    @model_validator(mode="after")
+    def _status_rules(self) -> "Fact":
+        env_of = {
+            Status.verified_server_prod: Env.prod,
+            Status.verified_server_sandbox: Env.sandbox,
+        }
+        if self.status in env_of and self.dimensions.env is not env_of[self.status]:
+            raise ValueError(f"status {self.status} needs dimensions.env {env_of[self.status]}")
+        if self.status in VERIFIED_STATUSES and self.evidence.probe is None:
+            raise ValueError(f"status {self.status} needs evidence.probe")
+        if self.status is Status.official and self.evidence.official_url is None:
+            raise ValueError("status official needs evidence.official_url")
+        return self
+
+
+class Template(_Closed):
+    method: HttpMethod
+    path: PathTemplate
+
+
+class HttpSurface(_Closed):
+    base_url: HttpsUrl
+    templates: Annotated[tuple[Template, ...], Field(min_length=1)]
+    signal_fields: tuple[_pattern(r"^[A-Za-z0-9_./-]{1,64}$"), ...] | None = None
+
+
+class SdkPackage(_Closed):
+    ecosystem: Ecosystem
+    package: Package
+
+
+class Surfaces(_Closed):
+    http: HttpSurface | None = None
+    sdk: Annotated[tuple[SdkPackage, ...], Field(min_length=1)] | None = None
+
+    @model_validator(mode="after")
+    def _not_empty(self) -> "Surfaces":
+        if not self.model_fields_set:
+            raise ValueError("surfaces needs at least one surface")
+        return self
+
+
+class EnvUrls(_Closed):
+    prod: HttpsUrl | None = None
+    sandbox: HttpsUrl | None = None
+
+    @model_validator(mode="after")
+    def _not_empty(self) -> "EnvUrls":
+        if not self.model_fields_set:
+            raise ValueError("dimensions.env needs at least one environment")
+        return self
+
+
+class ServiceDimensions(_Closed):
+    env: EnvUrls
+    account_state: tuple[DimensionValue, ...] | None = None
+
+
+class Auth(_Closed):
+    kind: Literal["none", "bearer", "basic", "header", "query"]
+    key_name: _pattern(r"^[a-z0-9][a-z0-9_-]{0,63}$") | None = None
+    env: Env | None = None
+    header_name: HeaderName | None = None
+    param_name: Identifier | None = None
+
+    @model_validator(mode="after")
+    def _kind_fields(self) -> "Auth":
+        if self.kind != "none" and (self.key_name is None or self.env is None):
+            raise ValueError(f"auth kind {self.kind} requires key_name and env")
+        if self.kind == "header" and self.header_name is None:
+            raise ValueError("auth kind header requires header_name")
+        if self.kind == "query" and self.param_name is None:
+            raise ValueError("auth kind query requires param_name")
+        return self
+
+
+class Tos(_Closed):
+    automated_access: Literal["allowed"]
+    publish_measurements: Literal["allowed"]
+    source: HttpsUrl
+
+
+class ProbeBudget(_Closed):
+    per_template_seconds: Annotated[StrictInt, Field(ge=300)] = 300
+
+
+class Service(_Closed):
+    key: Slug
+    name: Annotated[str, StringConstraints(min_length=1, max_length=100)]
+    hosts: Annotated[tuple[Hostname, ...], Field(min_length=1)]
+    surfaces: Surfaces
+    dimensions: ServiceDimensions
+    auth: Auth | None = None
+    tos: Tos
+    probe_budget: ProbeBudget = ProbeBudget()
+
+
+Scalar = Annotated[str, StringConstraints(max_length=1024)] | StrictInt | StrictFloat | StrictBool
+
+
+class HttpStep(_Closed):
+    do: Literal["http"]
+    method: HttpMethod
+    path: PathTemplate
+    query: dict[Identifier, Scalar] | None = None
+    form: dict[Identifier, Scalar] | None = None
+    json_body: dict | list | None = Field(default=None, alias="json")
+    headers: dict[HeaderName, Annotated[str, StringConstraints(max_length=1024)]] | None = None
+    auth: Literal["service", "none"] = "service"
+    expect_rate_limit: StrictBool | None = None
+
+
+class SleepStep(_Closed):
+    do: Literal["sleep"]
+    seconds: Annotated[Number, Field(gt=0, le=300)]
+
+
+Step = Annotated[HttpStep | SleepStep, Field(discriminator="do")]
+StepRef = Annotated[StrictInt, Field(ge=1)]
+
+
+class AssertStatus(_Closed):
+    step: StepRef
+    status: HttpStatus
+
+
+class _OneOperator(_Closed):
+    operators: ClassVar[tuple[str, ...]] = ()
+
+    @model_validator(mode="after")
+    def _exactly_one_operator(self):
+        given = [op for op in self.operators if op in self.model_fields_set]
+        if len(given) != 1:
+            raise ValueError(f"exactly one of {', '.join(self.operators)} is required")
+        return self
+
+
+class AssertHeader(_OneOperator):
+    operators = ("present", "equals", "matches")
+    step: StepRef
+    header: HeaderName
+    present: StrictBool | None = None
+    equals: Annotated[str, StringConstraints(max_length=1024)] | None = None
+    matches: Annotated[str, StringConstraints(max_length=256)] | None = None
+
+
+class AssertJsonPath(_OneOperator):
+    operators = ("equals", "contains", "exists")
+    step: StepRef
+    json_path: _pattern(r"^\$[^\s]{0,255}$")
+    equals: Scalar | None = None
+    contains: Annotated[str, StringConstraints(min_length=1, max_length=1024)] | None = None
+    exists: StrictBool | None = None
+
+
+class AssertBodyContains(_Closed):
+    step: StepRef
+    body_contains: Annotated[str, StringConstraints(min_length=1, max_length=1024)]
+
+
+class LatencyBound(_Closed):
+    lt: Annotated[StrictInt, Field(ge=1, le=60_000)]
+
+
+class AssertLatency(_Closed):
+    step: StepRef
+    latency_ms: LatencyBound
+
+
+class AssertSchemaFingerprint(_Closed):
+    step: StepRef
+    schema_fingerprint: Sha256
+
+
+Assertion = (
+    AssertStatus
+    | AssertHeader
+    | AssertJsonPath
+    | AssertBodyContains
+    | AssertLatency
+    | AssertSchemaFingerprint
+)
+
+
+class Probe(_Closed):
+    model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True)
+
+    id: ProbeId
+    service: Slug
+    env: Env
+    account_state: DimensionValue | None = None
+    steps: Annotated[tuple[Step, ...], Field(min_length=1, max_length=10)]
+    assertions: Annotated[tuple[Assertion, ...], Field(min_length=1, max_length=20)] = Field(
+        alias="assert"
+    )
+
+    @model_validator(mode="after")
+    def _prod_is_read_only(self) -> "Probe":
+        if self.env is Env.prod:
+            for step in self.steps:
+                if isinstance(step, HttpStep) and step.method not in ("GET", "HEAD"):
+                    raise ValueError("a probe with env prod may only use GET or HEAD")
+        return self
+
+
+class Observation(_Closed):
+    id: Annotated[StrictInt, Field(ge=1)]
+    received_at: DateTime
+    service: Slug
+    method: HttpMethod
+    path_template: PathTemplate
+    status: HttpStatus | None = None
+    error_hash: Sha256 | None = None
+    normalized_error: Annotated[str, StringConstraints(max_length=512)] | None = None
+    reporter_net: Sha256
+    reporter_ua_class: Literal["pytest-plugin", "jest-plugin", "mcp", "sdk", "other"]
+    sdk_package: Package | None = None
+    sdk_version: Version | None = None
+    env_guess: Env | None = None
+    vantage_country: _pattern(r"^[A-Z]{2}$") | None = None

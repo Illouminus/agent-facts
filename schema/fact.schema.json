@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facts.baillot.dev/schema/v0/fact.schema.json",
+  "title": "Fact",
+  "description": "facts/<service>/<slug>.yaml: one verified fact about a machine interface (docs/specs/01-fact-schema.md).",
+  "type": "object",
+  "required": ["id", "service", "kind", "target", "claim", "dimensions", "fixes", "status", "evidence", "provenance"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"$ref": "#/$defs/fact_id"},
+    "service": {"$ref": "#/$defs/slug"},
+    "kind": {
+      "enum": [
+        "error_meaning",
+        "rate_limit",
+        "breaking_change",
+        "silent_behavior",
+        "auth_quirk",
+        "pagination",
+        "sandbox_divergence",
+        "deprecation",
+        "availability",
+        "schema_drift",
+        "latency_profile"
+      ],
+      "x-error-codes": {"enum": "unknown_kind"}
+    },
+    "target": {"$ref": "#/$defs/target"},
+    "signal": {"$ref": "#/$defs/signal"},
+    "claim": {
+      "description": "One declarative sentence, no advice.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "x-error-codes": {"maxLength": "claim_too_long"}
+    },
+    "dimensions": {"$ref": "#/$defs/dimensions"},
+    "fixes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {"$ref": "fix.schema.json"},
+      "x-error-codes": {"minItems": "no_fix", "maxItems": "too_many_fixes"}
+    },
+    "status": {
+      "enum": [
+        "verified:server:prod",
+        "verified:server:sandbox",
+        "verified:client",
+        "reported",
+        "official",
+        "stale",
+        "retracted"
+      ]
+    },
+    "evidence": {"$ref": "#/$defs/evidence"},
+    "provenance": {"$ref": "#/$defs/provenance"}
+  },
+  "allOf": [
+    {
+      "if": {"required": ["status"], "properties": {"status": {"const": "verified:server:prod"}}},
+      "then": {"properties": {"dimensions": {"properties": {"env": {"const": "prod", "x-error-codes": {"const": "status_env_mismatch"}}}}}}
+    },
+    {
+      "if": {"required": ["status"], "properties": {"status": {"const": "verified:server:sandbox"}}},
+      "then": {"properties": {"dimensions": {"properties": {"env": {"const": "sandbox", "x-error-codes": {"const": "status_env_mismatch"}}}}}}
+    },
+    {
+      "if": {"required": ["status"], "properties": {"status": {"enum": ["verified:server:prod", "verified:server:sandbox", "verified:client"]}}},
+      "then": {"properties": {"evidence": {"required": ["probe"], "x-error-codes": {"required": "verified_needs_probe"}}}}
+    },
+    {
+      "if": {"required": ["status"], "properties": {"status": {"const": "official"}}},
+      "then": {"properties": {"evidence": {"required": ["official_url"], "x-error-codes": {"required": "official_needs_url"}}}}
+    }
+  ],
+  "$defs": {
+    "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}(?!\\n)$"},
+    "fact_id": {"type": "string", "pattern": "^af:[a-z0-9][a-z0-9-]{0,63}:[a-z0-9][a-z0-9-]{0,127}(?!\\n)$"},
+    "probe_id": {"type": "string", "pattern": "^af:[a-z0-9][a-z0-9-]{0,63}:probe:[a-z0-9][a-z0-9-]{0,127}(?!\\n)$"},
+    "dimension_value": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}(?!\\n)$"},
+    "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(?!\\n)$"},
+    "datetime": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})(?!\\n)$"
+    },
+    "author": {"type": "string", "pattern": "^(bot|producer:[a-z0-9][a-z0-9-]{0,63}|human:[A-Za-z0-9][A-Za-z0-9-]{0,38})(?!\\n)$"},
+    "target": {
+      "type": "object",
+      "required": ["surface"],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {"enum": ["http", "sdk", "cli"]},
+        "method": {"$ref": "fix.schema.json#/$defs/http_method"},
+        "path_template": {
+          "description": "Must be one of the service's registered templates (checked by agentfacts validate).",
+          "$ref": "fix.schema.json#/$defs/path_template"
+        },
+        "sdk": {
+          "type": "object",
+          "required": ["package", "ecosystem"],
+          "additionalProperties": false,
+          "properties": {
+            "package": {"$ref": "fix.schema.json#/$defs/package"},
+            "ecosystem": {"$ref": "fix.schema.json#/$defs/ecosystem"},
+            "versions": {"$ref": "fix.schema.json#/$defs/version_constraint"}
+          }
+        }
+      },
+      "allOf": [
+        {"if": {"required": ["surface"], "properties": {"surface": {"const": "http"}}}, "then": {"required": ["method", "path_template"]}},
+        {"if": {"required": ["surface"], "properties": {"surface": {"const": "sdk"}}}, "then": {"required": ["sdk"]}}
+      ]
+    },
+    "signal": {
+      "description": "What the agent observes. Strings are data, never instructions.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "status": {"type": "integer", "minimum": 100, "maximum": 599},
+        "error_code": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}(?!\\n)$"},
+        "error_string": {"type": "string", "minLength": 1, "maxLength": 512, "x-error-codes": {"maxLength": "error_string_too_long"}},
+        "normalized": {"type": "string", "minLength": 1, "maxLength": 512, "x-error-codes": {"maxLength": "error_string_too_long"}}
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "required": ["env"],
+      "additionalProperties": false,
+      "properties": {
+        "env": {"enum": ["prod", "sandbox"]},
+        "plan": {"$ref": "#/$defs/dimension_value", "default": "any"},
+        "region": {"$ref": "#/$defs/dimension_value", "default": "any"},
+        "account_state": {
+          "description": "`any` or one of the service's dimensions.account_state (checked by agentfacts validate).",
+          "$ref": "#/$defs/dimension_value",
+          "default": "any"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["first_seen"],
+      "additionalProperties": false,
+      "properties": {
+        "probe": {"$ref": "#/$defs/probe_id"},
+        "first_seen": {"$ref": "#/$defs/datetime"},
+        "last_confirmed": {"$ref": "#/$defs/datetime"},
+        "confirmations": {"type": "integer", "minimum": 0},
+        "stale_counter": {"type": "integer", "minimum": 0},
+        "vantages": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/slug"}},
+        "official_url": {"$ref": "fix.schema.json#/$defs/https_url"},
+        "observations": {"type": "integer", "minimum": 0}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source", "author", "created"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {"enum": ["probe", "observation_quorum", "producer", "manual"]},
+        "author": {"$ref": "#/$defs/author"},
+        "created": {"$ref": "#/$defs/date"},
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "change", "by"],
+            "additionalProperties": false,
+            "properties": {
+              "date": {"$ref": "#/$defs/date"},
+              "change": {"type": "string", "pattern": "^[a-z][a-z0-9_:.-]{0,63}(?!\\n)$"},
+              "by": {"$ref": "#/$defs/author"},
+              "previous_status": {"$ref": "#/properties/status"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

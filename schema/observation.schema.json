@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facts.baillot.dev/schema/v0/observation.schema.json",
+  "title": "Observation",
+  "description": "One row of observations.sqlite (never in git). Normalized fields only: no bodies, headers, query strings or raw IPs (docs/specs/01-fact-schema.md, 03-check-contract.md).",
+  "type": "object",
+  "required": ["id", "received_at", "service", "method", "path_template", "reporter_net", "reporter_ua_class"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "integer", "minimum": 1},
+    "received_at": {"$ref": "fact.schema.json#/$defs/datetime"},
+    "service": {"$ref": "fact.schema.json#/$defs/slug"},
+    "method": {"$ref": "fix.schema.json#/$defs/http_method"},
+    "path_template": {"$ref": "fix.schema.json#/$defs/path_template"},
+    "status": {"type": ["integer", "null"], "minimum": 100, "maximum": 599},
+    "error_hash": {"description": "sha256 (hex) of normalized_error.", "type": ["string", "null"], "pattern": "^[0-9a-f]{64}(?!\\n)$"},
+    "normalized_error": {"type": ["string", "null"], "maxLength": 512},
+    "reporter_net": {"description": "sha256 (hex) of daily salt ‖ reporter /16.", "type": "string", "pattern": "^[0-9a-f]{64}(?!\\n)$"},
+    "reporter_ua_class": {"enum": ["pytest-plugin", "jest-plugin", "mcp", "sdk", "other"]},
+    "sdk_package": {"anyOf": [{"$ref": "fix.schema.json#/$defs/package"}, {"type": "null"}]},
+    "sdk_version": {"anyOf": [{"$ref": "fix.schema.json#/$defs/version"}, {"type": "null"}]},
+    "env_guess": {"enum": ["prod", "sandbox", null]},
+    "vantage_country": {"type": ["string", "null"], "pattern": "^[A-Z]{2}(?!\\n)$"}
+  }
+}

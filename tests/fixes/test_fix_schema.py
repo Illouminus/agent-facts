@@ -56,6 +56,16 @@ REJECTED = {
         "path_template": "v1/customers",
     },
     "attempts_zero": {"action": "retry_after_header", "unit": "s", "max_attempts": 0},
+    "header_trailing_newline": {
+        "action": "set_header",
+        "name": "Idempotency-Key\n",
+        "value_source": "new_uuid_per_request",
+    },
+    "value_source_trailing_newline": {
+        "action": "set_header",
+        "name": "Idempotency-Key",
+        "value_source": "new_uuid_per_request\n",
+    },
 }
 
 
