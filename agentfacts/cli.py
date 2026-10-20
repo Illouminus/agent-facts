@@ -7,6 +7,7 @@ from typing import Annotated
 import typer
 
 from agentfacts import __version__, cli_check
+from agentfacts.bot.cli import app as bot_app
 from agentfacts.pages.cli import app as pages_app
 from agentfacts.probe.cli import app as probe_app
 from agentfacts.quorum.cli import app as quorum_app
@@ -23,6 +24,7 @@ app.add_typer(pages_app, name="pages")
 app.command("check")(cli_check.check)
 app.add_typer(probe_app, name="probe")
 app.add_typer(quorum_app, name="quorum")
+app.add_typer(bot_app, name="bot")
 
 
 @app.callback()
