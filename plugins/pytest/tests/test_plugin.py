@@ -115,6 +115,23 @@ def test_httpx_error_prints_known_facts(pytester, serve_check):
     result.stdout.fnmatch_lines(SECTION)
 
 
+def test_url_with_path_but_no_method_sends_nothing(pytester, serve_check):
+    server = serve_check()
+    pytester.makepyfile(
+        """
+        import types
+
+        def test_sdk():
+            exc = Exception("bad request")
+            exc.status_code = 400
+            exc.request = types.SimpleNamespace(url="https://api.stripe.com/v1/payment_intents")
+            raise exc
+        """
+    )
+    assert_untouched(pytester.runpytest())
+    assert requests_to(server, "/v0/check") == []
+
+
 def test_passing_tests_send_nothing(pytester, serve_check):
     server = serve_check()
     pytester.makepyfile("def test_ok():\n    assert True\n")

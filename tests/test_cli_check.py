@@ -71,7 +71,7 @@ def test_check_prints_the_section(server, tmp_path):
 def test_check_body_from_stdin(server):
     server.expect_request("/v0/check").respond_with_json(answer())
     result = runner.invoke(
-        app, ["check", URL, "--status", "400", "--body", "-"], input="rate limited\n"
+        app, ["check", URL, "-X", "POST", "--status", "400", "--body", "-"], input="rate limited\n"
     )
     assert result.exit_code == 0, result.output
     assert posted(server).get_json()["error"] == {"status": 400, "body_excerpt": "rate limited\n"}
@@ -79,14 +79,16 @@ def test_check_body_from_stdin(server):
 
 def test_non_utf8_stdin_body_is_an_excerpt(server):
     server.expect_request("/v0/check").respond_with_json(answer())
-    result = runner.invoke(app, ["check", URL, "--body", "-"], input=b"erreur \xe9chou\xe9e")
+    result = runner.invoke(
+        app, ["check", URL, "-X", "POST", "--body", "-"], input=b"erreur \xe9chou\xe9e"
+    )
     assert result.exit_code == 0, result.output
     assert posted(server).get_json()["error"]["body_excerpt"] == "erreur \ufffdchou\ufffde"
 
 
 def test_json_prints_the_raw_answer(server):
     server.expect_request("/v0/check").respond_with_json(answer())
-    result = runner.invoke(app, ["check", URL, "--json"])
+    result = runner.invoke(app, ["check", URL, "-X", "POST", "--json"])
     assert result.exit_code == 0
     assert json.loads(result.stdout) == answer()
 
@@ -109,9 +111,10 @@ def test_locators_and_hosts_are_sent_verbatim(server, target):
         ["ftp://api.stripe.com/x"],
         [URL, "-X", "BREW"],
         [URL, "--status", "42"],
-        [URL, "--body", "/nonexistent/body.txt"],
+        [URL, "-X", "POST", "--body", "/nonexistent/body.txt"],
+        [URL, "--status", "400"],
     ],
-    ids=["not-a-target", "ftp", "method", "status", "body-file"],
+    ids=["not-a-target", "ftp", "method", "status", "body-file", "no-method-for-path"],
 )
 def test_usage_errors_exit_2_and_send_nothing(server, args):
     result = runner.invoke(app, ["check", *args])
@@ -121,15 +124,15 @@ def test_usage_errors_exit_2_and_send_nothing(server, args):
 
 def test_unreachable_registry_exits_1(env):
     env.setenv("AGENTFACTS_ENDPOINT", "http://127.0.0.1:9")
-    result = runner.invoke(app, ["check", URL, "--status", "400"])
+    result = runner.invoke(app, ["check", URL, "-X", "POST", "--status", "400"])
     assert result.exit_code == 1
-    assert result.stderr.startswith("error: registry unreachable")
+    assert result.stderr.startswith("error: registry did not answer")
 
 
 def test_disabled_refuses_the_network(server, env):
     server.expect_request("/v0/check").respond_with_json(answer())
     env.setenv("AGENTFACTS_DISABLE", "1")
-    result = runner.invoke(app, ["check", URL])
+    result = runner.invoke(app, ["check", URL, "-X", "POST"])
     assert result.exit_code == 1
     assert "AGENTFACTS_DISABLE" in result.stderr
     assert server.log == []

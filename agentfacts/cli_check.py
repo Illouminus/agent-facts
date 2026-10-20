@@ -1,8 +1,8 @@
 """`agentfacts check <url-or-locator>`: the plugin's "Known facts" section for humans and agents.
 
 Same request filters as the plugin (query, credentials and secrets never leave), but no host gate:
-the user asked explicitly. Exit codes: 0 answered (with or without facts), 1 registry unreachable
-or disabled, 2 usage error.
+the user asked explicitly. Exit codes: 0 answered (with or without facts), 1 no answer from the
+registry or disabled, 2 usage error.
 """
 
 import json
@@ -74,6 +74,8 @@ def check(
     signal = make_signal(target, method=method, status=status, body=text)
     if signal is None:
         raise _fail(f"not an http(s) URL, a host or a pypi:/npm: locator: {target!r}", EXIT_USAGE)
+    if not signal.complete:
+        raise _fail("a URL with a path needs --method/-X", EXIT_USAGE)
 
     settings = Settings.from_env()
     if settings.disabled and not offline:
@@ -82,7 +84,7 @@ def check(
     result = client.check(signal.payload())
     if result is None:
         raise _fail(
-            f"registry unreachable at {settings.endpoint}: {client.last_error}", EXIT_UNREACHABLE
+            f"registry did not answer at {settings.endpoint}: {client.last_error}", EXIT_UNREACHABLE
         )
 
     if json_out:

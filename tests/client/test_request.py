@@ -274,3 +274,10 @@ def test_ordinary_text_after_a_url_is_kept():
 def test_kept_path_segments_are_sent_as_encoded():
     url = "https://api.example.org/v1/files/a%2Fb/x%20y"
     assert scrub_url(url) == url
+
+
+def test_complete_needs_a_method_only_for_a_path():
+    assert not make_signal("https://api.stripe.com/v1/charges").complete
+    assert make_signal("https://api.stripe.com/v1/charges", method="GET").complete
+    assert make_signal("https://api.stripe.com").complete
+    assert make_signal("pypi:stripe@12.1.0").complete

@@ -37,7 +37,7 @@ def pytest_configure(config: pytest.Config) -> None:
 
 def annotate(report: pytest.TestReport, exc: BaseException, client: Client) -> None:
     signal = signal_from_exception(exc)
-    if signal is None:
+    if signal is None or not signal.complete:
         return
     host = client.registered_host(signal.host)
     if host is None:

@@ -199,6 +199,13 @@ class Signal:
             return urlsplit(self.url).hostname
         return None if _LOCATOR.match(self.url) else self.url
 
+    @property
+    def complete(self) -> bool:
+        """False for a URL with a path but no method: the server refuses those (spec 03)."""
+        if self.method is not None or "://" not in self.url:
+            return True  # bare hosts and locators need no method
+        return urlsplit(self.url).path in ("", "/")
+
     def with_host(self, host: str) -> "Signal":
         parts = urlsplit(self.url)
         return replace(self, url=urlunsplit((parts.scheme, host, parts.path, "", "")))
