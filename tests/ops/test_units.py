@@ -72,10 +72,11 @@ def test_digest_service_runs_ops_digest():
     assert service["ExecStart"] == f"{APP}/.venv/bin/python {APP}/ops/digest.py --root {APP}"
 
 
-@pytest.mark.parametrize("name", ["agentfacts-quorum.service", "agentfacts-quorum.timer"])
-def test_quorum_is_prepared_but_marked_not_enabled(name):
-    text = (UNITS / name).read_text(encoding="utf-8")
-    assert "NOT ENABLED" in text
+def test_quorum_service_puts_user_local_bin_on_path():
+    # systemd user units get a minimal PATH; gh lives in ~/.local/bin on illouminus (2026-10-20)
+    text = (UNITS / "agentfacts-quorum.service").read_text(encoding="utf-8")
+    assert "Environment=PATH=%h/.local/bin:" in text
+    assert "NOT ENABLED" not in text
 
 
 def test_quorum_service_reads_the_api_database():

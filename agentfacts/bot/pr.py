@@ -44,7 +44,9 @@ Gh = Callable[[Sequence[str]], str]
 GH_FALLBACKS = ("~/.local/bin/gh", "/usr/local/bin/gh", "/snap/bin/gh", "/opt/homebrew/bin/gh")
 
 
-def find_gh(environ: Mapping[str, str] | None = None) -> str:
+def find_gh(
+    environ: Mapping[str, str] | None = None, fallbacks: Sequence[str] = GH_FALLBACKS
+) -> str:
     """Path to the `gh` binary: `AGENTFACTS_GH`, then PATH, then the usual per-user and system
     locations. systemd user units run with a minimal PATH that lacks ~/.local/bin, where gh lives
     on illouminus (quorum service failed with FileNotFoundError on 2026-10-20)."""
@@ -54,7 +56,7 @@ def find_gh(environ: Mapping[str, str] | None = None) -> str:
     if found := shutil.which("gh", path=env.get("PATH")):
         return found
     home = env.get("HOME") or str(Path.home())
-    for candidate in GH_FALLBACKS:
+    for candidate in fallbacks:
         path = Path(candidate.replace("~", home, 1))
         if path.is_file() and os.access(path, os.X_OK):
             return str(path)
