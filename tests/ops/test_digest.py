@@ -195,9 +195,10 @@ def test_missing_db_reads_as_unavailable(tmp_path):
 # ── publications ───────────────────────────────────────────────────────────────────────────────
 
 
-def test_repository_policy_draft_is_not_approved_and_loads():
+def test_repository_policy_is_approved_and_loads():
+    # approved by Edouard on 2026-10-20 (D-086); the publish button still does not exist
     policy = digest.load_policy(REPO / "ops" / "publish-policy.yaml")
-    assert policy.approved is False
+    assert policy.approved is True
     assert "stripe" in policy.vendors
 
 
@@ -268,7 +269,7 @@ def test_report_is_markdown_with_every_section(week):
     assert "af:stripe:reported-b" in text
     assert "api.notion.com 2" in text
     assert "stripe-test" in text
-    assert "политика не утверждена" in text
+    assert "политика утверждена, кандидатов 1 (кнопка ещё не подключена)" in text
 
 
 def test_report_is_deterministic(registry, week):
@@ -289,8 +290,8 @@ def test_ping_is_5_to_8_lines_with_the_report_link(week):
         in lines
     assert "пробы: 1 прогонов (1 pass) · нарушений бюджета 0 · ключей нет: stripe-test" in lines
     assert "нужна проба: 1 reported без пробы" in lines
-    assert "публикации: политика не утверждена, кандидатов 1" in lines
-    assert "✅" not in text  # no publish button before the policy is approved
+    assert "публикации: политика утверждена, кандидатов 1 (кнопка ещё не подключена)" in lines
+    assert "✅" not in text  # the publish button is not wired yet (Telegram gateway card)
 
 
 def test_current_window_is_labelled_incomplete(registry):
