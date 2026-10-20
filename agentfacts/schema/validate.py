@@ -364,3 +364,15 @@ def _probe_checks(doc: _Doc, registry: Registry) -> list[Problem]:
 
 
 _CROSS_CHECKS = {"service": _service_checks, "fact": _fact_checks, "probe": _probe_checks}
+
+
+def fix_problems(fix: Any, label: Path = Path("<fix>")) -> list[Problem]:
+    """Schema problems of one standalone fix (no service context), for `agentfacts render-fix`."""
+    problems = []
+    for error in validator_for("fix").iter_errors(fix):
+        annotations = (
+            error.schema.get("x-error-codes", {}) if isinstance(error.schema, Mapping) else {}
+        )
+        code = annotations.get(error.validator, "fix_invalid")
+        problems.append(Problem(label, 1, code, _clip(_schema_message(error))))
+    return sorted(problems)
