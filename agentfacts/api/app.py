@@ -322,6 +322,21 @@ async def _on_http(request: Request, exc: StarletteHTTPException) -> JSONRespons
     return JSONResponse(body, status_code=exc.status_code, headers=exc.headers)
 
 
+def _without_422(default: Callable[[], dict[str, Any]]) -> Callable[[], dict[str, Any]]:
+    """Validation errors are answered 400 with the error envelope, never FastAPI's 422."""
+
+    def openapi() -> dict[str, Any]:
+        schema = default()
+        for operations in schema.get("paths", {}).values():
+            for operation in operations.values():
+                operation.get("responses", {}).pop("422", None)
+        for name in ("HTTPValidationError", "ValidationError"):
+            schema.get("components", {}).get("schemas", {}).pop(name, None)
+        return schema
+
+    return openapi
+
+
 # ── factory ─────────────────────────────────────────────────────────────────────────────────────
 
 _ERRORS = {status: {"model": ErrorResponse} for status in (400, 413, 429)}
@@ -377,6 +392,7 @@ def create_app(
     )
     app.add_exception_handler(RequestValidationError, _on_validation)
     app.add_exception_handler(StarletteHTTPException, _on_http)
+    app.openapi = _without_422(app.openapi)
 
     @app.post(CHECK_PATH, response_model=CheckResponse, responses=_ERRORS)
     def check(req: CheckRequest, request: Request) -> Response:
