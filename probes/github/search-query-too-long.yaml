@@ -1,0 +1,15 @@
+id: af:github:probe:search-query-too-long
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /search/repositories, query: {q: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}
+assert:
+  - {step: 1, status: 422}
+  - {step: 1, json_path: $.message, equals: Validation Failed}
+  - {step: 1, json_path: "$.errors[0].message", equals: "The search is longer than 256 characters."}
+  - {step: 1, json_path: "$.errors[0].field", equals: q}
+  - {step: 1, json_path: "$.errors[0].code", equals: invalid}
+  - {step: 1, json_path: $.status, equals: "422"}
+  - {step: 1, header: X-RateLimit-Resource, equals: search}
+  - {step: 1, header: X-RateLimit-Limit, equals: "10"}

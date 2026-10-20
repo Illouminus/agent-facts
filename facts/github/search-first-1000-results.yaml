@@ -1,0 +1,31 @@
+id: af:github:search-first-1000-results
+service: github
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: /search/repositories
+signal:
+  status: 422
+  error_string: "Only the first 1000 search results are available"
+  normalized: "only the first #### search results are available"
+claim: "Search returns at most 1,000 results per query: a page past them (per_page 100, page 11) returns HTTP 422 Only the first 1000 search results are available."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:search-beyond-1000
+  first_seen: 2026-10-20T08:59:23Z
+  confirmations: 1
+  official_url: https://docs.github.com/en/rest/search/search#about-search
+  last_confirmed: 2026-10-20T08:59:23Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

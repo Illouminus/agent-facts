@@ -1,0 +1,26 @@
+id: af:github:anonymous-repo-has-no-permissions
+service: github
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+claim: "An anonymous GET /repos/{owner}/{repo} returns the repository object without a permissions field."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: request_scope, scope: public_repo}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:repo-anonymous
+  first_seen: 2026-10-20T08:59:22Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T08:59:22Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

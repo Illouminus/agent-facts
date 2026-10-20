@@ -1,0 +1,10 @@
+id: af:github:probe:repo-not-found
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/agent-facts-probe-no-such-repo}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.message, equals: Not Found}
+  - {step: 1, json_path: $.status, equals: "404"}

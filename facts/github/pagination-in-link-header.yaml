@@ -1,0 +1,27 @@
+id: af:github:pagination-in-link-header
+service: github
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: "/users/{username}/followers"
+claim: "List endpoints such as GET /users/{username}/followers return a bare JSON array and give the next and last page URLs only in the Link header (rel=\"next\", rel=\"last\")."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: paginate_with, cursor_field: link, param_name: page, page_size_max: 100}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:followers-per-page-cap
+  first_seen: 2026-10-20T08:59:21Z
+  confirmations: 1
+  official_url: https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api#using-link-headers
+  last_confirmed: 2026-10-20T08:59:21Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

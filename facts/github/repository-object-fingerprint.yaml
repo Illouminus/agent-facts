@@ -1,0 +1,26 @@
+id: af:github:repository-object-fingerprint
+service: github
+kind: schema_drift
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+claim: "On 2026-10-20 the repository object of GET /repos/{owner}/{repo} at API version 2022-11-28 had 84 top-level keys, schema fingerprint 4ca5975282230619."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: X-GitHub-Api-Version, value_source: "literal:2022-11-28"}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:repo-schema-fingerprint
+  first_seen: 2026-10-20T08:59:23Z
+  confirmations: 1
+  last_confirmed: 2026-10-20T08:59:23Z
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

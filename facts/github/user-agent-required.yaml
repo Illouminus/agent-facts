@@ -1,0 +1,24 @@
+id: af:github:user-agent-required
+service: github
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+signal:
+  status: 403
+claim: "REST API requests without a User-Agent header are rejected, and a request with an invalid User-Agent header receives HTTP 403 Forbidden."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: set_header, name: User-Agent, value_source: "account_setting:github_username"}
+status: official
+evidence:
+  first_seen: 2026-10-20T08:50:00Z
+  official_url: https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#user-agent
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]

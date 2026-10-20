@@ -1,0 +1,11 @@
+# A trailing slash is a different path: 404 with a plain-text body (did not count against core on 2026-10-20).
+id: af:github:probe:trailing-slash
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /rate_limit/}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, header: Content-Type, matches: "^text/plain"}
+  - {step: 1, body_contains: 404 Not Found}

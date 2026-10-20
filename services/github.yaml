@@ -1,0 +1,44 @@
+# GitHub REST API, anonymous only (wave 1 seed, keyless). Probes send no token, so every probe is
+# account_state anonymous and counts against the 60 requests/hour core limit of the runner's IP.
+key: github
+name: GitHub REST API
+hosts: [api.github.com]
+doc_hosts: [docs.github.com]
+surfaces:
+  http:
+    base_url: https://api.github.com
+    templates:
+      - {method: GET, path: /rate_limit}
+      - {method: GET, path: /rate_limit/}
+      - {method: DELETE, path: /rate_limit}
+      - {method: GET, path: "/repos/{owner}/{repo}"}
+      - {method: GET, path: "/repositories/{id}"}
+      - {method: GET, path: /search/repositories}
+      - {method: GET, path: "/users/{username}/followers"}
+    signal_fields:
+      - status
+      - message
+      - documentation_url
+      - errors.message
+      - errors.code
+      - errors.field
+      - errors.resource
+      - x-ratelimit-limit
+      - x-ratelimit-remaining
+      - x-ratelimit-used
+      - x-ratelimit-reset
+      - x-ratelimit-resource
+      - retry-after
+      - x-github-api-version-selected
+      - location
+      - link
+dimensions:
+  env: {prod: https://api.github.com}
+  account_state: [anonymous]
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service#h-api-terms
+# 60 anonymous requests/hour per IP: one run per template per 30 min keeps a full sweep < 20/hour.
+probe_budget: {per_template_seconds: 1800}

@@ -1,0 +1,17 @@
+# Breaking change of API version 2026-03-10: has_downloads removed from the repository object.
+# The cb1/cb2 query parameters are cache busters: the shared 60 s cache of this URL does not vary
+# on X-GitHub-Api-Version, so without them a step can get another version's cached body.
+id: af:github:probe:repo-api-version-2026
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World, query: {cb1: "{{run_uuid}}"}}
+  - {do: http, method: GET, path: /repos/octocat/Hello-World, query: {cb2: "{{run_uuid}}"}, headers: {X-GitHub-Api-Version: "2026-03-10"}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, header: X-GitHub-Api-Version-Selected, equals: "2022-11-28"}
+  - {step: 1, json_path: $.has_downloads, exists: true}
+  - {step: 2, status: 200}
+  - {step: 2, header: X-GitHub-Api-Version-Selected, equals: "2026-03-10"}
+  - {step: 2, json_path: $.has_downloads, exists: false}

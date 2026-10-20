@@ -1,0 +1,11 @@
+# twitter/bootstrap moved to twbs/bootstrap (repository id 2126244); the runner never follows redirects.
+id: af:github:probe:repo-renamed
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/twitter/bootstrap}
+assert:
+  - {step: 1, status: 301}
+  - {step: 1, header: Location, equals: "https://api.github.com/repositories/2126244"}
+  - {step: 1, json_path: $.message, equals: Moved Permanently}

@@ -1,0 +1,18 @@
+id: af:github:probe:repo-anonymous
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, header: X-RateLimit-Limit, equals: "60"}
+  - {step: 1, header: X-RateLimit-Resource, equals: core}
+  - {step: 1, header: X-RateLimit-Remaining, present: true}
+  - {step: 1, header: X-RateLimit-Used, present: true}
+  - {step: 1, header: X-RateLimit-Reset, matches: "^[0-9]{10}$"}
+  - {step: 1, header: X-GitHub-Api-Version-Selected, present: true}
+  - {step: 1, header: Cache-Control, equals: "public, max-age=60, s-maxage=60"}
+  - {step: 1, header: Vary, matches: "^(?![\\s\\S]*(?i:x-github-api-version))"}
+  - {step: 1, json_path: $.full_name, equals: octocat/Hello-World}
+  - {step: 1, json_path: $.permissions, exists: false}

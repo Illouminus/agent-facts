@@ -1,0 +1,22 @@
+id: af:github:default-api-version-end-of-support
+service: github
+kind: deprecation
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}"
+claim: "Requests without X-GitHub-Api-Version use version 2022-11-28, supported until 2028-03-10; after that, unversioned requests move to the next oldest supported version."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: set_header, name: X-GitHub-Api-Version, value_source: "literal:2026-03-10"}
+status: official
+evidence:
+  first_seen: 2026-10-20T08:50:00Z
+  official_url: https://docs.github.com/en/rest/about-the-rest-api/api-versions#supported-api-versions
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-20
+  history: [{date: 2026-10-20, change: created, by: bot}]
