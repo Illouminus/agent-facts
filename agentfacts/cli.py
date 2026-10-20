@@ -7,6 +7,7 @@ from typing import Annotated
 import typer
 
 from agentfacts import __version__
+from agentfacts.pages.cli import app as pages_app
 
 app = typer.Typer(
     help="agent-facts: verified facts about machine interfaces for AI agents.",
@@ -15,6 +16,8 @@ app = typer.Typer(
 )
 
 EXIT_OK, EXIT_INVALID, EXIT_USAGE = 0, 1, 2
+
+app.add_typer(pages_app, name="pages")
 
 
 @app.callback()
