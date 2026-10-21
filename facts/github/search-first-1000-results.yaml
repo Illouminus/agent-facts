@@ -22,7 +22,7 @@ evidence:
   confirmations: 12
   official_url: https://docs.github.com/en/rest/search/search#about-search
   last_confirmed: 2026-10-21T04:16:17Z
-  stale_counter: 0
+  stale_counter: 1
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
