@@ -19,8 +19,8 @@ status: verified:server:prod
 evidence:
   probe: af:pypi:probe:simple-not-found
   first_seen: 2026-10-20T09:06:08Z
-  confirmations: 24
-  last_confirmed: 2026-10-21T19:31:18Z
+  confirmations: 25
+  last_confirmed: 2026-10-21T21:00:18Z
   stale_counter: 0
   vantages: [mac-dev, illouminus]
 provenance:
