@@ -19,10 +19,10 @@ status: verified:server:prod
 evidence:
   probe: af:github:probe:search-beyond-1000
   first_seen: 2026-10-20T09:01:23Z
-  confirmations: 12
+  confirmations: 13
   official_url: https://docs.github.com/en/rest/search/search#about-search
-  last_confirmed: 2026-10-21T04:16:17Z
-  stale_counter: 1
+  last_confirmed: 2026-10-21T07:16:01Z
+  stale_counter: 0
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
