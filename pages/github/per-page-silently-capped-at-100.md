@@ -2,7 +2,7 @@
 
 **GitHub REST API · GET /users/{username}/followers**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-22 · 67 confirmations from 2 vantages
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-22 · 69 confirmations from 2 vantages
 
 ## What to do
 
