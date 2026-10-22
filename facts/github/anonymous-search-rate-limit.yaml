@@ -18,7 +18,7 @@ evidence:
   confirmations: 29
   official_url: https://docs.github.com/en/rest/search/search#rate-limit
   last_confirmed: 2026-10-22T05:46:17Z
-  stale_counter: 0
+  stale_counter: 1
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe

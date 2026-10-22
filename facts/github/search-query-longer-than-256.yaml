@@ -22,7 +22,7 @@ evidence:
   first_seen: 2026-10-20T09:01:24Z
   confirmations: 29
   last_confirmed: 2026-10-22T05:46:17Z
-  stale_counter: 0
+  stale_counter: 1
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
