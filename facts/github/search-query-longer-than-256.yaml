@@ -20,8 +20,8 @@ status: verified:server:prod
 evidence:
   probe: af:github:probe:search-query-too-long
   first_seen: 2026-10-20T09:01:24Z
-  confirmations: 38
-  last_confirmed: 2026-10-22T22:00:17Z
+  confirmations: 39
+  last_confirmed: 2026-10-22T23:15:17Z
   stale_counter: 0
   vantages: [mac-dev, illouminus]
 provenance:
