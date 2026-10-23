@@ -20,8 +20,8 @@ status: verified:server:prod
 evidence:
   probe: af:solana:probe:multiple-accounts-limit
   first_seen: 2026-10-20T09:15:16Z
-  confirmations: 29
-  last_confirmed: 2026-10-22T23:00:17Z
+  confirmations: 30
+  last_confirmed: 2026-10-23T01:00:17Z
   stale_counter: 0
   vantages: [mac-dev, illouminus]
 provenance:
