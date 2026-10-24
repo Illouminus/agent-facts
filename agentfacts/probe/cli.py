@@ -97,6 +97,9 @@ def run(
     writes a fact file only on a status change or a new vantage; --refresh-evidence writes the
     counters (spec 04)."""
     if refresh:
+        if run_all:
+            typer.echo("error: --refresh-evidence runs no probe; run --all separately", err=True)
+            raise typer.Exit(EXIT_USAGE)
         _refresh(root, state_dir or root / "var", dry_run)
     try:
         options = TickOptions(run_all=run_all, max_probes=max_probes, max_requests=max_requests,

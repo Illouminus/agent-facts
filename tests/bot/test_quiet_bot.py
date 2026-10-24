@@ -113,7 +113,7 @@ def test_daily_refresh_opens_one_pr_a_day(world):
     world.tick()
     world.refresh()
     again = world.publish()
-    assert (again.action, again.detail) == ("holding", "today's evidence PR is already open")
+    assert (again.action, again.detail) == ("holding", "today's evidence PR was already opened")
     assert len(world.pr_titles()) == 1
     tomorrow = world.publish(today=TODAY + timedelta(days=1))
     assert tomorrow.action == "opened" and len(world.pr_titles()) == 2
@@ -145,3 +145,16 @@ def test_substance_change_carries_the_counters_along(world):
     assert report.action == "opened"
     assert world.pr_titles() == ["facts: 2 fact files (2026-10-21)"]
     assert {SANDBOX, "facts/stripe/second.yaml"} <= set(world.repo.files_in(report.branch))
+
+
+def test_unwritable_bot_state_still_reports_the_opened_pr(world, monkeypatch):
+    import agentfacts.bot.pr as pr
+
+    def boom(*args):
+        raise OSError("read-only file system")
+
+    world.tick()
+    world.refresh()
+    monkeypatch.setattr(pr, "_remember_evidence_pr", boom)
+    report = world.publish()
+    assert report.action == "opened" and report.detail.startswith("bot state not saved")

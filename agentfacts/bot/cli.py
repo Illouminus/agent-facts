@@ -64,7 +64,8 @@ def publish(
         "waiting": f"waiting: {report.detail}; changes stay for the next run",
         "would-open": f"dry run: would open {report.branch}",
         "opened": f"opened {report.url} on {report.branch}"
-        + (" (auto-merge on)" if report.auto else " (needs review)"),
+        + (" (auto-merge on)" if report.auto else " (needs review)")
+        + (f"; {report.detail}" if report.detail else ""),
         "refused": f"refused: {report.detail}",
     }[report.action]
     typer.echo(summary, err=True)

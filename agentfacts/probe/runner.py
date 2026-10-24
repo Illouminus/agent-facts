@@ -69,6 +69,9 @@ STATE_FILE = "probe-state.sqlite"
 RESULTS_FILE = "results.jsonl"
 LOCK_FILE = "probe.lock"
 REFRESH_MARKER = "evidence-refresh.json"  # read by the bot: counters may go out (spec 05)
+# The 03:00 refresh meets the 03:00 tick most nights: wait for it, up to a tick's own timeout
+# (agentfacts-probe.service TimeoutStartSec=840), instead of skipping the day.
+REFRESH_LOCK_WAIT_S = 840
 DEFAULT_VANTAGE = "illouminus"
 KILL_FILE = Path("ops") / "KILL"
 _VANTAGE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
@@ -455,16 +458,22 @@ def _count_key(outcome: str) -> str:
 
 
 @contextmanager
-def _tick_lock(state_dir: Path) -> Iterator[bool]:
+def _tick_lock(state_dir: Path, wait_s: float = 0) -> Iterator[bool]:
     """One tick at a time per state dir: two overlapping ticks would both see the same probes due
-    (double requests, invariant 6) and race on the same fact files. False = another tick runs."""
+    (double requests, invariant 6) and race on the same fact files. False = another tick still
+    runs after `wait_s` seconds (a tick does not wait; the refresh does)."""
     state_dir.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + wait_s
     with (state_dir / LOCK_FILE).open("a") as fh:
-        try:
-            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            yield False
-            return
+        while True:
+            try:
+                fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    yield False
+                    return
+                time.sleep(min(1.0, wait_s / 10))
         try:
             yield True
         finally:
@@ -529,7 +538,9 @@ class RefreshReport:
         return not self.problems
 
 
-def _write_marker(path: Path, data: dict[str, Any]) -> None:
+def write_json_atomic(path: Path, data: dict[str, Any]) -> None:
+    """Small state files in the state dir (refresh marker, bot state): never half-written."""
+    path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
@@ -548,17 +559,19 @@ def refresh_evidence(
     dry_run: bool = False,
     clock: Callable[[], datetime] = _utcnow,
     environ: Mapping[str, str] | None = None,
+    lock_wait_s: float = REFRESH_LOCK_WAIT_S,
 ) -> RefreshReport:
     """`probe run --refresh-evidence` (daily timer): write the ledger's counters into the fact
     files, clear them, and leave `<state-dir>/evidence-refresh.json` so the bot may open the day's
-    evidence PR. Holds the tick lock (it writes facts/ like a tick). An id that no fact carries
-    any more (deleted or unreadable file) loses its pending counters: at most a day's."""
+    evidence PR. Holds the tick lock (it writes facts/ like a tick), waiting up to `lock_wait_s`
+    for a running tick. An id that no fact carries any more (deleted or unreadable file) loses its
+    pending counters: at most a day's."""
     environ = os.environ if environ is None else environ
     report = RefreshReport()
     if reason := kill_reason(root, environ):
         report.killed = reason
         return report
-    with nullcontext(True) if dry_run else _tick_lock(state_dir) as locked:
+    with nullcontext(True) if dry_run else _tick_lock(state_dir, lock_wait_s) as locked:
         if not locked:
             report.busy = True
             return report
@@ -581,8 +594,8 @@ def refresh_evidence(
                             path, 1, "fact_not_updated", f"{fact_id}: pending evidence kept"))
         if not dry_run:
             report.marker = state_dir / REFRESH_MARKER
-            _write_marker(report.marker, {"refreshed": rfc3339(clock()),
-                                          "written": report.changes["refreshed"]})
+            write_json_atomic(report.marker, {"refreshed": rfc3339(clock()),
+                                              "written": report.changes["refreshed"]})
     return report
 
 

@@ -177,3 +177,12 @@ def test_unknown_prev_is_an_error_and_writes_nothing(registry, state):
     before = state.journal.read_text(encoding="utf-8")
     assert deploy_range(registry, state, "f" * 40, c1) == 1
     assert state.journal.read_text(encoding="utf-8") == before
+
+
+def test_broken_yaml_on_main_is_a_journal_error(registry, state, capsys):
+    registry.fact("one")
+    c1 = commit_all(registry.root, "c1")
+    (registry.root / "facts" / "stripe" / "one.yaml").write_text("id: [unclosed\n")
+    c2 = commit_all(registry.root, "broken")
+    assert deploy_range(registry, state, c1, c2) == 1
+    assert "not YAML" in capsys.readouterr().err

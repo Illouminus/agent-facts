@@ -163,3 +163,35 @@ def test_cli_refresh_evidence(repo, httpserver):
     assert result.exit_code == 0, result.output
     assert "evidence refresh: 1 written, 0 unchanged, 0 dropped" in result.stderr
     assert pending(repo) is None
+
+
+def test_refresh_waits_for_a_running_tick_instead_of_skipping_the_day(repo, httpserver):
+    import fcntl
+    import threading
+
+    setup(repo, httpserver)
+    tick(repo, httpserver, Clock())
+    lock = (repo.state / "probe.lock").open("a")
+    fcntl.flock(lock, fcntl.LOCK_EX)  # the 03:00 tick is still running
+    threading.Timer(0.3, lambda: fcntl.flock(lock, fcntl.LOCK_UN)).start()
+    report = refresh_evidence(repo.root, repo.state, clock=Clock(), environ={}, lock_wait_s=5)
+    lock.close()
+    assert not report.busy and report.changes["refreshed"] == 1
+
+
+def test_refresh_gives_up_after_the_wait(repo, httpserver):
+    import fcntl
+
+    setup(repo, httpserver)
+    tick(repo, httpserver, Clock())
+    with (repo.state / "probe.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        report = refresh_evidence(repo.root, repo.state, clock=Clock(), environ={},
+                                  lock_wait_s=0.2)
+    assert report.busy and pending(repo) is not None
+
+
+def test_cli_refresh_refuses_all(repo):
+    result = CliRunner().invoke(app, ["probe", "run", "--refresh-evidence", "--all", "--root",
+                                      str(repo.root)], env={"AGENTFACTS_KILL": "0"})
+    assert result.exit_code == 2 and "runs no probe" in result.stderr

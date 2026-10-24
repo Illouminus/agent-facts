@@ -35,7 +35,13 @@ from agentfacts.bot.collect import (
     fact_rows,
     git,
 )
-from agentfacts.probe.runner import DEFAULT_VANTAGE, REFRESH_MARKER, check_vantage, kill_reason
+from agentfacts.probe.runner import (
+    DEFAULT_VANTAGE,
+    REFRESH_MARKER,
+    check_vantage,
+    kill_reason,
+    write_json_atomic,
+)
 
 BOT_NAME = "agent-facts-bot"
 DEFAULT_BOT_EMAIL = "bot@facts.baillot.dev"
@@ -142,25 +148,16 @@ def evidence_gate(state_dir: Path, today: date) -> tuple[str | None, str | None]
         return "no evidence refresh yet (probe run --refresh-evidence)", None
     state = _read_json(state_dir / BOT_STATE)
     if state.get("evidence_day") == today.isoformat():
-        return "today's evidence PR is already open", refreshed
+        return "today's evidence PR was already opened", refreshed
     if refreshed <= str(state.get("evidence_refresh") or ""):
         return "waiting for the next daily evidence refresh", refreshed
     return None, refreshed
 
 
 def _remember_evidence_pr(state_dir: Path, today: date, refreshed: str | None) -> None:
-    state_dir.mkdir(parents=True, exist_ok=True)
-    data = {**_read_json(state_dir / BOT_STATE), "evidence_refresh": refreshed,
-            "evidence_day": today.isoformat()}
-    fd, tmp = tempfile.mkstemp(prefix=f".{BOT_STATE}.", dir=state_dir)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            json.dump(data, fh)
-            fh.write("\n")
-        os.replace(tmp, state_dir / BOT_STATE)
-    except BaseException:
-        Path(tmp).unlink(missing_ok=True)
-        raise
+    write_json_atomic(state_dir / BOT_STATE, {**_read_json(state_dir / BOT_STATE),
+                                              "evidence_refresh": refreshed,
+                                              "evidence_day": today.isoformat()})
 
 
 @dataclass
@@ -304,7 +301,10 @@ def publish(
         git(root, "push", "--quiet", "origin", "--delete", report.branch)
         raise
     if daily:  # before the merge call: a failing `gh pr merge` must not reopen it next hour
-        _remember_evidence_pr(state_dir, today, refreshed)
+        try:
+            _remember_evidence_pr(state_dir, today, refreshed)
+        except OSError as exc:  # the PR is open; the open-PR check holds the next runs
+            report.detail = f"bot state not saved: {exc}"
     if auto:
         gh(["pr", "merge", report.url, "--auto", "--squash"])
     report.action = "opened"

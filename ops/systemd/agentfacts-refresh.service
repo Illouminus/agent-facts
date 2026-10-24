@@ -11,4 +11,4 @@ Type=oneshot
 WorkingDirectory=%h/apps/agent-facts
 ExecStart=%h/apps/agent-facts/.venv/bin/agentfacts probe run --refresh-evidence --root %h/apps/agent-facts
 Nice=10
-TimeoutStartSec=900
+TimeoutStartSec=1200

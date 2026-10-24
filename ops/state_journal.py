@@ -37,6 +37,8 @@ from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from ruamel.yaml.error import YAMLError
+
 from agentfacts.pages.build import load_registry
 from agentfacts.schema.models import VERIFIED_STATUSES, Fact
 from agentfacts.schema.substance import substance
@@ -149,7 +151,10 @@ def _git(root: Path, *args: str) -> str:
 
 
 def _fact_at(root: Path, rev: str, path: str) -> dict:
-    data = plain(load_yaml_text(_git(root, "show", f"{rev}:{path}")))
+    try:
+        data = plain(load_yaml_text(_git(root, "show", f"{rev}:{path}")))
+    except YAMLError as exc:
+        raise JournalError(f"{rev[:7]}:{path}: not YAML ({exc.__class__.__name__})") from None
     return data if isinstance(data, dict) else {}
 
 
