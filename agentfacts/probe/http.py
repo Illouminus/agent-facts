@@ -155,16 +155,18 @@ _PATH_SAFE_KEY = re.compile(r"^(?!\.+$)[A-Za-z0-9:_.~-]+$")
 
 def auth_for(service: Service, secret: str | None) -> Credentials:
     """The credentials for one keyed request. `secret` is the key file's value, or for
-    `google_service_account` the access token the runner minted from it (`google_sa`). A kind
-    this function does not know is refused, never sent in some default place."""
+    `google_service_account` / `oauth_refresh_token` the access token the runner minted from it
+    (`google_sa`, `oauth_refresh`). A kind this function does not know is refused, never sent in
+    some default place."""
     auth = service.auth
     if auth is None or auth.kind == "none" or secret is None:
         return NO_CREDENTIALS
-    if secret.lstrip().startswith("{"):
-        # A JSON key file (a service-account key with its private key) never goes out as is,
-        # whatever kind a service declares; only google_sa reads it, to mint a token.
-        raise Refused("unminted_key", f"the {service.key} key is a JSON key file, not a credential")
-    if auth.kind in ("bearer", "google_service_account"):
+    if secret.lstrip().startswith(("{", "force://")):
+        # A key file that holds a grant (a service-account JSON key with its private key, an sfdx
+        # auth URL with a refresh token) never goes out as is, whatever kind a service declares;
+        # only google_sa / oauth_refresh read it, to mint an access token.
+        raise Refused("unminted_key", f"the {service.key} key is a grant, not a credential")
+    if auth.kind in ("bearer", "google_service_account", "oauth_refresh_token"):
         return Credentials({"Authorization": f"Bearer {secret}"}, {})
     if auth.kind == "basic":
         user_pass = secret if ":" in secret else secret + ":"  # a bare key = user, no password

@@ -137,6 +137,9 @@ PEM = (
         "ya29.a0AfB_FAKEfakeFAKEfake-FAKE",  # Google OAuth access token
         "123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x",  # Telegram bot token
         "https://api.telegram.org/bot123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x/getMe",
+        "force://PlatformCLI::5A" "ep861FAKErefreshFAKErefresh.FAKE@acme.my.salesforce.com",
+        "00D" "FAKEfake000000!AQEAQFAKEaccessFAKEaccessFAKEaccess.FAKE_0123",  # split literal
+        "5A" "ep861FAKErefreshFAKErefreshFAKErefresh.FAKE_refresh0123456789",  # split literal
     ],
 )
 def test_vendor_secret_shapes_are_strict(secret):

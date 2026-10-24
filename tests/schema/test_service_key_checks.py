@@ -64,7 +64,12 @@ SERVICE_ACCOUNT = (
     "auth: {kind: google_service_account, key_name: stripe-test, env: sandbox,"
     " scopes: [https://www.googleapis.com/auth/datastore]}"
 )
+OAUTH = (
+    "auth: {kind: oauth_refresh_token, key_name: stripe-test, env: sandbox,"
+    " token_path: /services/oauth2/token, instance_hosts: [my.salesforce.com]}"
+)
 VALID_AUTH = [
+    OAUTH,
     PATH_PREFIX,
     PATH_PREFIX.replace("/bot{key}", "/v1/{key}"),
     PATH_PREFIX.replace("/bot{key}", "/{key}"),
@@ -74,6 +79,16 @@ VALID_AUTH = [
     ),
 ]
 INVALID_AUTH = [
+    OAUTH.replace(", token_path: /services/oauth2/token", ""),
+    OAUTH.replace(", instance_hosts: [my.salesforce.com]", ""),
+    OAUTH.replace("[my.salesforce.com]", "[]"),
+    OAUTH.replace("[my.salesforce.com]", "[My.Salesforce.com]"),
+    OAUTH.replace("[my.salesforce.com]", "[localhost]"),
+    PATH_PREFIX.replace('path_prefix: "/bot{key}"', "instance_hosts: [my.salesforce.com]"),
+    OAUTH.replace("/services/oauth2/token", "services/oauth2/token"),
+    OAUTH.replace("/services/oauth2/token", "/services/../token"),
+    OAUTH.replace("/services/oauth2/token", '"/services/oauth2/token?x=1"'),
+    PATH_PREFIX.replace('path_prefix: "/bot{key}"', "token_path: /services/oauth2/token"),
     PATH_PREFIX.replace(', path_prefix: "/bot{key}"', ""),
     PATH_PREFIX.replace("/bot{key}", "/bot"),  # the key must be in the prefix
     PATH_PREFIX.replace("/bot{key}", "/{key}/x"),  # and end it: the template follows

@@ -49,6 +49,7 @@ _ERROR_PATHS = (
     ".errors[0].message",
     ".title",
     ".description",  # Telegram: {ok: false, error_code, description}
+    "[0].message",  # Salesforce: [{message, errorCode}]
 )
 ERROR_MAX = 512
 _TEXT_ERROR_MAX = 200
