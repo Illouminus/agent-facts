@@ -1,0 +1,30 @@
+id: af:telegram:chat-not-found-400
+service: telegram
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/{bot_token}/getChat"
+signal:
+  status: 400
+  error_string: "Bad Request: chat not found"
+  normalized: "bad request: chat not found"
+claim: "getChat for a chat the bot has never seen (chat_id=1) returns HTTP 400 {ok: false, error_code: 400, description: \"Bad Request: chat not found\"}."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:telegram:probe:get-chat-not-found
+  first_seen: 2026-10-24T08:17:36Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:20:11Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

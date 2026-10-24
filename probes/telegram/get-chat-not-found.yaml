@@ -1,0 +1,10 @@
+id: af:telegram:probe:get-chat-not-found
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: /getChat, query: {chat_id: 1}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.ok, equals: false}
+  - {step: 1, json_path: $.error_code, equals: 400}
+  - {step: 1, json_path: $.description, equals: "Bad Request: chat not found"}

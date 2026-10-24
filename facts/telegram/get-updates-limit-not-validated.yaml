@@ -1,0 +1,29 @@
+id: af:telegram:get-updates-limit-not-validated
+service: telegram
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/{bot_token}/getUpdates"
+signal:
+  status: 200
+claim: "getUpdates with limit=0 or limit=1000, outside the documented 1-100, answers HTTP 200 instead of 400."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: set_param, name: limit, value_source: literal:100, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:telegram:probe:get-updates-limit-out-of-range
+  first_seen: 2026-10-24T08:17:36Z
+  confirmations: 2
+  stale_counter: 0
+  official_url: https://core.telegram.org/bots/api#getupdates
+  last_confirmed: 2026-10-24T08:20:12Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
