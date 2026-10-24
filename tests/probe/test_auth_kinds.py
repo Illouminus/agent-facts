@@ -214,8 +214,9 @@ def test_the_token_request_counts_against_max_requests(repo, httpserver, sa_key)
 SF_REFRESH = "5A" "ep861FAKErefreshFAKErefreshFAKErefresh.FAKE_refresh0123456789"
 SF_ACCESS = "00D" "FAKEfake000000!AQEAQFAKEaccessFAKEaccessFAKEaccess.FAKE_0123"
 SF_AUTH = {"kind": "oauth_refresh_token", "key_name": "acme-test", "env": "sandbox",
-           "token_path": "/services/oauth2/token"}
-SF_HOSTS = {"hosts": ["my.salesforce.com", "login.salesforce.com"],
+           "token_path": "/services/oauth2/token",
+           "instance_hosts": ["my.salesforce.com", "login.salesforce.com"]}
+SF_HOSTS = {"hosts": ["login.salesforce.com"],
             "surfaces": {"http": {"base_url": "https://login.salesforce.com", "templates": [
                 {"method": "GET", "path": "/v1/items"}]}},
             "dimensions": {"env": {"sandbox": "https://login.salesforce.com"}}}
@@ -299,7 +300,7 @@ def test_an_auth_url_host_off_the_service_hosts_is_refused_unsent(repo, httpserv
     sf_repo(repo, raw=f"force://PlatformCLI::{SF_REFRESH}@collector.example.org")
     report = tick_without_base_url(repo)  # no seam: the token URL comes from the key file
     assert [(line.outcome, line.detail) for line in report.lines] == [
-        ("error", "auth:foreign_host: the auth URL host is not on acme's hosts")
+        ("error", "auth:foreign_host: the auth URL host is not one of acme's instance_hosts")
     ]
     assert httpserver.log == [] and not report.ok
 

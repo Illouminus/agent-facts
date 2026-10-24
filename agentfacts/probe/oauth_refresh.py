@@ -4,8 +4,9 @@ The key file is an sfdx auth URL, `force://<client_id>:<client_secret>:<refresh_
 (what `sf org display --verbose` prints; the secret is empty for the CLI's own client). Once per
 service per tick the runner trades the refresh token at `https://<host><auth.token_path>` for an
 access token and the org's `instance_url`; probe requests then go to that instance as Bearer. Both
-hosts must be on the service's hosts, so the refresh token and the access token never leave the
-vendor, and the org's own domain never has to be written into the public service file.
+hosts must be on the service's `auth.instance_hosts` (tenant domains such as my.salesforce.com,
+kept apart from the hosts check() matches exactly), so the refresh token and the access token
+never leave the vendor, and the org's own domain never has to be written into the public file.
 `secrets_of` lists the secret forms of the file for the Redactor; the access token joins it when
 it arrives.
 """
@@ -69,10 +70,12 @@ def secrets_of(raw: str) -> set[str]:
 
 
 def token_url(service: Service, grant: RefreshGrant) -> str:
-    """Where the refresh token goes: the key's own host, which must be one of the service's."""
+    """Where the refresh token goes: the key's own host, which must be one of the service's
+    `auth.instance_hosts` (or a subdomain of one)."""
     url = f"https://{grant.host}{service.auth.token_path}"
-    if not on_vendor_domain(url, service.hosts):
-        raise AuthError("foreign_host", f"the auth URL host is not on {service.key}'s hosts")
+    if not on_vendor_domain(url, service.auth.instance_hosts):
+        message = f"the auth URL host is not one of {service.key}'s instance_hosts"
+        raise AuthError("foreign_host", message)
     return url
 
 
@@ -82,9 +85,10 @@ def instance_base_url(service: Service, instance_url: Any) -> str:
     if isinstance(instance_url, str):
         parts = urlsplit(instance_url)
         if (parts.scheme == "https" and parts.path in ("", "/") and not parts.query
-                and not parts.fragment and on_vendor_domain(instance_url, service.hosts)):
+                and not parts.fragment
+                and on_vendor_domain(instance_url, service.auth.instance_hosts)):
             return f"https://{parts.hostname}" + (f":{parts.port}" if parts.port else "")
-    message = f"instance_url is not an https origin on {service.key}'s hosts"
+    message = f"instance_url is not an https origin on {service.key}'s instance_hosts"
     raise AuthError("foreign_instance", message)
 
 

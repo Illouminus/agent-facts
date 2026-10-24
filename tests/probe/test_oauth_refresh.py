@@ -23,11 +23,13 @@ REFRESH = "5A" "ep861FAKErefreshFAKErefreshFAKErefresh.FAKE_refresh0123456789"
 RAW = f"force://PlatformCLI::{REFRESH}@acme-dev-ed.develop.my.salesforce.com"
 ACCESS = "00D" "FAKEfake000000!AQEAQFAKEaccessFAKEaccessFAKEaccess.FAKE_0123"
 SF = {"kind": "oauth_refresh_token", "key_name": "acme-test", "env": "sandbox",
-      "token_path": "/services/oauth2/token"}
+      "token_path": "/services/oauth2/token",
+      "instance_hosts": ["my.salesforce.com", "login.salesforce.com"]}
 
 
 def sf_service(**overrides):
-    return make_service(auth=SF, hosts=["my.salesforce.com", "login.salesforce.com"],
+    # Tenant domains are instance_hosts only: service hosts stay what check() matches exactly.
+    return make_service(auth=SF, hosts=["login.salesforce.com"],
                         surfaces={"http": {"base_url": "https://login.salesforce.com",
                                            "templates": [{"method": "GET", "path": "/v1/items"}]}},
                         dimensions={"env": {"sandbox": "https://login.salesforce.com"}},
@@ -67,7 +69,7 @@ def test_secrets_cover_the_url_and_the_refresh_token():
     assert secrets_of("garbage") == {"garbage"}
 
 
-def test_the_token_url_is_on_the_key_host_and_the_service_hosts():
+def test_the_token_url_is_on_the_key_host_and_the_instance_hosts():
     service = sf_service()
     assert token_url(service, parse_auth_url(RAW)) == (
         "https://acme-dev-ed.develop.my.salesforce.com/services/oauth2/token")
@@ -75,6 +77,11 @@ def test_the_token_url_is_on_the_key_host_and_the_service_hosts():
     with pytest.raises(AuthError) as exc:
         token_url(service, elsewhere)
     assert exc.value.code == "foreign_host"
+    # Service hosts alone do not admit a key host: login.salesforce.com is not an instance host.
+    narrow = sf_service().model_copy(update={"auth": sf_service().auth.model_copy(
+        update={"instance_hosts": ("my.salesforce.com",)})})
+    with pytest.raises(AuthError):
+        token_url(narrow, parse_auth_url(f"force://PlatformCLI::{REFRESH}@login.salesforce.com"))
 
 
 @pytest.mark.parametrize(("instance", "expected"), [
@@ -87,7 +94,7 @@ def test_the_token_url_is_on_the_key_host_and_the_service_hosts():
     ("https://acme.my.salesforce.com/services", None),
     (None, None),
 ])
-def test_instance_url_must_be_an_https_origin_on_the_service_hosts(instance, expected):
+def test_instance_url_must_be_an_https_origin_on_the_instance_hosts(instance, expected):
     if expected is None:
         with pytest.raises(AuthError) as exc:
             instance_base_url(sf_service(), instance)

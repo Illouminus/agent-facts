@@ -167,6 +167,14 @@
           "uniqueItems": true,
           "items": {"type": "string", "pattern": "^https://www\\.googleapis\\.com/auth/[a-z0-9._-]{1,64}(?!\\n)$"}
         },
+        "instance_hosts": {
+          "description": "oauth_refresh_token: hosts (or their subdomains) where the auth URL's host and the token's instance may be; tenant domains live here, not in the service's hosts.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/hostname"}
+        },
         "token_path": {
           "description": "oauth_refresh_token: path of the token endpoint on the auth URL's host (Salesforce: /services/oauth2/token).",
           "type": "string",
@@ -190,8 +198,8 @@
         },
         {
           "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "oauth_refresh_token"}}},
-          "then": {"required": ["token_path"]},
-          "else": {"not": {"required": ["token_path"]}}
+          "then": {"required": ["token_path", "instance_hosts"]},
+          "else": {"allOf": [{"not": {"required": ["token_path"]}}, {"not": {"required": ["instance_hosts"]}}]}
         },
         {
           "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "header"}}},

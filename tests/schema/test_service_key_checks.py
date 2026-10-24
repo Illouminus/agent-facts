@@ -66,7 +66,7 @@ SERVICE_ACCOUNT = (
 )
 OAUTH = (
     "auth: {kind: oauth_refresh_token, key_name: stripe-test, env: sandbox,"
-    " token_path: /services/oauth2/token}"
+    " token_path: /services/oauth2/token, instance_hosts: [my.salesforce.com]}"
 )
 VALID_AUTH = [
     OAUTH,
@@ -80,6 +80,11 @@ VALID_AUTH = [
 ]
 INVALID_AUTH = [
     OAUTH.replace(", token_path: /services/oauth2/token", ""),
+    OAUTH.replace(", instance_hosts: [my.salesforce.com]", ""),
+    OAUTH.replace("[my.salesforce.com]", "[]"),
+    OAUTH.replace("[my.salesforce.com]", "[My.Salesforce.com]"),
+    OAUTH.replace("[my.salesforce.com]", "[localhost]"),
+    PATH_PREFIX.replace('path_prefix: "/bot{key}"', "instance_hosts: [my.salesforce.com]"),
     OAUTH.replace("/services/oauth2/token", "services/oauth2/token"),
     OAUTH.replace("/services/oauth2/token", "/services/../token"),
     OAUTH.replace("/services/oauth2/token", '"/services/oauth2/token?x=1"'),

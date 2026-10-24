@@ -446,6 +446,9 @@ class Auth(_Closed):
     path_prefix: _pattern(r"^(/[A-Za-z0-9_.~-]+)*/[A-Za-z0-9_.~-]*\{key\}$") | None = None
     scopes: Annotated[tuple[GoogleScope, ...], Field(min_length=1, max_length=5)] | None = None
     token_path: _pattern(r"^(/[A-Za-z0-9_.~-]+){1,8}$") | None = None
+    # oauth_refresh_token: where the auth URL's host and the token's instance may be (a host or
+    # a subdomain of one); tenant domains live here, not in the service's hosts check() matches.
+    instance_hosts: Annotated[tuple[Hostname, ...], Field(min_length=1, max_length=5)] | None = None
 
     @model_validator(mode="after")
     def _kind_fields(self) -> "Auth":
@@ -456,7 +459,8 @@ class Auth(_Closed):
         if self.kind == "query" and self.param_name is None:
             raise ValueError("auth kind query requires param_name")
         for kind, name in (("path_prefix", "path_prefix"), ("google_service_account", "scopes"),
-                           ("oauth_refresh_token", "token_path")):
+                           ("oauth_refresh_token", "token_path"),
+                           ("oauth_refresh_token", "instance_hosts")):
             if (self.kind == kind) != (getattr(self, name) is not None):
                 raise ValueError(f"{name} is required for auth kind {kind} and only for it")
         if self.scopes is not None and len(set(self.scopes)) != len(self.scopes):
