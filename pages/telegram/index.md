@@ -14,11 +14,11 @@ Hosts: `api.telegram.org` · 16 facts
 ## Rate limits
 
 - 🔵 official · [Exceeding flood control returns HTTP 429; parameters.retry_after holds the number of seconds left to wait before the request can be repeated.](flood-control-429-retry-after.md) · POST /{bot_token}/sendMessage · env prod
-- 🔵 official · [Bots should send no more than one message per second to a chat and at most 20 messages per minute to a group; broadcasts are capped at about 30 messages per second; beyond that the API answers 429.](message-rate-limits.md) · POST /{bot_token}/sendMessage · env prod
+- 🔵 official · [The documented sending limits are about one message per second per chat, 20 messages per minute per group and about 30 messages per second for broadcasts; past them the API answers 429.](message-rate-limits.md) · POST /{bot_token}/sendMessage · env prod
 
 ## Silent behavior
 
-- ✅ verified:server:prod · [Errors are a JSON object with ok: false, a description and an integer error_code equal to the HTTP status; there is no result field.](error-envelope-ok-false.md) · GET /{bot_token}/{method} · env prod
+- ✅ verified:server:prod · [Errors are a JSON object with ok: false, a description and an integer error_code equal to the HTTP status (documented as subject to change); there is no result field.](error-envelope-ok-false.md) · GET /{bot_token}/{method} · env prod
 - 🔵 official · [getUpdates does not work while an outgoing webhook is set up; the webhook has to be removed before updates can be polled.](get-updates-blocked-by-webhook.md) · GET /{bot_token}/getUpdates · env prod
 - ✅ verified:server:prod · [getUpdates with limit=0 or limit=1000, outside the documented 1-100, answers HTTP 200 instead of 400.](get-updates-limit-not-validated.md) · GET /{bot_token}/getUpdates · env prod
 - ✅ verified:server:prod · [Method names are case-insensitive: /getme and /GETME answer like /getMe.](method-names-case-insensitive.md) · GET /{bot_token}/getMe · env prod

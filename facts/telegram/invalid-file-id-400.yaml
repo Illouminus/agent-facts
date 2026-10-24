@@ -19,9 +19,9 @@ status: verified:server:prod
 evidence:
   probe: af:telegram:probe:get-file-invalid
   first_seen: 2026-10-24T08:17:36Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T08:17:36Z
+  last_confirmed: 2026-10-24T08:20:12Z
   vantages: [mac-dev]
 provenance:
   source: probe

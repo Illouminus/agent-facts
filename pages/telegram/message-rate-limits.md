@@ -1,4 +1,4 @@
-# Bots should send no more than one message per second to a chat and at most 20 messages per minute to a group; broadcasts are capped at about 30 messages per second; beyond that the API answers 429.
+# The documented sending limits are about one message per second per chat, 20 messages per minute per group and about 30 messages per second for broadcasts; past them the API answers 429.
 
 **Telegram Bot API · POST /{bot_token}/sendMessage · HTTP 429**
 

@@ -7,7 +7,7 @@ target:
   path_template: "/{bot_token}/{method}"
 signal:
   status: 400
-claim: "Errors are a JSON object with ok: false, a description and an integer error_code equal to the HTTP status; there is no result field."
+claim: "Errors are a JSON object with ok: false, a description and an integer error_code equal to the HTTP status (documented as subject to change); there is no result field."
 dimensions:
   env: prod
   account_state: any
@@ -16,10 +16,11 @@ fixes:
 status: verified:server:prod
 evidence:
   probe: af:telegram:probe:error-envelope
+  official_url: https://core.telegram.org/bots/api#making-requests
   first_seen: 2026-10-24T08:17:36Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T08:17:36Z
+  last_confirmed: 2026-10-24T08:20:11Z
   vantages: [mac-dev]
 provenance:
   source: probe
