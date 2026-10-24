@@ -50,9 +50,49 @@ def on_vendor_domain(url: str, hosts: Iterable[str]) -> bool:
     return match_host(parts.hostname.lower(), hosts) is not None
 
 
-def key_bound_to_service(key_name: str, service_key: str) -> bool:
+@dataclass(frozen=True)
+class KeyFamily:
+    hosts: frozenset[str]  # exact API hosts a service using a family key may list
+    scopes: frozenset[str]  # OAuth scopes a family service account may ask for
+
+
+# Vendor keys that several services of one vendor share (a Google Cloud API key or service
+# account serves Sheets, Calendar, Firestore). Exact hosts, not the vendor domain:
+# storage.googleapis.com serves user buckets. Scopes are read-only where the API has one
+# (Firestore has none: the service account's IAM role decides). Changed only here, in a reviewed
+# code PR.
+KEY_FAMILIES: Mapping[str, KeyFamily] = {
+    "google": KeyFamily(
+        hosts=frozenset({
+            "sheets.googleapis.com",
+            "www.googleapis.com",
+            "firestore.googleapis.com",
+            "generativelanguage.googleapis.com",
+        }),
+        scopes=frozenset({
+            "https://www.googleapis.com/auth/spreadsheets.readonly",
+            "https://www.googleapis.com/auth/calendar.readonly",
+            "https://www.googleapis.com/auth/calendar.events.readonly",
+            "https://www.googleapis.com/auth/datastore",
+        }),
+    ),
+}
+
+
+def key_bound_to_service(
+    key_name: str, service_key: str, hosts: Iterable[str] = (), scopes: Iterable[str] = ()
+) -> bool:
     """A probe key belongs to one service by name: `stripe`, `stripe-test`, `stripe_live` for
-    `stripe`. Without it any new service could name another's key file and send it to its hosts."""
+    `stripe`. Without it any new service could name another's key file and send it to its hosts.
+    A family key (`google-…`) is decided by the family alone, whatever the name match: it serves
+    the family's services (`google`, `google-<x>`) only when every one of their hosts is one of
+    the family's API hosts and every OAuth scope they ask for is one of the family's scopes."""
+    for family, rules in KEY_FAMILIES.items():
+        if key_name == family or key_name.startswith((f"{family}-", f"{family}_")):
+            hosts = tuple(h.lower() for h in hosts)
+            in_family = service_key == family or service_key.startswith(f"{family}-")
+            return (in_family and bool(hosts) and all(h in rules.hosts for h in hosts)
+                    and all(scope in rules.scopes for scope in scopes))
     return key_name == service_key or key_name.startswith((f"{service_key}-", f"{service_key}_"))
 
 

@@ -168,6 +168,19 @@ def test_path_prefix_refuses_a_key_that_is_not_one_plain_segment(key):
     assert exc.value.code == "key_not_path_safe" and key not in str(exc.value)
 
 
+@pytest.mark.parametrize("kind", [
+    {"kind": "bearer", "key_name": "k", "env": "sandbox"},
+    {"kind": "query", "key_name": "k", "env": "sandbox", "param_name": "key"},
+    {"kind": "header", "key_name": "k", "env": "sandbox", "header_name": "X-Api-Key"},
+    PATH_AUTH,
+])
+def test_a_json_key_file_is_never_sent_raw(kind):
+    # A service-account JSON key (with its private key) only ever goes through google_sa.
+    with pytest.raises(Refused) as exc:
+        auth_for(make_service(auth=kind), ' {"type": "service_account", "private_key": "x"}')
+    assert exc.value.code == "unminted_key"
+
+
 def test_unknown_auth_kind_is_refused_not_sent_somewhere():
     service = make_service().model_copy(
         update={"auth": make_service().auth.model_copy(update={"kind": "cookie"})}

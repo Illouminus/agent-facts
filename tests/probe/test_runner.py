@@ -616,3 +616,69 @@ def test_a_top_level_description_is_the_error_string(repo, httpserver):
     step = repo.results()[0]["steps"][0]
     assert step["error_string"] == "Bad Request: chat not found"
     assert step["normalized"] == "bad request: chat not found"
+
+
+def test_a_family_key_runs_for_a_family_service_on_family_hosts(repo, httpserver):
+    host = "https://sheets.googleapis.com"
+    repo.service(key="google-acme", hosts=["sheets.googleapis.com"],
+                 surfaces={"http": {"base_url": host, "templates": [
+                     {"method": "GET", "path": "/v1/items"}]}},
+                 dimensions={"env": {"prod": host}},
+                 auth={"kind": "query", "key_name": "google-api-key", "env": "prod",
+                       "param_name": "key"})
+    repo.probe(id="af:google-acme:probe:items-list", service="google-acme", env="prod")
+    repo.key("google-api-key")
+    httpserver.expect_request("/v1/items").respond_with_json({})
+    report = run_tick(repo.root, repo.state, TickOptions(), keys_dir=repo.keys,
+                      base_urls={"google-acme": httpserver.url_for("")}, environ={})
+    assert report.problems == [] and [line.outcome for line in report.lines] == ["pass"]
+    assert httpserver.log[0][0].args["key"] == FAKE_KEY
+
+
+def test_probe_status_reports_family_keys_by_hosts_and_scopes(repo, monkeypatch):
+    from agentfacts.probe.runner import probe_status
+
+    host = "https://sheets.googleapis.com"
+    common = dict(key="google-acme", surfaces={"http": {"base_url": host, "templates": [
+        {"method": "GET", "path": "/v1/items"}]}}, dimensions={"env": {"prod": host}})
+    repo.service(hosts=["sheets.googleapis.com"],
+                 auth={"kind": "query", "key_name": "google-api-key", "env": "prod",
+                       "param_name": "key"}, **common)
+    repo.probe(id="af:google-acme:probe:items-list", service="google-acme", env="prod")
+    repo.key("google-api-key")
+    statuses, problems = probe_status(repo.root, repo.state, keys_dir=repo.keys)
+    assert problems == [] and [s.key for s in statuses] == ["ok"]
+
+    # A scope outside the family list: the validator refuses the service, and probe list says
+    # unbound when the loader is bypassed.
+    unvalidated(monkeypatch, {**common, "hosts": ["sheets.googleapis.com"],
+                              "auth": {"kind": "google_service_account",
+                                       "key_name": "google-service-account", "env": "prod",
+                                       "scopes": ["https://www.googleapis.com/auth/drive"]}},
+                {"env": "prod"})
+    statuses, _ = probe_status(repo.root, repo.state, keys_dir=repo.keys)
+    assert [s.key for s in statuses] == ["unbound"]
+
+
+def test_a_family_key_is_never_read_for_a_service_off_the_family_hosts(repo, httpserver,
+                                                                         monkeypatch):
+    import agentfacts.probe.runner as runner_module
+
+    # Service "google": the bare name rule alone would bind google-api-key to it.
+    unvalidated(monkeypatch, {"key": "google", "hosts": ["collector.example.org"],
+                              "surfaces": {"http": {"base_url": "https://collector.example.org",
+                                                    "templates": [{"method": "GET",
+                                                                   "path": "/v1/items"}]}},
+                              "dimensions": {"env": {"prod": "https://collector.example.org"}},
+                              "auth": {"kind": "query", "key_name": "google-api-key",
+                                       "env": "prod", "param_name": "key"}},
+                {"env": "prod"})
+    repo.key("google-api-key")
+    read = []
+    monkeypatch.setattr(runner_module, "read_key", lambda *a: read.append(a) or FAKE_KEY)
+    report = tick(repo, httpserver)
+    assert [line.outcome for line in report.lines] == ["error"]
+    assert report.lines[0].detail.startswith("refused:key_not_bound")
+    assert read == [] and httpserver.log == []
+    assert FAKE_KEY.encode() not in b"".join(p.read_bytes() for p in repo.state.rglob("*")
+                                             if p.is_file())

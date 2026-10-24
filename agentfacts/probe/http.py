@@ -160,9 +160,11 @@ def auth_for(service: Service, secret: str | None) -> Credentials:
     auth = service.auth
     if auth is None or auth.kind == "none" or secret is None:
         return NO_CREDENTIALS
+    if secret.lstrip().startswith("{"):
+        # A JSON key file (a service-account key with its private key) never goes out as is,
+        # whatever kind a service declares; only google_sa reads it, to mint a token.
+        raise Refused("unminted_key", f"the {service.key} key is a JSON key file, not a credential")
     if auth.kind in ("bearer", "google_service_account"):
-        if auth.kind == "google_service_account" and secret.lstrip().startswith("{"):
-            raise Refused("unminted_key", f"the {service.key} key file is not an access token")
         return Credentials({"Authorization": f"Bearer {secret}"}, {})
     if auth.kind == "basic":
         user_pass = secret if ":" in secret else secret + ":"  # a bare key = user, no password
