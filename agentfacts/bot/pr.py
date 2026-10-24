@@ -5,6 +5,11 @@ The commit is built in a temporary worktree of `origin/main`, never in the check
 working tree, its branch and every code path stay untouched; only `facts/` and the `pages/`
 regenerated from them can enter the commit (checked before the push). One open bot PR at a time:
 while it waits, changes stay in the checkout and go out with the next run after the merge.
+
+When to open (incident 2026-10-20..24, 62 PRs in three days): a new, deleted or substantively
+changed fact goes out at once (with any counter-only changes riding along); counter-only changes
+go out as one "daily evidence refresh" PR, on the first run after `probe run --refresh-evidence`
+left its marker, at most one a day (`<state-dir>/bot-state.json` remembers it).
 """
 
 import json
@@ -30,13 +35,15 @@ from agentfacts.bot.collect import (
     fact_rows,
     git,
 )
-from agentfacts.probe.runner import DEFAULT_VANTAGE, check_vantage, kill_reason
+from agentfacts.probe.runner import DEFAULT_VANTAGE, REFRESH_MARKER, check_vantage, kill_reason
 
 BOT_NAME = "agent-facts-bot"
 DEFAULT_BOT_EMAIL = "bot@facts.baillot.dev"
 LABEL = "facts"
 BRANCH_PREFIX = "bot/facts-"
 PUBLISHED_DIRS = ("facts/", "pages/")
+BOT_STATE = "bot-state.json"
+DAILY_TITLE = "facts: daily evidence refresh ({day})"
 
 Gh = Callable[[Sequence[str]], str]
 
@@ -89,12 +96,19 @@ def _remote_branches(root: Path, day: date) -> list[str]:
 
 
 def render_body(
-    rows: Sequence[FactRow], auto: bool, vantage: str, skipped: Sequence[str] = ()
+    rows: Sequence[FactRow],
+    auto: bool,
+    vantage: str,
+    skipped: Sequence[str] = (),
+    daily: bool = False,
 ) -> str:
     """The PR description: one table row per fact, then what decides the merge."""
-    lines = [
-        f"Fact files changed by the quorum and the probe runner on `{vantage}`.",
-        "",
+    lines = [f"Fact files changed by the quorum and the probe runner on `{vantage}`.", ""]
+    if daily:
+        lines += ["Daily evidence refresh: only the counters moved (confirmations, last_confirmed, "
+                  "stale_counter, vantages, observations). New facts and status changes open "
+                  "their own PR at once.", ""]
+    lines += [
         "| id | kind | status | evidence | change |",
         "|----|------|--------|----------|--------|",
     ]
@@ -113,9 +127,45 @@ def render_body(
     return "\n".join(lines) + "\n"
 
 
+def _read_json(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def evidence_gate(state_dir: Path, today: date) -> tuple[str | None, str | None]:
+    """(why counter-only changes must wait, or None; the refresh marker's stamp)."""
+    refreshed = _read_json(state_dir / REFRESH_MARKER).get("refreshed")
+    if not isinstance(refreshed, str):
+        return "no evidence refresh yet (probe run --refresh-evidence)", None
+    state = _read_json(state_dir / BOT_STATE)
+    if state.get("evidence_day") == today.isoformat():
+        return "today's evidence PR is already open", refreshed
+    if refreshed <= str(state.get("evidence_refresh") or ""):
+        return "waiting for the next daily evidence refresh", refreshed
+    return None, refreshed
+
+
+def _remember_evidence_pr(state_dir: Path, today: date, refreshed: str | None) -> None:
+    state_dir.mkdir(parents=True, exist_ok=True)
+    data = {**_read_json(state_dir / BOT_STATE), "evidence_refresh": refreshed,
+            "evidence_day": today.isoformat()}
+    fd, tmp = tempfile.mkstemp(prefix=f".{BOT_STATE}.", dir=state_dir)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+            fh.write("\n")
+        os.replace(tmp, state_dir / BOT_STATE)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
 @dataclass
 class PublishReport:
-    action: str  # nothing, killed, waiting, would-open, opened, refused
+    action: str  # nothing, killed, holding, waiting, would-open, opened, refused
     branch: str | None = None
     url: str | None = None
     rows: list[FactRow] = field(default_factory=list)
@@ -123,12 +173,16 @@ class PublishReport:
     skipped: list[str] = field(default_factory=list)
     body: str = ""
     detail: str = ""
+    daily: bool = False  # counter-only changes: the daily evidence refresh PR
 
 
-def _commit_message(rows: Sequence[FactRow], vantage: str, email: str, day: date) -> str:
+def _commit_message(
+    rows: Sequence[FactRow], vantage: str, email: str, day: date, daily: bool
+) -> str:
     listed = "\n".join(f"- {r.id} ({r.status}, {r.change})" for r in rows)
-    return (f"facts: {len(rows)} fact file{'s' if len(rows) != 1 else ''} from {vantage} ({day})"
-            f"\n\n{listed}\n\nSigned-off-by: {BOT_NAME}@{vantage} <{email}>\n")
+    files = f"{len(rows)} fact file{'s' if len(rows) != 1 else ''}"
+    headline = DAILY_TITLE.format(day=day) if daily else f"facts: {files} from {vantage} ({day})"
+    return f"{headline}\n\n{listed}\n\nSigned-off-by: {BOT_NAME}@{vantage} <{email}>\n"
 
 
 def _bot_env(email: str) -> dict[str, str]:
@@ -177,14 +231,20 @@ def publish(
     dry_run: bool = False,
     environ: Mapping[str, str] | None = None,
     gh: Gh | None = None,
+    state_dir: Path | None = None,
 ) -> PublishReport:
     check_vantage(vantage)
     environ = os.environ if environ is None else environ
+    state_dir = root / "var" if state_dir is None else state_dir
     if reason := kill_reason(root, environ):
         return PublishReport("killed", detail=reason)
     changes = changed_facts(root)
     if not changes:
         return PublishReport("nothing")
+    by_path = {row.path: row for row in fact_rows(root, changes)}  # against HEAD: fetch-proof
+    hold, refreshed = evidence_gate(state_dir, today)
+    if hold and not any(row.substantive for row in by_path.values()):
+        return PublishReport("holding", detail=hold)  # no fetch, no gh: nothing goes out
     if not dry_run:
         git(root, "fetch", "--quiet", "origin", "main")
     changes = [c for c in changes if not already_on(root, c)]
@@ -194,10 +254,14 @@ def publish(
     changes = [c for c in changes if c.path not in skipped]
     if not changes:
         return PublishReport("refused", skipped=skipped, detail="every change conflicts with main")
-    rows = fact_rows(root, changes)
+    rows = [by_path[c.path] for c in changes]
+    daily = not any(row.substantive for row in rows)
+    if daily and hold:  # the substantive changes were already on main or conflicted
+        return PublishReport("holding", skipped=skipped, detail=hold)
     auto = auto_mergeable(rows)
-    body = render_body(rows, auto, vantage, skipped)
-    report = PublishReport("would-open", rows=rows, auto=auto, skipped=skipped, body=body)
+    body = render_body(rows, auto, vantage, skipped, daily=daily)
+    report = PublishReport("would-open", rows=rows, auto=auto, skipped=skipped, body=body,
+                           daily=daily)
     report.branch = branch_name(today, _remote_branches(root, today))
     if dry_run:
         return report
@@ -223,13 +287,14 @@ def publish(
             report.action, report.detail = "refused", f"outside facts/ and pages/: {outside}"
             return report
         git(tree, "commit", "--quiet", "--no-verify", "-m",
-            _commit_message(rows, vantage, email, today), env=_bot_env(email))
+            _commit_message(rows, vantage, email, today, daily), env=_bot_env(email))
         git(tree, "push", "--quiet", "origin", f"HEAD:refs/heads/{report.branch}")
     finally:
         git(root, "worktree", "remove", "--force", str(tree))
         shutil.rmtree(scratch, ignore_errors=True)
 
-    title = f"facts: {len(rows)} fact file{'s' if len(rows) != 1 else ''} ({today})"
+    title = (DAILY_TITLE.format(day=today) if daily else
+             f"facts: {len(rows)} fact file{'s' if len(rows) != 1 else ''} ({today})")
     try:
         gh(["label", "create", LABEL, "--force", "--color", "0E8A16",
             "--description", "Fact files published by agent-facts-bot"])
@@ -238,6 +303,8 @@ def publish(
     except GitError:  # no PR: drop the branch, or the next run would push a duplicate
         git(root, "push", "--quiet", "origin", "--delete", report.branch)
         raise
+    if daily:  # before the merge call: a failing `gh pr merge` must not reopen it next hour
+        _remember_evidence_pr(state_dir, today, refreshed)
     if auto:
         gh(["pr", "merge", report.url, "--auto", "--squash"])
     report.action = "opened"
