@@ -52,14 +52,16 @@ def is_local(host: str) -> bool:
 
 
 def hosts_of(answer: Any) -> frozenset[str]:
-    """Hosts from a `GET /v0/services` answer: `{"services": [...]}`, a bare list, or a mapping."""
+    """Hosts and instance hosts from a `GET /v0/services` answer: `{"services": [...]}`, a bare
+    list, or a mapping."""
     services = answer.get("services", answer) if isinstance(answer, Mapping) else answer
     entries = services.values() if isinstance(services, Mapping) else services
     found: set[str] = set()
     for entry in entries if isinstance(entries, Iterable) else ():
-        hosts = entry.get("hosts") if isinstance(entry, Mapping) else None
-        if isinstance(hosts, list):
-            found.update(h.strip().lower() for h in hosts if isinstance(h, str) and h.strip())
+        for field in ("hosts", "instance_hosts"):  # tenant hosts too (D-090)
+            hosts = entry.get(field) if isinstance(entry, Mapping) else None
+            if isinstance(hosts, list):
+                found.update(h.strip().lower() for h in hosts if isinstance(h, str) and h.strip())
     return frozenset(found)
 
 

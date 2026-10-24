@@ -1215,6 +1215,14 @@
             "title": "Hosts",
             "type": "array"
           },
+          "instance_hosts": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Instance Hosts",
+            "type": "array"
+          },
           "key": {
             "title": "Key",
             "type": "string"

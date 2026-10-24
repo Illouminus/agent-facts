@@ -72,7 +72,7 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 
 - `GET /v0/facts/{service}` → all non-retracted facts, ETag, `Cache-Control: public, max-age=300`.
 - `GET /v0/facts/{service}/{slug}` → one fact.
-- `GET /v0/services` → keys, hosts, counts.
+- `GET /v0/services` → keys, hosts, `instance_hosts` (tenant hosts, D-090; `[]` when none), counts.
 - `GET /healthz` → `{ok, registry_version, probes_last_run}`; `probes_last_run` = `started` of the newest
   `pass`/`fail`/`error` line in the runner's `results.jsonl` (`AGENTFACTS_RESULTS`), `null` if none.
 

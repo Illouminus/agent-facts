@@ -145,3 +145,36 @@ def test_check_and_runner_read_the_same_string(body, fields):
 def test_list_paths_come_from_the_runners_list():
     assert "[0].message" in MESSAGE_PATHS
     assert set(CODE_PATHS) == {".error.errors[0].reason", "[0].errorCode"}
+
+
+# ── the client side: /v0/services, the hosts list, the offline snapshot ─────────────────────────
+
+
+def test_services_endpoint_lists_instance_hosts(client):
+    services = {s["key"]: s for s in client.get("/v0/services").json()["services"]}
+    assert services["salesforce"]["instance_hosts"] == ["my.salesforce.com"]
+    assert services["google-calendar"]["instance_hosts"] == []
+
+
+def test_client_reports_an_org_host_under_its_instance_host(client):
+    from agentfacts.client.transport import hosts_of
+    from agentfacts.schema.registry import match_host
+
+    hosts = hosts_of(client.get("/v0/services").json())
+    assert "login.salesforce.com" in hosts
+    # Client.registered_host is this match: the org name is not sent
+    assert match_host("acme.my.salesforce.com", hosts) == "my.salesforce.com"
+    assert match_host("acme.my.salesforce.com.evil.io", hosts) is None
+
+
+def test_offline_snapshot_matches_an_org_host(repo):
+    from agentfacts.client.offline import Snapshot
+
+    snapshot = Snapshot.load(repo)
+    assert "my.salesforce.com" in snapshot.hosts
+    answer = snapshot.check(
+        {"target": {"method": "GET", "url": ORG_QUERY}, "error": {"status": 401}}
+    )
+    assert answer["service"] == "salesforce"
+    lookalike = snapshot.check({"target": {"method": "GET", "url": LOOKALIKE_QUERY}})
+    assert lookalike["unknown"]["reason"] == "unregistered_target"

@@ -118,6 +118,7 @@ class ServiceSummary(BaseModel):
     key: str
     name: str
     hosts: list[str]
+    instance_hosts: list[str] = []  # tenant hosts: these or a subdomain (D-090)
     templates: int
     facts: int
 

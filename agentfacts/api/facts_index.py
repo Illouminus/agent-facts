@@ -67,7 +67,7 @@ class IndexedFact:
         return ref is not None and (ref.ecosystem, ref.package) == (sdk.ecosystem, sdk.package)
 
 
-def _instance_hosts(service: Service) -> tuple[str, ...]:
+def instance_hosts_of(service: Service) -> tuple[str, ...]:
     return (service.auth.instance_hosts or ()) if service.auth else ()
 
 
@@ -188,7 +188,7 @@ class FactsIndex:
         return [
             s
             for s in self.services.values()
-            if host in s.service.hosts or match_host(host, _instance_hosts(s.service)) is not None
+            if host in s.service.hosts or match_host(host, instance_hosts_of(s.service)) is not None
         ]
 
     def services_for_package(self, ecosystem: str, package: str) -> list[ServiceEntry]:
