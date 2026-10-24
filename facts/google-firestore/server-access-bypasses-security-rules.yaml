@@ -1,0 +1,22 @@
+id: af:google-firestore:server-access-bypasses-security-rules
+service: google-firestore
+kind: auth_quirk
+target:
+  surface: http
+  method: POST
+  path_template: "/v1/projects/{project}/databases/{database}/documents:runQuery"
+claim: "Server client libraries bypass all Firestore security rules and authenticate with Application Default Credentials, so their access is decided by IAM, not by the rules."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://firebase.google.com/docs/firestore/security/get-started
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

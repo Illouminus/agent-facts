@@ -1,0 +1,10 @@
+id: af:google-firestore:probe:document-not-found
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch"}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error.status, equals: NOT_FOUND}
+  - {step: 1, json_path: $.error.message, equals: "Document \"projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch\" not found."}

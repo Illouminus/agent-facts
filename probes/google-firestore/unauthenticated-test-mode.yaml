@@ -1,0 +1,12 @@
+# Keyless: under test-mode security rules an unauthenticated REST read is allowed.
+id: af:google-firestore:probe:unauthenticated-test-mode
+service: google-firestore
+env: prod
+account_state: test_mode_rules
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch", auth: none}
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", auth: none}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error.status, equals: NOT_FOUND}
+  - {step: 2, status: 200}

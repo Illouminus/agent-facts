@@ -1,0 +1,31 @@
+id: af:google-firestore:invalid-page-token-400
+service: google-firestore
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}"
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "invalid page token"
+  normalized: "invalid page token"
+claim: "A pageToken the API did not issue returns HTTP 400 \"invalid page token\" (lowercase, no period)."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: paginate_with, cursor_field: nextPageToken, param_name: pageToken, page_size_max: 300}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:list-parameter-errors
+  first_seen: 2026-10-24T08:46:02Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:44:52Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

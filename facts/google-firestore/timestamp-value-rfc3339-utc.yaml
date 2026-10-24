@@ -1,0 +1,28 @@
+id: af:google-firestore:timestamp-value-rfc3339-utc
+service: google-firestore
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"
+signal:
+  status: 200
+claim: "A timestamp field comes back as timestampValue, an RFC 3339 string in UTC with a Z suffix (\"2026-10-24T00:00:00Z\")."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: encode_as, field: timestampValue, encoding: rfc3339}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:typed-document
+  first_seen: 2026-10-24T09:44:52Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:44:52Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

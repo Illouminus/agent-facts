@@ -1,0 +1,18 @@
+id: af:google-firestore:probe:list-parameter-errors
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {pageToken: agentfacts}}
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {pageSize: -1}}
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {"mask.fieldPaths": "a b"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.message, equals: invalid page token}
+  - {step: 1, json_path: $.error.status, equals: INVALID_ARGUMENT}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: $.error.message, equals: Page size must be nonnegative.}
+  - {step: 2, json_path: $.error.status, equals: INVALID_ARGUMENT}
+  - {step: 3, status: 400}
+  - {step: 3, json_path: $.error.message, contains: "Invalid property path \"a b\""}
+  - {step: 3, json_path: $.error.status, equals: INVALID_ARGUMENT}

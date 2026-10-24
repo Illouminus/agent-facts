@@ -1,0 +1,39 @@
+# Cloud Firestore REST API v1 — the Firebase document database (wave 1 seed, keyed). The probe
+# runner authenticates as the project's service account (google-service-account, a google family
+# key) with the datastore scope; Firestore has no read-only scope, the account's IAM role decides,
+# and probes are read-only GETs on the (default) database of project agent-facts-probes, created
+# 2026-10-24 in test mode (eur3) and still empty. Keyless steps show what an unauthenticated client
+# gets under those rules.
+key: google-firestore
+name: Cloud Firestore (Firebase) REST API
+hosts: [firestore.googleapis.com]
+doc_hosts: [firebase.google.com]
+surfaces:
+  http:
+    base_url: https://firestore.googleapis.com
+    templates:
+      - {method: GET, path: "/v1/projects/{project}/databases/{database}/documents/{collection}"}
+      - {method: GET, path: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"}
+      - {method: GET, path: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}/{subcollection}"}
+      - {method: PATCH, path: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"}
+      - {method: POST, path: "/v1/projects/{project}/databases/{database}/documents:runQuery"}
+    signal_fields:  # error.status first: check() takes the first code-shaped field
+      - status
+      - error.status
+      - error.message
+  sdk:
+    - {ecosystem: pypi, package: google-cloud-firestore}
+    - {ecosystem: npm, package: firebase}
+dimensions:
+  env: {prod: https://firestore.googleapis.com}
+  account_state: [service_account, test_mode_rules]
+auth:
+  kind: google_service_account
+  key_name: google-service-account
+  env: prod
+  scopes: [https://www.googleapis.com/auth/datastore]
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://firebase.google.com/terms
+probe_budget: {per_template_seconds: 300}

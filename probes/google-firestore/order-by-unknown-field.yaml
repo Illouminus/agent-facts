@@ -1,0 +1,9 @@
+# orderBy on a field no document has is not refused.
+id: af:google-firestore:probe:order-by-unknown-field
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {orderBy: "agent_facts_no_such_field desc"}}
+assert:
+  - {step: 1, status: 200}

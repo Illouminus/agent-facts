@@ -1,0 +1,31 @@
+id: af:google-firestore:unauthenticated-read-under-test-mode
+service: google-firestore
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "Document \"projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch\" not found."
+  normalized: "document \"projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch\" not found."
+claim: "While a database runs on test-mode security rules, REST reads with no credentials at all are allowed: a missing document is 404 NOT_FOUND and a list is HTTP 200, rather than 401 or 403."
+dimensions:
+  env: prod
+  account_state: test_mode_rules
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:unauthenticated-test-mode
+  first_seen: 2026-10-24T08:46:02Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:44:52Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,28 @@
+id: af:google-firestore:order-by-unknown-field-accepted
+service: google-firestore
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}"
+signal:
+  status: 200
+claim: "orderBy on a field that no document has is accepted with HTTP 200 instead of being refused."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:order-by-unknown-field
+  first_seen: 2026-10-24T08:46:02Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:44:52Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,31 @@
+id: af:google-firestore:invalid-field-path-400
+service: google-firestore
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}"
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Invalid property path \"a b\". Unquoted property paths must match regex ([a-zA-Z_][a-zA-Z_0-9]*), and quoted property paths must match regex (`(?:[^`\\\\]|(?:\\\\.))+`)"
+  normalized: "invalid property path \"a b\". unquoted property paths must match regex ([a-za-z_][a-za-z_#-#]*), and quoted property paths must match regex (`(?:[^`\\\\]|(?:\\\\.))+`)"
+claim: "A mask.fieldPaths entry with a space or other character outside [a-zA-Z_][a-zA-Z_0-9]* returns HTTP 400 \"Invalid property path\" unless the path is quoted in backticks."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:list-parameter-errors
+  first_seen: 2026-10-24T08:46:02Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:44:52Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
