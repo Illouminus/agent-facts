@@ -168,3 +168,38 @@ def test_a_bad_key_file_refuses_the_probe_without_a_request(repo, httpserver):
     ]
     assert httpserver.log == [] and not report.ok
     assert b"REFRESHtoken" not in outputs(repo)
+
+
+def test_a_token_close_to_expiry_is_minted_again(repo, httpserver, sa_key):
+    raw, _ = sa_key
+    sa_repo(repo, raw, probes=2)
+    calls = serve_token(httpserver, body={"access_token": ACCESS, "expires_in": 60})
+    httpserver.expect_request("/v1/items").respond_with_json({})
+    report = tick(repo, httpserver, google_token_url=httpserver.url_for("/token"))
+    assert [line.outcome for line in report.lines] == ["pass", "pass"]
+    assert len(calls) == 2  # 60 s left is inside the safety margin: never sent stale
+
+
+def test_a_keyless_probe_of_a_service_account_service_mints_nothing(repo, httpserver, sa_key):
+    raw, _ = sa_key
+    sa_repo(repo, raw, probes=0)
+    repo.probe("anonymous", steps=[{"do": "http", "method": "GET", "path": "/v1/items",
+                                    "auth": "none"}])
+    calls = serve_token(httpserver)
+    httpserver.expect_request("/v1/items").respond_with_json({})
+    report = tick(repo, httpserver, google_token_url=httpserver.url_for("/token"))
+    assert [line.outcome for line in report.lines] == ["pass"] and calls == []
+
+
+def test_the_token_request_counts_against_max_requests(repo, httpserver, sa_key):
+    raw, _ = sa_key
+    sa_repo(repo, raw, probes=2)
+    serve_token(httpserver)
+    httpserver.expect_request("/v1/items").respond_with_json({})
+    report = run_tick(repo.root, repo.state,
+                      TickOptions(run_all=True, vantage="test", max_requests=2),
+                      keys_dir=repo.keys, base_urls={"acme": httpserver.url_for("")},
+                      environ={}, google_token_url=httpserver.url_for("/token"))
+    # 1 token + 1 step fit; the second probe's step would be the third request.
+    assert [line.outcome for line in report.lines] == ["pass"]
+    assert report.counts["deferred"] == 1

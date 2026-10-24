@@ -157,7 +157,7 @@
         "path_prefix": {
           "description": "path_prefix: what the runner puts before every keyed path, the key in place of {key} (Telegram: /bot{key}). Registered templates never contain it.",
           "type": "string",
-          "pattern": "^(/[A-Za-z0-9_.~-]+)*/[A-Za-z0-9_.~-]*\\{key\\}(?!\\n)$"
+          "pattern": "^(?!(.*/)?\\.{1,2}/)(/[A-Za-z0-9_.~-]+)*/[A-Za-z0-9_.~-]*\\{key\\}(?!\\n)$"
         },
         "scopes": {
           "description": "google_service_account: OAuth scopes of the access token the runner mints from the service-account JSON key.",

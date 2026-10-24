@@ -457,6 +457,8 @@ class Auth(_Closed):
                 raise ValueError(f"{name} is required for auth kind {kind} and only for it")
         if self.scopes is not None and len(set(self.scopes)) != len(self.scopes):
             raise ValueError("scopes must be unique")
+        if self.path_prefix is not None and {".", ".."} & set(self.path_prefix.split("/")):
+            raise ValueError("path_prefix has a dot segment")
         return self
 
 

@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 from agentfacts.probe import USER_AGENT
+from agentfacts.probe.http import transport_error_name
 
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer"
@@ -115,9 +116,10 @@ def mint_access_token(
     scopes: Sequence[str],
     now: datetime,
     token_url: str = GOOGLE_TOKEN_URL,
-) -> str:
-    """One token request. The audience is the fixed Google token URL even when a test points
-    `token_url` at a local server."""
+) -> tuple[str, int]:
+    """One token request → (access token, seconds it lives; the JWT's lifetime when Google does
+    not say). The audience is the fixed Google token URL even when a test points `token_url` at
+    a local server."""
     form = {"grant_type": JWT_BEARER, "assertion": signed_assertion(sa, scopes, now)}
     headers = {"User-Agent": USER_AGENT, "Accept-Encoding": "identity"}
     try:
@@ -128,20 +130,17 @@ def mint_access_token(
                 if len(raw) > MAX_TOKEN_RESPONSE:
                     break
             status = response.status_code
-    except httpx.TimeoutException:
-        raise AuthError("token_exchange", "timeout") from None
-    except httpx.ConnectError:
-        raise AuthError("token_exchange", "connect_error") from None
     except httpx.HTTPError as exc:
-        raise AuthError("token_exchange", "http_error:" + type(exc).__name__) from None
+        raise AuthError("token_exchange", transport_error_name(exc)) from None
     try:
         body = json.loads(bytes(raw[:MAX_TOKEN_RESPONSE]))
     except ValueError:
         body = None
     body = body if isinstance(body, dict) else {}
-    token = body.get("access_token")
+    token, lifetime = body.get("access_token"), body.get("expires_in")
     if status == 200 and isinstance(token, str) and token.strip():
-        return token.strip()
+        valid = isinstance(lifetime, int) and not isinstance(lifetime, bool) and lifetime > 0
+        return token.strip(), lifetime if valid else TOKEN_LIFETIME_S
     if status == 200:
         raise AuthError("token_exchange", "200 no access_token")
     error = body.get("error")

@@ -80,6 +80,8 @@ INVALID_AUTH = [
     PATH_PREFIX.replace("/bot{key}", "bot{key}"),
     PATH_PREFIX.replace("/bot{key}", "/b?t{key}"),
     PATH_PREFIX.replace("/bot{key}", "/{key}{key}"),
+    PATH_PREFIX.replace("/bot{key}", "/../{key}"),  # no dot segment before the key
+    PATH_PREFIX.replace("/bot{key}", "/v1/./{key}"),
     SERVICE_ACCOUNT.replace(", scopes: [https://www.googleapis.com/auth/datastore]", ""),
     SERVICE_ACCOUNT.replace("[https://www.googleapis.com/auth/datastore]", "[]"),
     SERVICE_ACCOUNT.replace("https://www.googleapis.com/auth/", "https://evil.example/auth/"),

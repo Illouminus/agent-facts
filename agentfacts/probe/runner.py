@@ -66,6 +66,7 @@ LOCK_FILE = "probe.lock"
 DEFAULT_VANTAGE = "illouminus"
 KILL_FILE = Path("ops") / "KILL"
 _VANTAGE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+TOKEN_MARGIN_S = 300  # a minted token is not sent in its last 5 minutes
 
 
 def check_vantage(vantage: str) -> str:
@@ -173,6 +174,7 @@ def _select(
 
     plan: list[tuple[_Candidate, str, str]] = []
     used: set[TemplateKey] = set()
+    minting: set[str] = set()  # service-account services whose token request is counted
     started = requests = 0
     for c in sorted(candidates, key=age):
         budget = c.service.probe_budget.per_template_seconds
@@ -192,12 +194,18 @@ def _select(
         if c.keyed and not has_key(c.service.auth.key_name, keys_dir):
             plan.append((c, "skipped:no_key", f"no key {c.service.auth.key_name}"))
             continue
-        if started >= options.max_probes or requests + c.requests > options.max_requests:
+        # The token request of a service-account service counts once per tick, with its first
+        # keyed probe (a re-mint before expiry in a long tick is not budgeted ahead).
+        mints = c.keyed and c.service.auth.kind == "google_service_account"
+        cost = c.requests + (1 if mints and c.service.key not in minting else 0)
+        if started >= options.max_probes or requests + cost > options.max_requests:
             plan.append((c, "deferred", "tick budget spent"))
             continue
         plan.append((c, "run", f"{c.requests} request" + ("s" if c.requests != 1 else "")))
         started += 1
-        requests += c.requests
+        requests += cost
+        if mints:
+            minting.add(c.service.key)
         used |= set(c.templates)
     return plan
 
@@ -308,8 +316,9 @@ class _Tick:
     state: BudgetState
     report: TickReport
     google_token_url: str = GOOGLE_TOKEN_URL
-    # service → access token minted this tick, or why there is none (asked once per tick)
-    tokens: dict[str, str | AuthError] = field(default_factory=dict)
+    # service → (access token, epoch it stops being used), or why there is none: a failure is
+    # not retried within the tick, a token is minted again before it expires.
+    tokens: dict[str, tuple[str, float] | AuthError] = field(default_factory=dict)
 
     def line(self, c: _Candidate, outcome: str, detail: str) -> None:
         self.report.counts[_count_key(outcome)] += 1
@@ -401,22 +410,27 @@ class _Tick:
             self.report.refused.append(c.id)
         self.line(c, run.outcome, redacted["detail"])
 
-
     def _access_token(
         self, service: Service, key: str | None, client: httpx.Client, redactor: Redactor
     ) -> str | AuthError:
-        """One token per service per tick; the token joins the redactor before any write."""
-        if service.key not in self.tokens:
-            try:
-                account = parse_service_account(key or "")
-                token = mint_access_token(client, account, service.auth.scopes, self.clock(),
-                                          self.google_token_url)
-            except AuthError as exc:
-                self.tokens[service.key] = exc
-            else:
-                redactor.add({token})
-                self.tokens[service.key] = token
-        return self.tokens[service.key]
+        """A token per service, reused within the tick until `TOKEN_MARGIN_S` before it expires
+        (sleep steps can make a tick long); it joins the redactor before any write."""
+        cached = self.tokens.get(service.key)
+        if isinstance(cached, AuthError):
+            return cached
+        now = self.clock()
+        if cached is not None and now.timestamp() < cached[1]:
+            return cached[0]
+        try:
+            account = parse_service_account(key or "")
+            token, lifetime = mint_access_token(client, account, service.auth.scopes, now,
+                                                self.google_token_url)
+        except AuthError as exc:
+            self.tokens[service.key] = exc
+            return exc
+        redactor.add({token})
+        self.tokens[service.key] = (token, now.timestamp() + lifetime - TOKEN_MARGIN_S)
+        return token
 
 
 def _count_key(outcome: str) -> str:

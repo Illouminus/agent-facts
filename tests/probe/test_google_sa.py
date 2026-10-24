@@ -140,7 +140,8 @@ def test_mint_trades_the_assertion_for_an_access_token(rsa_key, httpserver):
 
     httpserver.expect_request("/token", method="POST").respond_with_handler(token)
     with make_client() as client:
-        assert mint_access_token(client, sa, SCOPES, NOW, httpserver.url_for("/token")) == ACCESS
+        token = mint_access_token(client, sa, SCOPES, NOW, httpserver.url_for("/token"))
+    assert token == (ACCESS, 3599)
     assert seen[0].headers["User-Agent"].startswith("agent-facts-probe/")
 
 
@@ -161,6 +162,17 @@ def test_mint_failures_are_auth_errors(rsa_key, httpserver, status, body, detail
     with make_client() as client, pytest.raises(AuthError) as exc:
         mint_access_token(client, sa, SCOPES, NOW, httpserver.url_for("/token"))
     assert (exc.value.code, exc.value.message) == ("token_exchange", detail)
+
+
+@pytest.mark.parametrize("expires_in", [None, "soon", 0, -5, True])
+def test_a_missing_or_odd_lifetime_counts_as_the_default(rsa_key, httpserver, expires_in):
+    sa = parse_service_account(sa_json(rsa_key))
+    body = {"access_token": ACCESS} | ({} if expires_in is None else {"expires_in": expires_in})
+    httpserver.expect_request("/token").respond_with_json(body)
+    with make_client() as client:
+        assert mint_access_token(client, sa, SCOPES, NOW, httpserver.url_for("/token")) == (
+            ACCESS, 3600
+        )
 
 
 def test_mint_transport_error_is_an_auth_error(rsa_key):
