@@ -1,7 +1,7 @@
-# Enabled 2026-10-20: switched on after a green dry run on the host (see agentfacts-quorum.service).
-# Hourly per spec 08.
+# Hourly per spec 08. Enabled 2026-10-20; disabled 2026-10-24 (62 bot PRs from counter refreshes);
+# re-enabled after the quiet bot (#85) and the bot's own token / verified-only auto-merge (D-089).
 [Unit]
-Description=agent-facts quorum + bot hourly (not enabled)
+Description=agent-facts quorum + bot hourly
 
 [Timer]
 OnCalendar=hourly

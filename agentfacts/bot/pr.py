@@ -6,6 +6,9 @@ working tree, its branch and every code path stay untouched; only `facts/` and t
 regenerated from them can enter the commit (checked before the push). One open bot PR at a time:
 while it waits, changes stay in the checkout and go out with the next run after the merge.
 
+GitHub access is the bot's own token only (`bot/token.py`, D-089): gh with GH_TOKEN, remote git
+through an env-only credential helper; a missing token is a refusal, never the personal login.
+
 When to open (incident 2026-10-20..24, 62 PRs in three days): a new, deleted or substantively
 changed fact goes out at once (with any counter-only changes riding along); counter-only changes
 go out as one "daily evidence refresh" PR, on the first run after `probe run --refresh-evidence`
@@ -35,6 +38,7 @@ from agentfacts.bot.collect import (
     fact_rows,
     git,
 )
+from agentfacts.bot.token import BotAuth
 from agentfacts.probe.runner import (
     DEFAULT_VANTAGE,
     REFRESH_MARKER,
@@ -46,6 +50,7 @@ from agentfacts.probe.runner import (
 BOT_NAME = "agent-facts-bot"
 DEFAULT_BOT_EMAIL = "bot@facts.baillot.dev"
 LABEL = "facts"
+REVIEW_LABEL = "needs-review"  # a PR without auto-merge: some fact needs a human tap (D-089)
 BRANCH_PREFIX = "bot/facts-"
 PUBLISHED_DIRS = ("facts/", "pages/")
 BOT_STATE = "bot-state.json"
@@ -76,14 +81,17 @@ def find_gh(
     raise GitError("gh not found: set AGENTFACTS_GH or add gh to PATH")
 
 
-def gh_cli(root: Path) -> Gh:
-    """The real `gh`, run in the checkout (its `origin` names the repository)."""
+def gh_cli(root: Path, auth: BotAuth) -> Gh:
+    """The real `gh`, run in the checkout (its `origin` names the repository), with the bot's
+    token in GH_TOKEN (never the host's keyring login) and redacted errors."""
     exe = find_gh()
+    env = auth.gh_env(os.environ)
 
     def run(args: Sequence[str]) -> str:
-        done = subprocess.run([exe, *args], cwd=root, capture_output=True, text=True, check=False)
+        done = subprocess.run([exe, *args], cwd=root, capture_output=True, text=True, env=env,
+                              check=False)
         if done.returncode != 0:
-            raise GitError(f"gh {' '.join(args[:2])}: {done.stderr.strip()}")
+            raise GitError(auth.redact(f"gh {' '.join(args[:2])}: {done.stderr.strip()}"))
         return done.stdout
 
     return run
@@ -96,8 +104,8 @@ def branch_name(day: date, existing: Iterable[str]) -> str:
     return f"{BRANCH_PREFIX}{day.isoformat()}-{max(used, default=0) + 1}"
 
 
-def _remote_branches(root: Path, day: date) -> list[str]:
-    out = git(root, "ls-remote", "--heads", "origin", f"refs/heads/{BRANCH_PREFIX}{day}-*")
+def _remote_branches(root: Path, day: date, auth: BotAuth) -> list[str]:
+    out = auth.git(root, "ls-remote", "--heads", "origin", f"refs/heads/{BRANCH_PREFIX}{day}-*")
     return [line.split("\t", 1)[1] for line in out.splitlines() if "\t" in line]
 
 
@@ -121,11 +129,12 @@ def render_body(
     lines += [f"| `{r.id}` | {r.kind} | {r.status} | {r.evidence} | {r.change} |" for r in rows]
     lines.append("")
     if auto:
-        lines.append("Auto-merge: on. Every fact is `verified:*` or `reported` from quorum and "
-                     "written by the bot; it merges when CI is green.")
+        lines.append("Auto-merge: on. Every fact is `verified:*` and written by the bot; it "
+                     "merges when CI is green.")
     else:
         held = ", ".join(f"`{r.id}`" for r in rows if not r.eligible)
-        lines.append(f"Auto-merge: off. Needs a human review `[tap]` for: {held}.")
+        lines.append(f"Auto-merge: off. Needs a human review `[tap]` for: {held}. Only "
+                     "`verified:*` facts written by the bot merge on their own (D-089).")
     if skipped:
         lines += ["", "Not included (changed on `main` since this checkout was synced): "
                   + ", ".join(f"`{p}`" for p in skipped) + "."]
@@ -229,6 +238,7 @@ def publish(
     environ: Mapping[str, str] | None = None,
     gh: Gh | None = None,
     state_dir: Path | None = None,
+    auth: BotAuth | None = None,
 ) -> PublishReport:
     check_vantage(vantage)
     environ = os.environ if environ is None else environ
@@ -242,8 +252,10 @@ def publish(
     hold, refreshed = evidence_gate(state_dir, today)
     if hold and not any(row.substantive for row in by_path.values()):
         return PublishReport("holding", detail=hold)  # no fetch, no gh: nothing goes out
+    if auth is None:  # MissingToken (a GitError) before any remote call; a dry run goes anonymous
+        auth = BotAuth.anonymous() if dry_run else BotAuth.load()
     if not dry_run:
-        git(root, "fetch", "--quiet", "origin", "main")
+        auth.git(root, "fetch", "--quiet", "origin", "main")
     changes = [c for c in changes if not already_on(root, c)]
     if not changes:
         return PublishReport("nothing", detail="every change is already on main")
@@ -259,10 +271,10 @@ def publish(
     body = render_body(rows, auto, vantage, skipped, daily=daily)
     report = PublishReport("would-open", rows=rows, auto=auto, skipped=skipped, body=body,
                            daily=daily)
-    report.branch = branch_name(today, _remote_branches(root, today))
+    report.branch = branch_name(today, _remote_branches(root, today, auth))
     if dry_run:
         return report
-    gh = gh or gh_cli(root)
+    gh = gh or gh_cli(root, auth)
     if (waiting := _open_bot_pr(gh)) is not None:
         report.action, report.detail = "waiting", f"open bot PR {waiting}"
         return report
@@ -285,20 +297,24 @@ def publish(
             return report
         git(tree, "commit", "--quiet", "--no-verify", "-m",
             _commit_message(rows, vantage, email, today, daily), env=_bot_env(email))
-        git(tree, "push", "--quiet", "origin", f"HEAD:refs/heads/{report.branch}")
+        auth.git(tree, "push", "--quiet", "origin", f"HEAD:refs/heads/{report.branch}")
     finally:
         git(root, "worktree", "remove", "--force", str(tree))
         shutil.rmtree(scratch, ignore_errors=True)
 
     title = (DAILY_TITLE.format(day=today) if daily else
              f"facts: {len(rows)} fact file{'s' if len(rows) != 1 else ''} ({today})")
+    labels = ["--label", LABEL] + ([] if auto else ["--label", REVIEW_LABEL])
     try:
         gh(["label", "create", LABEL, "--force", "--color", "0E8A16",
             "--description", "Fact files published by agent-facts-bot"])
+        if not auto:
+            gh(["label", "create", REVIEW_LABEL, "--force", "--color", "D93F0B",
+                "--description", "A fact in this PR needs a human review before merge"])
         report.url = gh(["pr", "create", "--base", "main", "--head", report.branch, "--title",
-                         title, "--body", body, "--label", LABEL]).strip()
+                         title, "--body", body, *labels]).strip()
     except GitError:  # no PR: drop the branch, or the next run would push a duplicate
-        git(root, "push", "--quiet", "origin", "--delete", report.branch)
+        auth.git(root, "push", "--quiet", "origin", "--delete", report.branch)
         raise
     if daily:  # before the merge call: a failing `gh pr merge` must not reopen it next hour
         try:

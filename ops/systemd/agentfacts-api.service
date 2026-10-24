@@ -15,6 +15,19 @@ Environment=AGENTFACTS_TRUSTED_PROXIES=127.0.0.1,::1
 ExecStart=%h/apps/agent-facts/.venv/bin/uvicorn agentfacts.api.app:app --workers 1 --no-access-log --host 127.0.0.1 --port 8795
 Restart=on-failure
 RestartSec=5
+# Hardening (sec card 2026-10-23, D-089): seccomp and prctl only. Mount-namespace options
+# (ProtectSystem, PrivateTmp, ReadWritePaths, InaccessiblePaths…) cannot work in user units on
+# illouminus: AppArmor restricts unprivileged user namespaces (ops/README.md → Hardening).
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 
 [Install]
 WantedBy=default.target
