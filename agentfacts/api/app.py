@@ -29,7 +29,13 @@ from starlette.datastructures import Headers
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from agentfacts.api.facts_index import FactsIndex, IndexedFact, ServiceEntry, Template
+from agentfacts.api.facts_index import (
+    FactsIndex,
+    IndexedFact,
+    ServiceEntry,
+    Template,
+    instance_hosts_of,
+)
 from agentfacts.api.health import last_probe_run
 from agentfacts.api.match import (
     HostTarget,
@@ -149,7 +155,8 @@ class _CheckGuard:
 def _resolve(
     index: FactsIndex, target: Target | None, method: str | None
 ) -> tuple[ServiceEntry | None, Template | None]:
-    """Spec 03 step 1: host → services (exact), path → template (`{id}` = one segment)."""
+    """Spec 03 step 1: host → services (exact `hosts`, or `auth.instance_hosts` and its
+    subdomains, D-090), path → template (`{id}` = one segment)."""
     if isinstance(target, UrlTarget):
         candidates = index.services_for_host(target.host)
         for entry in candidates:
@@ -435,6 +442,7 @@ def create_app(
                     "key": e.key,
                     "name": e.service.name,
                     "hosts": list(e.service.hosts),
+                    "instance_hosts": list(instance_hosts_of(e.service)),
                     "templates": len(e.info.templates),
                     "facts": len(e.facts),
                 }

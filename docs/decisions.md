@@ -1,5 +1,13 @@
 # Журнал решений (новые сверху)
 
+- 2026-10-24 · check(): хост цели сопоставляется ещё и с `auth.instance_hosts` сервиса (сам хост или его поддомен:
+  `<org>.my.salesforce.com`), `hosts` остаются без шаблонов, отправку ключа раннером правка не трогает; ошибки
+  внутри списка (`[0].message` / `[0].errorCode` у Salesforce, `error.errors[0].reason` у Google) check() читает
+  теми же путями, что раннер (`agentfacts/schema/error_paths.py`), whitelist `signal_fields` по-прежнему первый
+  (реестр мегамозга D-090, решено по карт-бланшу Edouard, карточка 2026-10-24-agent-facts-check-org-hosts-error-lists).
+  Клиент тем же правилом: `GET /v0/services` отдаёт `instance_hosts`, плагин и офлайн-снимок их знают, хост org
+  уходит под хостом реестра (`my.salesforce.com`), имя org с машины не уходит.
+
 - 2026-10-20 · Правила приёма check() по семи вопросам W3 (PR #4), приняты рекомендации агента (реестр D-085):
   (1) URL в строке ошибки допустимы с hosts + doc_hosts сервиса; (2) маркеры prompt-injection шире спеки;
   (3) сеть репортёра IPv4 /16, IPv6 /32; (4) JSON-тело без whitelisted message — хранится только статус;

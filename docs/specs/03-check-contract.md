@@ -41,15 +41,20 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 
 ## Server-side processing (default-deny)
 
-1. Parse `target.url` → host, path. Match host against `services/*.yaml::hosts`; path against
+1. Parse `target.url` → host, path. Match host against `services/*.yaml::hosts` (exact), or against
+   the service's `auth.instance_hosts` — that host or a subdomain of it, e.g. `<org>.my.salesforce.com`
+   for `my.salesforce.com` (decision 2026-10-24, D-090); no other subdomain matches. Path against
    `templates` (path parameters `{id}` match one segment). No match → respond with
    `unregistered_target`, store nothing, count one anonymous daily metric; the hostname is kept in that
    metric only when it belongs to the seed candidate list (`docs/research/seed-100/candidates.py`),
    every other host counts as `other` (decision 2026-10-20, Q7).
 2. Extract the signal from `error`: status; vendor error code via the service's `signal_fields` whitelist
-   (JSON pointer list); error string = first whitelisted message field; a body that is JSON (or
-   truncated JSON) without a whitelisted message field yields **no string**, only the status is kept
-   (Q4); a non-JSON body falls back to its first line. Normalize: lowercase, collapse whitespace, digits → `#`, UUID/hex ≥ 16 → `<id>`,
+   (JSON pointer list); error string = first whitelisted message field. An error inside a list, which a
+   whitelist name cannot address, is read through the probe runner's own paths
+   (`agentfacts/schema/error_paths.py`, D-090): message `[0].message` (Salesforce `[{message, errorCode}]`)
+   or `.errors[0].message`, code `[0].errorCode` or `.error.errors[0].reason` (Google); a whitelisted field
+   wins. A body that is JSON (or truncated JSON) without either yields **no string**, only the status is
+   kept (Q4); a non-JSON body falls back to its first line. Normalize: lowercase, collapse whitespace, digits → `#`, UUID/hex ≥ 16 → `<id>`,
    emails → `<email>`, URLs → `<url>`, truncate 512. Hash = sha256 of normalized.
 3. Look up facts: exact `(service, template, normalized hash)`, then `(service, template, status)`,
    then `(service, kind in {rate_limit, availability})`. Render fixes.
@@ -67,7 +72,7 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 
 - `GET /v0/facts/{service}` → all non-retracted facts, ETag, `Cache-Control: public, max-age=300`.
 - `GET /v0/facts/{service}/{slug}` → one fact.
-- `GET /v0/services` → keys, hosts, counts.
+- `GET /v0/services` → keys, hosts, `instance_hosts` (tenant hosts, D-090; `[]` when none), counts.
 - `GET /healthz` → `{ok, registry_version, probes_last_run}`; `probes_last_run` = `started` of the newest
   `pass`/`fail`/`error` line in the runner's `results.jsonl` (`AGENTFACTS_RESULTS`), `null` if none.
 

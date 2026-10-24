@@ -53,9 +53,10 @@ def test_services(client):
     assert r.status_code == 200 and r.headers["cache-control"] == "public, max-age=300"
     assert r.json() == {
         "services": [
-            {"key": "pypi", "name": "PyPI", "hosts": ["pypi.org"], "templates": 1, "facts": 0},
-            {"key": "stripe", "name": "Stripe", "hosts": ["api.stripe.com"], "templates": 2,
-             "facts": 4},
+            {"key": "pypi", "name": "PyPI", "hosts": ["pypi.org"], "instance_hosts": [],
+             "templates": 1, "facts": 0},
+            {"key": "stripe", "name": "Stripe", "hosts": ["api.stripe.com"], "instance_hosts": [],
+             "templates": 2, "facts": 4},
         ],
         "registry": {"version": "2026-10-22", "license": "CC-BY-4.0"},
     }

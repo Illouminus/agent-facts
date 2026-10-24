@@ -20,7 +20,7 @@ from agentfacts.api.match import Locator, version_in
 from agentfacts.api.normalize import ExtractedSignal, error_hash, normalize
 from agentfacts.fixes.templates import render_fix
 from agentfacts.schema.models import Fact, Kind, Service, Status
-from agentfacts.schema.registry import ServiceInfo
+from agentfacts.schema.registry import ServiceInfo, match_host
 from agentfacts.schema.validate import Report, default_paths, validate_paths
 
 log = logging.getLogger("agentfacts.api")
@@ -65,6 +65,10 @@ class IndexedFact:
     def about(self, sdk: Locator) -> bool:
         ref = self.fact.target.sdk
         return ref is not None and (ref.ecosystem, ref.package) == (sdk.ecosystem, sdk.package)
+
+
+def instance_hosts_of(service: Service) -> tuple[str, ...]:
+    return (service.auth.instance_hosts or ()) if service.auth else ()
 
 
 def fact_hashes(fact: Fact) -> frozenset[str]:
@@ -178,9 +182,14 @@ class FactsIndex:
         return self._all.get((service, slug))
 
     def services_for_host(self, host: str) -> list[ServiceEntry]:
-        """Exact host match (no subdomains: default-deny), by key; Google-style shared hosts
-        give several services."""
-        return [s for s in self.services.values() if host in s.service.hosts]
+        """Exact `hosts` match, or a tenant host on `auth.instance_hosts` (it or a subdomain:
+        `<org>.my.salesforce.com`, D-090); no other subdomains (default-deny). By key;
+        Google-style shared hosts give several services."""
+        return [
+            s
+            for s in self.services.values()
+            if host in s.service.hosts or match_host(host, instance_hosts_of(s.service)) is not None
+        ]
 
     def services_for_package(self, ecosystem: str, package: str) -> list[ServiceEntry]:
         return [

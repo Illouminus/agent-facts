@@ -24,7 +24,9 @@ POST api.stripe.com/v1/payment_intents → 400 idempotency_error
   patterns from `body_excerpt` client-side; one request per failure, none on pass.
 - Config: `AGENTFACTS_ENDPOINT` (default `https://facts.baillot.dev`), `AGENTFACTS_DISABLE`,
   `--agentfacts-offline` (use the cached YAML snapshot shipped in the wheel, no network).
-- Cache: `GET /v0/services` hosts list cached 24 h in `~/.cache/agentfacts/`.
+- Cache: `GET /v0/services` hosts list (`hosts` + `instance_hosts`) cached 24 h in `~/.cache/agentfacts/`.
+  A tenant host such as `<org>.my.salesforce.com` is sent under its registry host (`my.salesforce.com`):
+  the org name does not leave the machine; the offline snapshot matches the same way (D-090).
 
 ## jest plugin (wave 2, `plugins/jest/`, package `@agent-facts/jest`)
 

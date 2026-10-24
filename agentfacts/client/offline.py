@@ -41,6 +41,12 @@ def _list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 
 
+def _hosts(service: Mapping[str, Any]) -> list[str]:
+    """`hosts` and the tenant `auth.instance_hosts` (D-090), lowercased."""
+    listed = _list(service.get("hosts")) + _list(_map(service.get("auth")).get("instance_hosts"))
+    return [h.lower() for h in listed if isinstance(h, str)]
+
+
 def _templates(service: Mapping[str, Any]) -> list[tuple[str, str]]:
     http = _map(_map(service.get("surfaces")).get("http"))
     return [
@@ -67,9 +73,7 @@ class Snapshot:
 
     @property
     def hosts(self) -> frozenset[str]:
-        return frozenset(
-            h.lower() for s in self.services for h in _list(s.get("hosts")) if isinstance(h, str)
-        )
+        return frozenset(h for s in self.services for h in _hosts(s))
 
     def check(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         """Same shape as the server's answer; `observed` is always empty offline."""
@@ -81,9 +85,7 @@ class Snapshot:
             (
                 s
                 for s in self.services
-                if match_host(
-                    host, [h.lower() for h in _list(s.get("hosts")) if isinstance(h, str)]
-                )
+                if match_host(host, _hosts(s))
             ),
             None,
         )
