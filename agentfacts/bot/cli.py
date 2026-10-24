@@ -24,9 +24,15 @@ def publish(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Show the PR that would open; push and call nothing.")
     ] = False,
+    state_dir: Annotated[
+        Path | None,
+        typer.Option(help="Runner state (evidence-refresh.json, bot-state.json); <root>/var."),
+    ] = None,
 ) -> None:
     """Commit changed facts/ (and regenerated pages/) on bot/facts-<date>-<n>, open one PR
-    labelled `facts`, auto-merge it when every fact is verified or reported from quorum.
+    labelled `facts`, auto-merge it when every fact is verified or reported from quorum. New
+    facts and status changes go out at once; counter-only changes once a day, after
+    `probe run --refresh-evidence`.
 
     Exit codes: 0 done / nothing to do / waiting / killed, 1 refused (invalid or conflicting
     files, git or gh failure), 2 usage.
@@ -36,7 +42,7 @@ def publish(
 
     try:
         report = run(root, today=datetime.now(UTC).date(), vantage=vantage, dry_run=dry_run,
-                     environ=os.environ)
+                     environ=os.environ, state_dir=state_dir)
     except ValueError as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(EXIT_USAGE) from None
@@ -54,10 +60,12 @@ def publish(
     summary = {
         "nothing": "nothing to publish",
         "killed": f"killed ({report.detail}): nothing done",
+        "holding": f"holding counter-only changes: {report.detail}",
         "waiting": f"waiting: {report.detail}; changes stay for the next run",
         "would-open": f"dry run: would open {report.branch}",
         "opened": f"opened {report.url} on {report.branch}"
-        + (" (auto-merge on)" if report.auto else " (needs review)"),
+        + (" (auto-merge on)" if report.auto else " (needs review)")
+        + (f"; {report.detail}" if report.detail else ""),
         "refused": f"refused: {report.detail}",
     }[report.action]
     typer.echo(summary, err=True)

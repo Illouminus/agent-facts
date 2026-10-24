@@ -89,6 +89,21 @@ def test_quorum_timer_hourly():
     assert unit("agentfacts-quorum.timer")["Timer"]["OnCalendar"] == "hourly"
 
 
+def test_refresh_timer_daily_3_paris():
+    timer = unit("agentfacts-refresh.timer")["Timer"]
+    assert timer["OnCalendar"] == "*-*-* 03:00:00 Europe/Paris"
+    assert timer["Persistent"] == "true"
+    assert timer["Unit"] == "agentfacts-refresh.service"
+
+
+def test_refresh_service_flushes_the_ledger_only():
+    service = unit("agentfacts-refresh.service")["Service"]
+    assert service["Type"] == "oneshot"
+    assert service["ExecStart"] == (
+        f"{APP}/.venv/bin/agentfacts probe run --refresh-evidence --root {APP}"
+    )
+
+
 @pytest.mark.parametrize("name", sorted(p.name for p in UNITS.glob("agentfacts-*")))
 def test_no_unit_touches_keys_or_model_apis(name):
     text = (UNITS / name).read_text(encoding="utf-8").lower()

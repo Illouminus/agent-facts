@@ -1,0 +1,31 @@
+id: af:google-gemini:page-size-negative-400
+service: google-gemini
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: /v1beta/models
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "* ListModelsRequest.page_size: page_size must be positive"
+  normalized: "* listmodelsrequest.page_size: page_size must be positive"
+claim: "A negative pageSize returns HTTP 400 INVALID_ARGUMENT \"* ListModelsRequest.page_size: page_size must be positive\"."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: remove_param, name: pageSize, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:models-page-size-negative
+  first_seen: 2026-10-24T08:03:54Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:07:09Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,31 @@
+id: af:google-gemini:latest-aliases-v1beta-only
+service: google-gemini
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/models/{model}"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "Model is not found: models/gemini-flash-latest for api version v1"
+  normalized: "model is not found: models/gemini-flash-latest for api version v#"
+claim: "The alias gemini-flash-latest and preview models such as gemini-3-flash-preview answer on v1beta but return HTTP 404 NOT_FOUND on v1."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: use_endpoint, method: GET, path_template: "/v1beta/models/{model}"}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:latest-alias-v1beta-only
+  first_seen: 2026-10-24T08:03:54Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:07:09Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

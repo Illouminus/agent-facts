@@ -1,0 +1,9 @@
+id: af:google-gemini:probe:models-invalid-page-token
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models, query: {pageToken: agentfacts}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.status, equals: INVALID_ARGUMENT}
+  - {step: 1, json_path: $.error.message, equals: "Invalid page_token."}
