@@ -1,9 +1,9 @@
-# Enabled 2026-10-20 (orchestrator, after W4 #10/#11 and repo setting allow_auto_merge). To switch on
-# elsewhere, run a dry run on the host first:
+# See agentfacts-quorum.timer for when it runs. To switch it on anywhere, run a dry run first:
 #   .venv/bin/agentfacts quorum run --root . --db var/observations.sqlite --dry-run
 #   .venv/bin/agentfacts bot publish --root . --dry-run
 #   systemctl --user enable --now agentfacts-quorum.timer
-# The bot needs git push + gh on the host and "Allow auto-merge" on the repo (W4 hand-over).
+# The bot needs gh on the host, its own token (keyput agent-facts-bot: a fine-grained PAT on
+# this repo only, D-089; never the owner's gh login) and "Allow auto-merge" on the repo.
 [Unit]
 Description=agent-facts quorum + bot (spec 05)
 After=network-online.target
@@ -17,3 +17,17 @@ Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/bin/sh -c '%h/apps/agent-facts/.venv/bin/agentfacts quorum run --root %h/apps/agent-facts --db %h/apps/agent-facts/var/observations.sqlite && %h/apps/agent-facts/.venv/bin/agentfacts bot publish --root %h/apps/agent-facts'
 Nice=10
 TimeoutStartSec=1800
+# Hardening (sec card 2026-10-23, D-089): seccomp and prctl only. Mount-namespace options
+# (ProtectSystem, PrivateTmp, ReadWritePaths, InaccessiblePaths…) cannot work in user units on
+# illouminus: AppArmor restricts unprivileged user namespaces (ops/README.md → Hardening).
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+UMask=0077

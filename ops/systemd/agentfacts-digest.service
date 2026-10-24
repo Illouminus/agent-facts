@@ -8,3 +8,17 @@ Type=oneshot
 WorkingDirectory=%h/apps/agent-facts
 ExecStart=%h/apps/agent-facts/.venv/bin/python %h/apps/agent-facts/ops/digest.py --root %h/apps/agent-facts
 TimeoutStartSec=300
+# Hardening (sec card 2026-10-23, D-089): seccomp and prctl only. Mount-namespace options
+# (ProtectSystem, PrivateTmp, ReadWritePaths, InaccessiblePaths…) cannot work in user units on
+# illouminus: AppArmor restricts unprivileged user namespaces (ops/README.md → Hardening).
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+UMask=0077

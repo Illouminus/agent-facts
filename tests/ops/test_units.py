@@ -121,3 +121,42 @@ def test_kill_file_is_ignored_by_git():
         ["git", "check-ignore", "-q", "ops/KILL"], cwd=ROOT, check=False
     )
     assert result.returncode == 0
+
+
+# Hardening (sec card 2026-10-23, variant 1, D-089). Only what applies to systemd user units on
+# illouminus: seccomp and prctl. Mount-namespace options are ignored or fail with 226/NAMESPACE
+# there (AppArmor restricts unprivileged user namespaces; ops/README.md → Hardening), so a unit
+# carrying one would promise a confinement it does not have.
+HARDENING = {
+    "NoNewPrivileges": "yes",
+    "RestrictSUIDSGID": "yes",
+    "LockPersonality": "yes",
+    "RestrictRealtime": "yes",
+    "RestrictNamespaces": "yes",
+    "SystemCallArchitectures": "native",
+    "SystemCallFilter": "@system-service",
+    "SystemCallErrorNumber": "EPERM",
+    "MemoryDenyWriteExecute": "yes",
+    "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6 AF_NETLINK",
+    "UMask": "0077",
+}
+NEEDS_MOUNT_NAMESPACE = (
+    "ProtectSystem", "ProtectHome", "PrivateTmp", "ReadWritePaths", "ReadOnlyPaths",
+    "InaccessiblePaths", "TemporaryFileSystem", "BindPaths", "BindReadOnlyPaths", "PrivateUsers",
+    "PrivateDevices", "ProtectProc", "ProcSubset", "ProtectKernelTunables", "ProtectKernelModules",
+    "ProtectKernelLogs", "ProtectControlGroups", "ProtectClock", "ProtectHostname",
+    "PrivateNetwork", "CapabilityBoundingSet",
+)
+SERVICES = sorted(p.name for p in UNITS.glob("agentfacts-*.service"))
+
+
+@pytest.mark.parametrize("name", SERVICES)
+def test_every_service_is_hardened(name):
+    service = unit(name)["Service"]
+    assert {key: service.get(key) for key in HARDENING} == HARDENING
+
+
+@pytest.mark.parametrize("name", SERVICES)
+def test_no_service_promises_a_mount_namespace(name):
+    service = unit(name)["Service"]
+    assert [key for key in NEEDS_MOUNT_NAMESPACE if key in service] == []
