@@ -1,0 +1,10 @@
+# A subcollection is listed even when its parent document does not exist: 200 {}, not 404.
+id: af:google-firestore:probe:subcollection-of-missing-document
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch/children"}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.documents, exists: false}

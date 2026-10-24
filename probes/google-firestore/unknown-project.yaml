@@ -1,0 +1,11 @@
+# A project that does not exist (or that the caller cannot see) is a 403, not a 404.
+id: af:google-firestore:probe:unknown-project
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-nosuch-project-x/databases/(default)/documents/agent_facts/x"}
+assert:
+  - {step: 1, status: 403}
+  - {step: 1, json_path: $.error.status, equals: PERMISSION_DENIED}
+  - {step: 1, json_path: $.error.message, equals: Permission denied on resource project agent-facts-nosuch-project-x.}

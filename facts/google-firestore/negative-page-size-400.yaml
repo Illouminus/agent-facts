@@ -1,0 +1,31 @@
+id: af:google-firestore:negative-page-size-400
+service: google-firestore
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}"
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Page size must be nonnegative."
+  normalized: "page size must be nonnegative."
+claim: "A negative pageSize returns HTTP 400 \"Page size must be nonnegative.\"."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: remove_param, name: pageSize, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:list-parameter-errors
+  first_seen: 2026-10-24T08:46:02Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:46:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

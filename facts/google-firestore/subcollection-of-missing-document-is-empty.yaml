@@ -1,0 +1,28 @@
+id: af:google-firestore:subcollection-of-missing-document-is-empty
+service: google-firestore
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}/{subcollection}"
+signal:
+  status: 200
+claim: "Listing a subcollection under a parent document that does not exist returns HTTP 200 {} rather than 404: the parent's absence is not reported."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:subcollection-of-missing-document
+  first_seen: 2026-10-24T08:46:02Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:46:27Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

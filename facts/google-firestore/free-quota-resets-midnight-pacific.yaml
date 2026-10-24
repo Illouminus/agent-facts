@@ -1,0 +1,22 @@
+id: af:google-firestore:free-quota-resets-midnight-pacific
+service: google-firestore
+kind: rate_limit
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"
+claim: "The free quota is 50,000 document reads and 20,000 writes and 20,000 deletes per day, reset around midnight Pacific time."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://firebase.google.com/docs/firestore/quotas
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

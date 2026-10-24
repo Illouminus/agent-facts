@@ -1,0 +1,11 @@
+# Listing a collection with no documents returns {} — no documents field, no nextPageToken.
+id: af:google-firestore:probe:empty-collection-empty-object
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {pageSize: 10}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.documents, exists: false}
+  - {step: 1, json_path: $.nextPageToken, exists: false}

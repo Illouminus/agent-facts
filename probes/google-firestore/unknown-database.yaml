@@ -1,0 +1,10 @@
+id: af:google-firestore:probe:unknown-database
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: /v1/projects/agent-facts-probes/databases/agentfacts-nosuch-db/documents/agent_facts/x}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error.status, equals: NOT_FOUND}
+  - {step: 1, json_path: $.error.message, contains: "The database agentfacts-nosuch-db does not exist for project agent-facts-probes"}

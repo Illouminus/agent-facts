@@ -1,0 +1,31 @@
+id: af:google-firestore:unknown-project-403
+service: google-firestore
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"
+signal:
+  status: 403
+  error_code: PERMISSION_DENIED
+  error_string: "Permission denied on resource project agent-facts-nosuch-project-x."
+  normalized: "permission denied on resource project agent-facts-nosuch-project-x."
+claim: "A project id that does not exist returns HTTP 403 PERMISSION_DENIED \"Permission denied on resource project <id>.\", the same status as missing IAM rights, not 404."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:unknown-project
+  first_seen: 2026-10-24T08:46:02Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:46:27Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

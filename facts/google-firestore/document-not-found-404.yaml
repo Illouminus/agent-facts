@@ -1,0 +1,31 @@
+id: af:google-firestore:document-not-found-404
+service: google-firestore
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "Document \"projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch\" not found."
+  normalized: "document \"projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch\" not found."
+claim: "Getting a document that does not exist returns HTTP 404 NOT_FOUND with the full document name in the message (Document \"projects/…/documents/<path>\" not found.)."
+dimensions:
+  env: prod
+  account_state: service_account
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-firestore:probe:document-not-found
+  first_seen: 2026-10-24T08:46:01Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:46:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
