@@ -597,3 +597,16 @@ def test_details_are_clipped_after_redaction(repo, httpserver):
     tick(repo, httpserver)
     line = repo.results()[0]
     assert len(line["asserts"][0]["detail"]) <= 200 and len(line["detail"]) <= 200
+
+
+def test_a_top_level_description_is_the_error_string(repo, httpserver):
+    """Telegram's error shape: {ok: false, error_code, description} (check() reads it too)."""
+    repo.service()
+    repo.key()
+    repo.probe()
+    body = {"ok": False, "error_code": 400, "description": "Bad Request: chat not found"}
+    httpserver.expect_request("/v1/items").respond_with_json(body, status=400)
+    tick(repo, httpserver)
+    step = repo.results()[0]["steps"][0]
+    assert step["error_string"] == "Bad Request: chat not found"
+    assert step["normalized"] == "bad request: chat not found"

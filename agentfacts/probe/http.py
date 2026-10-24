@@ -11,9 +11,12 @@ body that drips past the timeout as a whole.
 
 import base64
 import json
+import re
 import time
 import zlib
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -134,26 +137,56 @@ def base_url_for(service: Service, env: str) -> str:
     return url
 
 
-def auth_for(service: Service, key: str | None) -> tuple[dict[str, str], dict[str, str]]:
-    """(headers, query parameters) that carry the service key."""
+@dataclass(frozen=True)
+class Credentials:
+    """What carries the service key on one request: headers, query parameters, and a path prefix
+    put between the base URL and the template path (`path_prefix` kind)."""
+
+    headers: Mapping[str, str]
+    query: Mapping[str, str]
+    path_prefix: str = ""
+
+
+NO_CREDENTIALS = Credentials(MappingProxyType({}), MappingProxyType({}))
+# One plain path segment: a key that could add a segment, a dot segment, a query or a fragment
+# would reach another path than the registered template.
+_PATH_SAFE_KEY = re.compile(r"^(?!\.+$)[A-Za-z0-9:_.~-]+$")
+
+
+def auth_for(service: Service, secret: str | None) -> Credentials:
+    """The credentials for one keyed request. `secret` is the key file's value, or for
+    `google_service_account` the access token the runner minted from it (`google_sa`). A kind
+    this function does not know is refused, never sent in some default place."""
     auth = service.auth
-    if auth is None or auth.kind == "none" or key is None:
-        return {}, {}
-    if auth.kind == "bearer":
-        return {"Authorization": f"Bearer {key}"}, {}
+    if auth is None or auth.kind == "none" or secret is None:
+        return NO_CREDENTIALS
+    if auth.kind in ("bearer", "google_service_account"):
+        if auth.kind == "google_service_account" and secret.lstrip().startswith("{"):
+            raise Refused("unminted_key", f"the {service.key} key file is not an access token")
+        return Credentials({"Authorization": f"Bearer {secret}"}, {})
     if auth.kind == "basic":
-        user_pass = key if ":" in key else key + ":"  # a bare key is the user, empty password
-        return {"Authorization": "Basic " + base64.b64encode(user_pass.encode()).decode()}, {}
+        user_pass = secret if ":" in secret else secret + ":"  # a bare key = user, no password
+        return Credentials(
+            {"Authorization": "Basic " + base64.b64encode(user_pass.encode()).decode()}, {}
+        )
     if auth.kind == "header":
-        return {auth.header_name: key}, {}
-    return {}, {auth.param_name: key}
+        return Credentials({auth.header_name: secret}, {})
+    if auth.kind == "query":
+        return Credentials({}, {auth.param_name: secret})
+    if auth.kind == "path_prefix":
+        prefix = auth.path_prefix.replace("{key}", secret)
+        if not _PATH_SAFE_KEY.match(secret) or {".", ".."} & set(prefix.split("/")):
+            message = f"the {service.key} key is not one plain path segment"
+            raise Refused("key_not_path_safe", message)
+        return Credentials({}, {}, prefix)
+    raise Refused("unknown_auth_kind", f"auth kind {auth.kind} of {service.key} is not supported")
 
 
 def make_client(timeout: float = TIMEOUT_S) -> httpx.Client:
     return httpx.Client(timeout=timeout, follow_redirects=False, trust_env=False)
 
 
-def _error_name(exc: httpx.HTTPError) -> str:
+def transport_error_name(exc: httpx.HTTPError) -> str:
     if isinstance(exc, httpx.TimeoutException):
         return "timeout"
     if isinstance(exc, httpx.ConnectError):
@@ -203,16 +236,15 @@ def send(
     client: httpx.Client,
     base_url: str,
     request: PreparedRequest,
-    auth_headers: dict[str, str],
-    auth_query: dict[str, str],
+    credentials: Credentials = NO_CREDENTIALS,
 ) -> StepResponse:
     headers = httpx.Headers(request.headers)
-    for name, value in auth_headers.items():
+    for name, value in credentials.headers.items():
         headers[name] = value
     headers["User-Agent"] = USER_AGENT
     headers["Accept-Encoding"] = "identity"
-    url = base_url.rstrip("/") + request.path
-    params = {**request.query, **auth_query}
+    url = base_url.rstrip("/") + credentials.path_prefix + request.path
+    params = {**request.query, **credentials.query}
     total = client.timeout.read or TIMEOUT_S
     started = time.perf_counter()
 
@@ -240,6 +272,6 @@ def send(
                     break
             status, response_headers = response.status_code, response.headers
     except httpx.HTTPError as exc:
-        return failed(_error_name(exc))
+        return failed(transport_error_name(exc))
     latency = int((time.perf_counter() - started) * 1000)
     return StepResponse(status, response_headers, bytes(body), _parse(bytes(body)), latency)

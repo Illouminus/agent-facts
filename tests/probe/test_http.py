@@ -14,6 +14,8 @@ from werkzeug import Request, Response
 from agentfacts.probe import USER_AGENT
 from agentfacts.probe.http import (
     MAX_RAW_BYTES,
+    NO_CREDENTIALS,
+    Credentials,
     Refused,
     _Decoder,
     auth_for,
@@ -57,9 +59,8 @@ class Capture:
 
 def run(httpserver, s, *, env="sandbox", key=FAKE_KEY, service=SERVICE, timeout=5.0, c=None):
     request = prepare(s, c or ctx(), service, env)
-    headers, query = auth_for(service, key)
     with make_client(timeout=timeout) as client:
-        return send(client, httpserver.url_for(""), request, headers, query)
+        return send(client, httpserver.url_for(""), request, auth_for(service, key))
 
 
 def test_get_with_query_and_json_response(httpserver):
@@ -122,9 +123,11 @@ def test_auth_kinds_reach_the_server(httpserver, auth, expect):
 
 
 def test_basic_key_with_colon_is_user_and_password():
-    headers, _ = auth_for(make_service(auth={"kind": "basic", "key_name": "k", "env": "sandbox"}),
-                          "user:pass")
-    assert headers["Authorization"] == "Basic " + base64.b64encode(b"user:pass").decode()
+    credentials = auth_for(
+        make_service(auth={"kind": "basic", "key_name": "k", "env": "sandbox"}), "user:pass"
+    )
+    basic = "Basic " + base64.b64encode(b"user:pass").decode()
+    assert credentials.headers["Authorization"] == basic
 
 
 def test_auth_none_step_sends_no_credential(httpserver):
@@ -134,13 +137,44 @@ def test_auth_none_step_sends_no_credential(httpserver):
     request = prepare(s, ctx(), SERVICE, "sandbox")
     assert not request.uses_key
     with make_client() as client:
-        send(client, httpserver.url_for(""), request, {}, {})
+        send(client, httpserver.url_for(""), request, NO_CREDENTIALS)
     assert "Authorization" not in cap.requests[0].headers
 
 
 def test_keyless_service_has_no_auth():
-    assert auth_for(make_service(auth={"kind": "none"}), None) == ({}, {})
-    assert auth_for(make_service(), None) == ({}, {})
+    assert auth_for(make_service(auth={"kind": "none"}), None) == NO_CREDENTIALS
+    assert auth_for(make_service(), None) == NO_CREDENTIALS
+
+
+TELEGRAM_KEY = "123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x"
+PATH_AUTH = {"kind": "path_prefix", "key_name": "k", "env": "sandbox", "path_prefix": "/bot{key}"}
+
+
+def test_path_prefix_puts_the_key_before_the_template_path(httpserver):
+    cap = Capture()
+    httpserver.expect_request(f"/bot{TELEGRAM_KEY}/v1/items").respond_with_handler(cap)
+    r = run(httpserver, step(), service=make_service(auth=PATH_AUTH), key=TELEGRAM_KEY)
+    assert r.status == 200 and len(cap.requests) == 1
+    assert "Authorization" not in cap.requests[0].headers and not cap.requests[0].args
+    assert auth_for(make_service(auth=PATH_AUTH), TELEGRAM_KEY) == Credentials(
+        {}, {}, f"/bot{TELEGRAM_KEY}"
+    )
+
+
+@pytest.mark.parametrize("key", ["123:abc/../x", "a?b", "a#b", "a%2Fb", "a b", ".", "..", "é"])
+def test_path_prefix_refuses_a_key_that_is_not_one_plain_segment(key):
+    with pytest.raises(Refused) as exc:
+        auth_for(make_service(auth=PATH_AUTH), key)
+    assert exc.value.code == "key_not_path_safe" and key not in str(exc.value)
+
+
+def test_unknown_auth_kind_is_refused_not_sent_somewhere():
+    service = make_service().model_copy(
+        update={"auth": make_service().auth.model_copy(update={"kind": "cookie"})}
+    )
+    with pytest.raises(Refused) as exc:
+        auth_for(service, FAKE_KEY)
+    assert exc.value.code == "unknown_auth_kind"
 
 
 def test_redirect_is_not_followed(httpserver):
@@ -165,7 +199,7 @@ def test_timeout_is_a_normalized_error(httpserver):
 def test_connect_error_is_normalized():
     request = prepare(step(), ctx(), SERVICE, "sandbox")
     with make_client(timeout=1.0) as client:
-        r = send(client, "http://127.0.0.1:9", request, {}, {})
+        r = send(client, "http://127.0.0.1:9", request, NO_CREDENTIALS)
     assert r.status is None and r.error == "connect_error"
 
 

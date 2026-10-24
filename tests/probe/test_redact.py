@@ -4,6 +4,8 @@ import base64
 import json
 from urllib.parse import quote
 
+import pytest
+
 from agentfacts.probe.redact import REDACTED, Redactor, secret_forms
 
 
@@ -117,3 +119,43 @@ def test_exact_secrets_match_case_insensitively():
 
 def test_bearer_pattern_is_case_insensitive():
     assert "abcdefghijklmnop1234" not in Redactor(set()).text_strict("bearer abcdefghijklmnop1234")
+
+
+PEM = (
+    "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC\n"
+    "q1w2e3r4t5y6\n-----END PRIVATE KEY-----\n"
+)
+
+
+@pytest.mark.parametrize(
+    "secret",
+    [
+        PEM,
+        PEM.replace("\n", "\\n"),  # as it sits inside a JSON string
+        PEM.replace("PRIVATE KEY", "RSA PRIVATE KEY"),
+        "AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfa_-1",  # Google API key shape
+        "ya29.a0AfB_FAKEfakeFAKEfake-FAKE",  # Google OAuth access token
+        "123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x",  # Telegram bot token
+        "https://api.telegram.org/bot123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x/getMe",
+    ],
+)
+def test_vendor_secret_shapes_are_strict(secret):
+    out = Redactor(set()).line(f'{{"x": "{secret}"}}')
+    assert secret.strip() not in out and REDACTED in out and "FakeFake" not in out
+    assert "PRIVATE KEY" not in out and "MIIEvQ" not in out
+
+
+def test_a_truncated_pem_block_still_loses_its_body():
+    out = Redactor(set()).line("-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEF")
+    assert "MIIEvQ" not in out
+
+
+def test_short_lookalikes_survive():
+    text = "AIza is a prefix, ya29 too, 12:30 and 1234567:short"
+    assert Redactor(set()).line(text) == text
+
+
+def test_add_extends_the_exact_secrets():
+    r = Redactor({"first-secret-value"})
+    r.add({"minted-token-value", ""})
+    assert r.text_strict("minted-token-value / first-secret-value") == f"{REDACTED} / {REDACTED}"
