@@ -1,6 +1,6 @@
 # Google Sheets API
 
-Hosts: `sheets.googleapis.com` · 14 facts
+Hosts: `sheets.googleapis.com` · 20 facts
 
 ## Error meanings
 
@@ -17,9 +17,15 @@ Hosts: `sheets.googleapis.com` · 14 facts
 
 ## Silent behavior
 
+- ✅ verified:server:prod · [With majorDimension=COLUMNS an empty cell before a column's last value comes back as "" and the empty cells after it are dropped.](columns-major-inner-empty-cells.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [UNFORMATTED_VALUE with dateTimeRenderOption=FORMATTED_STRING returns dates as locale-formatted strings ("24/10/2026") while numbers stay JSON numbers.](date-time-formatted-string.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 - ✅ verified:server:prod · [values.get on a range with no data returns HTTP 200 with range and majorDimension but no values field at all, not values: \[\].](empty-range-omits-values.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [By default values.get returns every cell as a string formatted in the spreadsheet's locale: on a fr_FR file 3.14159 comes back as "3,14159", a date as "24/10/2026" and a boolean as "TRUE".](formatted-values-follow-locale.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [With valueRenderOption=FORMULA formulas come back as text in the spreadsheet locale's syntax: =DATE(2026;10;24) with semicolons on a fr_FR file, while plain numbers and booleans stay typed.](formulas-in-locale-syntax.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 - ✅ verified:server:prod · [The untouched first sheet of a new spreadsheet has a grid of 1000 rows by 26 columns (gridProperties.rowCount and columnCount), the bounds ranges are clipped to.](new-sheet-grid-1000x26.md) · GET /v4/spreadsheets/{spreadsheet_id} · env prod
 - ✅ verified:server:prod · [A range that runs past the sheet's grid is clipped instead of refused: A1:ZZZ1 comes back as A1:Z1 and A1:B2000 as A1:B1000 on a 1000x26 sheet, with HTTP 200.](range-clipped-to-grid.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [With valueRenderOption=UNFORMATTED_VALUE numbers and booleans are JSON numbers and booleans, and a date is its serial number: 2026-10-24 comes back as 46319.](unformatted-dates-are-serial-numbers.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [values is a ragged array: each row ends at its last non-empty cell (a two-cell row of A1:E5 has two items) and an empty row between filled ones comes back as \[\].](value-rows-not-padded.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 - ✅ verified:server:prod · [An open range such as A:A is answered with explicit bounds, A1:A1000 on a 1000-row sheet, and the first sheet's quoted name ('Feuille 1'!A1:A1000).](whole-column-range-expanded.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 
 ## Auth quirks

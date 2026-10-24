@@ -2,7 +2,7 @@
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · HTTP 200**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 3 confirmations from 1 vantage
 
 ## What to do
 
