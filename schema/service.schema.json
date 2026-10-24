@@ -144,7 +144,7 @@
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "enum": ["none", "bearer", "basic", "header", "query", "path_prefix", "google_service_account"]
+          "enum": ["none", "bearer", "basic", "header", "query", "path_prefix", "google_service_account", "oauth_refresh_token"]
         },
         "key_name": {
           "description": "Name of ~/.private_keys/<key_name>.key on the probe runner; never a value.",
@@ -166,11 +166,16 @@
           "maxItems": 5,
           "uniqueItems": true,
           "items": {"type": "string", "pattern": "^https://www\\.googleapis\\.com/auth/[a-z0-9._-]{1,64}(?!\\n)$"}
+        },
+        "token_path": {
+          "description": "oauth_refresh_token: path of the token endpoint on the auth URL's host (Salesforce: /services/oauth2/token).",
+          "type": "string",
+          "pattern": "^(?!.*/\\.{1,2}(/|$))(/[A-Za-z0-9_.~-]+){1,8}(?!\\n)$"
         }
       },
       "allOf": [
         {
-          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["bearer", "basic", "header", "query", "path_prefix", "google_service_account"]}}},
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["bearer", "basic", "header", "query", "path_prefix", "google_service_account", "oauth_refresh_token"]}}},
           "then": {"required": ["key_name", "env"]}
         },
         {
@@ -182,6 +187,11 @@
           "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "google_service_account"}}},
           "then": {"required": ["scopes"]},
           "else": {"not": {"required": ["scopes"]}}
+        },
+        {
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "oauth_refresh_token"}}},
+          "then": {"required": ["token_path"]},
+          "else": {"not": {"required": ["token_path"]}}
         },
         {
           "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "header"}}},

@@ -433,16 +433,19 @@ GoogleScope = _pattern(r"^https://www\.googleapis\.com/auth/[a-z0-9._-]{1,64}$")
 class Auth(_Closed):
     """How the runner turns the key file into credentials. `path_prefix` puts the key into a path
     prefix the templates never contain (`/bot{key}` + `/getMe`); `google_service_account` reads a
-    service-account JSON key and sends a minted access token as Bearer."""
+    service-account JSON key and sends a minted access token as Bearer; `oauth_refresh_token`
+    trades the refresh token of an sfdx auth URL at `token_path` and sends the access token as
+    Bearer to the instance the token names."""
 
     kind: Literal["none", "bearer", "basic", "header", "query", "path_prefix",
-                  "google_service_account"]
+                  "google_service_account", "oauth_refresh_token"]
     key_name: _pattern(r"^[a-z0-9][a-z0-9_-]{0,63}$") | None = None
     env: Env | None = None
     header_name: HeaderName | None = None
     param_name: Identifier | None = None
     path_prefix: _pattern(r"^(/[A-Za-z0-9_.~-]+)*/[A-Za-z0-9_.~-]*\{key\}$") | None = None
     scopes: Annotated[tuple[GoogleScope, ...], Field(min_length=1, max_length=5)] | None = None
+    token_path: _pattern(r"^(/[A-Za-z0-9_.~-]+){1,8}$") | None = None
 
     @model_validator(mode="after")
     def _kind_fields(self) -> "Auth":
@@ -452,13 +455,15 @@ class Auth(_Closed):
             raise ValueError("auth kind header requires header_name")
         if self.kind == "query" and self.param_name is None:
             raise ValueError("auth kind query requires param_name")
-        for kind, name in (("path_prefix", "path_prefix"), ("google_service_account", "scopes")):
+        for kind, name in (("path_prefix", "path_prefix"), ("google_service_account", "scopes"),
+                           ("oauth_refresh_token", "token_path")):
             if (self.kind == kind) != (getattr(self, name) is not None):
                 raise ValueError(f"{name} is required for auth kind {kind} and only for it")
         if self.scopes is not None and len(set(self.scopes)) != len(self.scopes):
             raise ValueError("scopes must be unique")
-        if self.path_prefix is not None and {".", ".."} & set(self.path_prefix.split("/")):
-            raise ValueError("path_prefix has a dot segment")
+        for name in ("path_prefix", "token_path"):
+            if (value := getattr(self, name)) is not None and {".", ".."} & set(value.split("/")):
+                raise ValueError(f"{name} has a dot segment")
         return self
 
 
