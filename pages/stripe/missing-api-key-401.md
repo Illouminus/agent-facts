@@ -2,13 +2,13 @@
 
 **Stripe API · GET /v1/customers · HTTP 401**
 
-Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 > A request without an Authorization header returns HTTP 401 with error type invalid_request_error and no error.code; the message says no API key was provided.
 
 ## What to do
 
-1. Send header Authorization = the account setting secret_key.
+1. No client-side fix known (by design).
 
 ## Dimensions
 

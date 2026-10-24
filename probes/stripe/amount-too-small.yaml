@@ -8,3 +8,4 @@ assert:
   - {step: 1, json_path: $.error.type, equals: invalid_request_error}
   - {step: 1, json_path: $.error.code, equals: amount_too_small}
   - {step: 1, json_path: $.error.message, contains: "Amount must convert to at least 50 cents"}
+  - {step: 1, json_path: $.error.message, contains: "converts to approximately €0.09"}

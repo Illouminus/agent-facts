@@ -19,9 +19,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:expand-not-expandable
   first_seen: 2026-10-24T07:53:51Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T07:53:51Z
+  last_confirmed: 2026-10-24T07:57:24Z
   vantages: [mac-dev]
 provenance:
   source: probe

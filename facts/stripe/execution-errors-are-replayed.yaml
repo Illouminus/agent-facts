@@ -10,7 +10,7 @@ signal:
   error_code: amount_too_small
   error_string: "Amount must convert to at least 50 cents. $0.10 converts to approximately €0.09."
   normalized: "amount must convert to at least ## cents. $#.## converts to approximately €#.##."
-claim: "A 400 returned after the endpoint began executing, such as amount_too_small, is saved under its Idempotency-Key: a retry with the same key returns the same error with Idempotent-Replayed: true, even if the cause has been fixed elsewhere."
+claim: "A 400 returned after the endpoint began executing, such as amount_too_small, is saved under its Idempotency-Key: a retry with the same key returns the same error with Idempotent-Replayed: true."
 dimensions:
   env: sandbox
   account_state: any
@@ -20,9 +20,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:replayed-execution-error
   first_seen: 2026-10-24T07:53:55Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T07:53:55Z
+  last_confirmed: 2026-10-24T07:57:28Z
   vantages: [mac-dev]
 provenance:
   source: probe

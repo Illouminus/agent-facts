@@ -2,9 +2,9 @@
 
 **Stripe API · POST /v1/customers · HTTP 400 `idempotency_error`**
 
-Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
-> An Idempotency-Key longer than 255 characters returns HTTP 400 idempotency_error and the request is not performed.
+> An Idempotency-Key longer than 255 characters returns HTTP 400 idempotency_error; the message gives the accepted range, 1-255 characters.
 
 ## What to do
 

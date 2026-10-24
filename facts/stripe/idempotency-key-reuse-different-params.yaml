@@ -10,7 +10,7 @@ signal:
   error_code: idempotency_error
   error_string: "Keys for idempotent requests can only be used with the same parameters they were first used with. Try using a key other than '3f1e9c2a-7b4d-4e8f-9a6c-1d2b3c4d5e6f' if you meant to execute a different request."
   normalized: "keys for idempotent requests can only be used with the same parameters they were first used with. try using a key other than '<id>' if you meant to execute a different request."
-claim: "Reusing an Idempotency-Key with a different request body returns HTTP 400 with error type idempotency_error; the second request is not performed."
+claim: "Reusing an Idempotency-Key with a different request body returns HTTP 400 with error type idempotency_error."
 dimensions:
   env: sandbox
   account_state: any
@@ -20,9 +20,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:idempotency-key-reuse
   first_seen: 2026-10-24T07:53:52Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T07:53:52Z
+  last_confirmed: 2026-10-24T07:57:25Z
   vantages: [mac-dev]
 provenance:
   source: probe

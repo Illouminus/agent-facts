@@ -14,14 +14,14 @@ dimensions:
   env: sandbox
   account_state: any
 fixes:
-  - {action: set_header, name: Authorization, value_source: account_setting:secret_key}
+  - {action: none_known, reason_kind: by_design}
 status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:no-api-key
   first_seen: 2026-10-24T07:53:54Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T07:53:54Z
+  last_confirmed: 2026-10-24T07:57:27Z
   vantages: [mac-dev]
 provenance:
   source: probe

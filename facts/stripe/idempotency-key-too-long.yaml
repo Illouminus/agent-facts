@@ -10,7 +10,7 @@ signal:
   error_code: idempotency_error
   error_string: "Idempotent key length is 256 characters long, which is outside accepted lengths. Idempotent Keys must be 1-255 characters long. If you're looking for a decent generator, try using a UUID defined by IETF RFC 4122."
   normalized: "idempotent key length is ### characters long, which is outside accepted lengths. idempotent keys must be #-### characters long. if you're looking for a decent generator, try using a uuid defined by ietf rfc ####."
-claim: "An Idempotency-Key longer than 255 characters returns HTTP 400 idempotency_error and the request is not performed."
+claim: "An Idempotency-Key longer than 255 characters returns HTTP 400 idempotency_error; the message gives the accepted range, 1-255 characters."
 dimensions:
   env: sandbox
   account_state: any
@@ -20,9 +20,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:idempotency-key-too-long
   first_seen: 2026-10-24T07:53:52Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T07:53:52Z
+  last_confirmed: 2026-10-24T07:57:25Z
   vantages: [mac-dev]
 provenance:
   source: probe

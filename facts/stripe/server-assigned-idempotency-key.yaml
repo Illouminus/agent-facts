@@ -17,9 +17,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:server-idempotency-key
   first_seen: 2026-10-24T07:53:55Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T07:53:55Z
+  last_confirmed: 2026-10-24T07:57:28Z
   vantages: [mac-dev]
 provenance:
   source: probe

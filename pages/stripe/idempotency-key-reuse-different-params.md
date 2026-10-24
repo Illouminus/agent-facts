@@ -2,9 +2,9 @@
 
 **Stripe API · POST /v1/payment_intents · HTTP 400 `idempotency_error`**
 
-Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
-> Reusing an Idempotency-Key with a different request body returns HTTP 400 with error type idempotency_error; the second request is not performed.
+> Reusing an Idempotency-Key with a different request body returns HTTP 400 with error type idempotency_error.
 
 ## What to do
 
