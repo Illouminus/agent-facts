@@ -5,12 +5,16 @@ template it hits is running (invariant 6; `run_all` skips this check only), `ski
 needs a key that is not there, `deferred` past `max_probes` probes or `max_requests` http steps,
 oldest last run first. Keys are read once, after selection and before the first request, only for
 the services about to run. Only `pass`/`fail` touch facts; `error` (transport error, unexpected
-429, refused request) is not evidence. Every outcome moves the probe's budget (back-off).
+429 or rate-limited 403, refused request) is not evidence. Every outcome moves the probe's budget
+(back-off). Confirmation counters go to the evidence ledger; `refresh_evidence` (daily timer)
+writes them into the fact files (spec 04, incident 2026-10-20..24).
 """
 
 import fcntl
+import json
 import os
 import re
+import tempfile
 import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping
@@ -25,7 +29,7 @@ import httpx
 from agentfacts import __version__
 from agentfacts.probe.assertions import evaluate
 from agentfacts.probe.budget import BudgetState, TemplateKey
-from agentfacts.probe.evidence import apply_outcome
+from agentfacts.probe.evidence import apply_outcome, refresh_from_ledger
 from agentfacts.probe.google_sa import (
     GOOGLE_TOKEN_URL,
     AuthError,
@@ -46,6 +50,7 @@ from agentfacts.probe.http import (
     uses_key,
 )
 from agentfacts.probe.keys import DEFAULT_KEYS_DIR, has_key, read_key
+from agentfacts.probe.ledger import LEDGER_FILE, EvidenceLedger
 from agentfacts.probe.loader import LoadedProbe, Repo, load_repo
 from agentfacts.probe.redact import Redactor
 from agentfacts.probe.results import (
@@ -63,6 +68,7 @@ from agentfacts.schema.validate import Problem
 STATE_FILE = "probe-state.sqlite"
 RESULTS_FILE = "results.jsonl"
 LOCK_FILE = "probe.lock"
+REFRESH_MARKER = "evidence-refresh.json"  # read by the bot: counters may go out (spec 05)
 DEFAULT_VANTAGE = "illouminus"
 KILL_FILE = Path("ops") / "KILL"
 _VANTAGE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
@@ -239,6 +245,11 @@ def _execute(
     expected_5xx = {
         a.step for a in probe.assertions if isinstance(a, AssertStatus) and a.status >= 500
     }
+    # GitHub answers a spent primary limit with 403 + X-RateLimit-Remaining: 0; the IP's search
+    # limit is shared with other clients on the host (8 false failures, 21–23.10.2026).
+    expected_403 = {
+        a.step for a in probe.assertions if isinstance(a, AssertStatus) and a.status == 403
+    }
     ctx = RunContext.start(now=now)
     run, responses = _Run("error", run_id=ctx.run_uuid), {}
     for i, step in enumerate(probe.steps, 1):
@@ -269,6 +280,10 @@ def _execute(
             return run
         if response.status == 429 and not step.expect_rate_limit:
             run.detail = f"step {i}: rate limited (429)"
+            return run
+        if (response.status == 403 and response.headers.get("x-ratelimit-remaining") == "0"
+                and not step.expect_rate_limit and i not in expected_403):
+            run.detail = f"step {i}: rate limited (403, x-ratelimit-remaining: 0)"
             return run
         if response.status >= 500 and i not in expected_5xx:
             run.detail = f"step {i}: server error ({response.status})"
@@ -314,6 +329,7 @@ class _Tick:
     environ: Mapping[str, str]
     repo: Repo
     state: BudgetState
+    ledger: EvidenceLedger
     report: TickReport
     google_token_url: str = GOOGLE_TOKEN_URL
     # service → (access token, epoch it stops being used), or why there is none: a failure is
@@ -396,7 +412,8 @@ class _Tick:
         if run.outcome in ("pass", "fail"):
             for loaded in self.repo.facts_citing(c.id):
                 change = apply_outcome(
-                    loaded.path, c.item.probe, run.outcome, self.options.vantage, now
+                    loaded.path, c.item.probe, run.outcome, self.options.vantage, now,
+                    ledger=self.ledger,
                 )
                 record["facts"].append({"id": loaded.fact.id, "change": change})
                 if change == "invalid":
@@ -483,14 +500,89 @@ def run_tick(
             return report
         repo = load_repo(root)
         report.problems.extend(repo.problems)
-        with BudgetState(state_dir / STATE_FILE, read_only=options.dry_run) as state:
+        with (
+            BudgetState(state_dir / STATE_FILE, read_only=options.dry_run) as state,
+            EvidenceLedger(state_dir / LEDGER_FILE, read_only=options.dry_run) as ledger,
+        ):
             plan = _select(repo, state, options, clock().timestamp(), keys_dir)
             tick = _Tick(root, options, keys_dir, base_urls or {}, sleep, clock, environ, repo,
-                         state, report, google_token_url)
+                         state, ledger, report, google_token_url)
             if options.dry_run:
                 tick.dry_run(plan)
             else:
                 tick.run(plan, results)
+    return report
+
+
+@dataclass
+class RefreshReport:
+    killed: str | None = None
+    busy: bool = False
+    # refreshed, unchanged, untouched, invalid, dropped (no fact carries the id); dry run:
+    # would-refresh
+    changes: Counter = field(default_factory=Counter)
+    problems: list[Problem] = field(default_factory=list)
+    marker: Path | None = None
+
+    @property
+    def ok(self) -> bool:
+        return not self.problems
+
+
+def _write_marker(path: Path, data: dict[str, Any]) -> None:
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+            fh.write("\n")
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def refresh_evidence(
+    root: Path,
+    state_dir: Path,
+    *,
+    dry_run: bool = False,
+    clock: Callable[[], datetime] = _utcnow,
+    environ: Mapping[str, str] | None = None,
+) -> RefreshReport:
+    """`probe run --refresh-evidence` (daily timer): write the ledger's counters into the fact
+    files, clear them, and leave `<state-dir>/evidence-refresh.json` so the bot may open the day's
+    evidence PR. Holds the tick lock (it writes facts/ like a tick). An id that no fact carries
+    any more (deleted or unreadable file) loses its pending counters: at most a day's."""
+    environ = os.environ if environ is None else environ
+    report = RefreshReport()
+    if reason := kill_reason(root, environ):
+        report.killed = reason
+        return report
+    with nullcontext(True) if dry_run else _tick_lock(state_dir) as locked:
+        if not locked:
+            report.busy = True
+            return report
+        repo = load_repo(root)
+        report.problems.extend(repo.problems)
+        paths = {loaded.fact.id: loaded.path for loaded in repo.facts}
+        with EvidenceLedger(state_dir / LEDGER_FILE, read_only=dry_run) as ledger:
+            for fact_id, _ in ledger.items():
+                path = paths.get(fact_id)
+                if path is None:
+                    ledger.clear(fact_id)
+                    report.changes["dropped"] += 1
+                elif dry_run:
+                    report.changes["would-refresh"] += 1
+                else:
+                    change = refresh_from_ledger(path, ledger)
+                    report.changes[change] += 1
+                    if change == "invalid":
+                        report.problems.append(Problem(
+                            path, 1, "fact_not_updated", f"{fact_id}: pending evidence kept"))
+        if not dry_run:
+            report.marker = state_dir / REFRESH_MARKER
+            _write_marker(report.marker, {"refreshed": rfc3339(clock()),
+                                          "written": report.changes["refreshed"]})
     return report
 
 
