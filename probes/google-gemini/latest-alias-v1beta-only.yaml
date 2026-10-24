@@ -1,0 +1,14 @@
+# Moving aliases and previews exist on v1beta only.
+id: af:google-gemini:probe:latest-alias-v1beta-only
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models/gemini-flash-latest}
+  - {do: http, method: GET, path: /v1/models/gemini-flash-latest}
+  - {do: http, method: GET, path: /v1/models/gemini-3-flash-preview}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.name, equals: models/gemini-flash-latest}
+  - {step: 2, status: 404}
+  - {step: 2, json_path: $.error.message, equals: "Model is not found: models/gemini-flash-latest for api version v1"}
+  - {step: 3, status: 404}

@@ -1,0 +1,10 @@
+# The deprecations page gives June 1, 2026 as the earliest shutdown date of gemini-2.0-flash.
+id: af:google-gemini:probe:gemini-2-0-flash-served
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models/gemini-2.0-flash}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.name, equals: models/gemini-2.0-flash}
+  - {step: 1, json_path: $.version, equals: "2.0"}

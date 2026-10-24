@@ -8,6 +8,12 @@
 - A probe in another `env` or `account_state` than the fact (probe without `account_state` = `any`)
   never touches it: `other_dimension` (01: it would be a sibling dimension row, never a refutation).
 
+With a ledger (the runner always passes one) the counters stay out of the YAML: the file is
+written only on a status change (verified, stale, restored) or a first confirmation from a new
+vantage, carrying the pending counters along; every other outcome goes to the ledger, and the
+daily `probe run --refresh-evidence` flushes it (`refresh_from_ledger`). Incident 2026-10-20..24:
+counters rewritten every 15 minutes became 62 bot PRs, 137 CI runs and 62 deploys.
+
 Files go through a ruamel round-trip that leaves untouched lines byte-identical (comments, quotes,
 plain timestamps); the result is re-validated as a `Fact` before an atomic replace.
 """
@@ -27,6 +33,7 @@ from ruamel.yaml.constructor import RoundTripConstructor
 from ruamel.yaml.error import YAMLError
 from ruamel.yaml.representer import RoundTripRepresenter
 
+from agentfacts.probe.ledger import EvidenceLedger, Pending
 from agentfacts.probe.templating import rfc3339
 from agentfacts.schema.models import VERIFIED_STATUSES, Fact, HttpStep, Probe, Status
 from agentfacts.schema.registry import match_template
@@ -175,25 +182,99 @@ def save_fact(path: Path, doc: Any) -> None:
     _write_atomic(path, dump_text(doc))
 
 
-def apply_outcome(path: Path, probe: Probe, outcome: Outcome, vantage: str, now: datetime) -> str:
-    """Update one fact file; returns the change: confirmed, verified, restored, failed, stale,
-    other_dimension, untouched or invalid (file left as is)."""
+def _overlay(evidence: CommentedMap, pending: Pending | None) -> None:
+    """Put the ledger's counters onto the YAML's evidence (in memory)."""
+    if pending is None:
+        return
+    if pending.confirmations:
+        evidence["confirmations"] = (evidence.get("confirmations") or 0) + pending.confirmations
+    if pending.last_confirmed is not None:
+        evidence["last_confirmed"] = Stamp(pending.last_confirmed)
+    if pending.stale_counter is not None:
+        evidence["stale_counter"] = pending.stale_counter
+
+
+def _pending(evidence: CommentedMap, written_confirmations: int) -> Pending:
+    """The counters of `evidence` that the YAML (with `written_confirmations`) does not hold."""
+    last = evidence.get("last_confirmed")
+    return Pending(
+        (evidence.get("confirmations") or 0) - written_confirmations,
+        None if last is None else str(last),
+        evidence.get("stale_counter"),
+    )
+
+
+def _load(path: Path) -> tuple[Any, Fact] | None:
     try:
         doc = load_fact(path)
-        fact = Fact.model_validate(plain(doc))
+        return doc, Fact.model_validate(plain(doc))
     except (OSError, YAMLError, ValidationError):
+        return None
+
+
+def apply_outcome(
+    path: Path,
+    probe: Probe,
+    outcome: Outcome,
+    vantage: str,
+    now: datetime,
+    *,
+    ledger: EvidenceLedger | None = None,
+) -> str:
+    """Update one fact; returns the change: confirmed, verified, restored, failed, stale,
+    other_dimension, untouched or invalid (file left as is). Without `ledger` every outcome is
+    written to the YAML; with it, only status changes and a new vantage are (module doc)."""
+    if (loaded := _load(path)) is None:
         return "invalid"
+    doc, fact = loaded
     if not _same_dimension(fact, probe):
         return "other_dimension"
     if fact.status is Status.retracted:
         return "untouched"
     now = now.astimezone(UTC)
+    evidence = doc["evidence"]
+    written_confirmations = evidence.get("confirmations") or 0
+    new_vantage = vantage not in (evidence.get("vantages") or [])
+    if ledger is not None:
+        _overlay(evidence, ledger.get(fact.id))
     if outcome == "pass":
         change = _confirm(doc, fact, probe, vantage, now)
     else:
         change = _fail(doc, now)
+    quiet = change in ("confirmed", "failed") and not (outcome == "pass" and new_vantage)
+    if ledger is not None and quiet:
+        ledger.put(fact.id, _pending(evidence, written_confirmations))
+        return change
     try:
         save_fact(path, doc)
     except ValueError:
         return "invalid"
+    if ledger is not None:
+        ledger.clear(fact.id)
     return change
+
+
+def refresh_from_ledger(path: Path, ledger: EvidenceLedger) -> str:
+    """Daily refresh of one fact: write its pending counters into the YAML and clear them.
+    Returns refreshed, unchanged (counters equal the YAML's), untouched (nothing pending, or a
+    retracted fact whose entry is dropped) or invalid (file and entry left as they are)."""
+    if (loaded := _load(path)) is None:
+        return "invalid"
+    doc, fact = loaded
+    pending = ledger.get(fact.id)
+    if pending is None:
+        return "untouched"
+    if fact.status is Status.retracted:
+        ledger.clear(fact.id)
+        return "untouched"
+    before = plain(doc)
+    _overlay(doc["evidence"], pending)
+    if plain(doc) == before:
+        ledger.clear(fact.id)
+        return "unchanged"
+    try:
+        save_fact(path, doc)
+    except ValueError:
+        return "invalid"
+    ledger.clear(fact.id)
+    return "refreshed"

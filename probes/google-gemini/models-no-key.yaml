@@ -1,0 +1,10 @@
+# Keyless step: what an agent gets when no API key reaches the API.
+id: af:google-gemini:probe:models-no-key
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models, auth: none}
+assert:
+  - {step: 1, status: 403}
+  - {step: 1, json_path: $.error.status, equals: PERMISSION_DENIED}
+  - {step: 1, json_path: $.error.message, contains: "Method doesn't allow unregistered callers"}

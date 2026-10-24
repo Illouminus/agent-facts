@@ -1,0 +1,9 @@
+id: af:google-gemini:probe:model-not-found
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models/gemini-agent-facts-nosuch}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error.status, equals: NOT_FOUND}
+  - {step: 1, json_path: $.error.message, equals: "Model is not found: models/gemini-agent-facts-nosuch for api version v1beta"}

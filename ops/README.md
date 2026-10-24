@@ -8,6 +8,8 @@ Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 |------------------|------|
 | `~/apps/agent-facts/` | checkout (detached HEAD = deployed sha) |
 | `var/results.jsonl`, `var/probe-state.sqlite` | probe runs and budgets (spec 04) |
+| `var/evidence-pending.sqlite`, `var/evidence-refresh.json` | counters waiting for the daily refresh, its marker |
+| `var/bot-state.json` | day and refresh of the last "daily evidence refresh" PR |
 | `var/observations.sqlite` | check() observations and counters (spec 03) |
 | `var/deploy/` | `deployed` (sha), `deploy.log`, parked `facts-unapplied-*.patch` |
 | `var/publications.jsonl` | published items (once the publish policy is approved) |
@@ -19,6 +21,7 @@ Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 | `agentfacts-api.service` | always, `127.0.0.1:8795`, 1 worker, no access log | yes |
 | `agentfacts-probe.timer` | every 15 min, `probe run --due --max 50 --vantage illouminus` | yes |
 | `agentfacts-digest.timer` | Monday 08:00 Europe/Paris, `ops/digest.py` | yes |
+| `agentfacts-refresh.timer` | daily 03:00 Europe/Paris, `probe run --refresh-evidence` | by hand after the deploy that adds it |
 | `agentfacts-quorum.timer` | hourly, quorum + bot | **no** — after W4 lands |
 
 ## First install (once)
@@ -36,8 +39,9 @@ systemctl --user enable --now agentfacts-probe.timer          # one call per uni
 systemctl --user enable --now agentfacts-digest.timer
 ```
 
-Units are links into the checkout: `ops/deploy.sh` runs `daemon-reload` when `ops/systemd/` changes;
-enabling a new unit stays a deliberate step.
+Units are links into the checkout: when `ops/systemd/` changes, `ops/deploy.sh` links unit files
+that are not linked yet and runs `daemon-reload`; enabling a new unit stays a deliberate step
+(`systemctl --user enable --now agentfacts-refresh.timer`).
 
 ## Deploy
 
@@ -61,9 +65,11 @@ agentfacts-api` — `deploy.sh` always restarts, so prefer it. `/healthz` → `r
 which registry is served; `probes_last_run` is read from `var/results.jsonl` on each call (no
 restart needed after a probe tick).
 
-The probe runner rewrites evidence in `facts/` in place; until the W4 bot publishes those edits,
-`deploy.sh` carries them across checkouts as a patch, and parks a patch that no longer applies in
-`var/deploy/` instead of dropping it.
+The probe runner writes `facts/` in place on a status change, a new vantage and the daily refresh;
+until the bot publishes those edits, `deploy.sh` carries them across checkouts as a patch, and
+parks a patch that no longer applies in `var/deploy/` instead of dropping it. The journal hook
+(`ops/state_journal.py --prev`) writes a megabrain line only when a deploy changes what the
+registry says (new, removed or re-statused facts, claims), never for counters or code.
 
 ## Kill switch
 
