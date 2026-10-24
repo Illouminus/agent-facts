@@ -1,0 +1,10 @@
+# Drift detector: sha256 of the sorted top-level keys of a model object (12 keys incl. thinking,
+# 2026-10-24; same on v1).
+id: af:google-gemini:probe:model-schema-fingerprint
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models/gemini-2.5-flash}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, schema_fingerprint: d91ec8eb6902fc65d2e618735685db2b3d16404bd4b6cd6313ff1beb71fcc632}

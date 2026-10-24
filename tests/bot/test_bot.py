@@ -239,3 +239,13 @@ def test_failed_pr_create_drops_the_pushed_branch(repo):
     with pytest.raises(GitError):
         run(repo, Failing())
     assert repo.remote_branches() == ["main"]
+
+
+def test_cli_holds_counter_only_changes_until_the_daily_refresh(repo, tmp_path):
+    known = repo.work / KNOWN
+    known.write_text(known.read_text().replace("confirmations: 1", "confirmations: 2"))
+    args = ["bot", "publish", "--root", str(repo.work), "--state-dir", str(tmp_path / "state")]
+    r = CliRunner().invoke(app, args, env={"AGENTFACTS_KILL": "0"})
+    assert r.exit_code == 0, r.output
+    assert "holding counter-only changes: no evidence refresh yet" in r.output
+    assert repo.remote_branches() == ["main"]

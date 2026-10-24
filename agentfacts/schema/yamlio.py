@@ -34,6 +34,11 @@ def load_yaml(path: Path) -> Any:
         return _yaml().load(fh)
 
 
+def load_yaml_text(text: str) -> Any:
+    """`load_yaml` for text already in memory (e.g. `git show HEAD:<path>`)."""
+    return _yaml().load(text)
+
+
 def plain(data: Any) -> Any:
     """Convert ruamel containers and scalar subclasses to plain JSON-compatible Python values."""
     if isinstance(data, dict):
