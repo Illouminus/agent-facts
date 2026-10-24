@@ -1,0 +1,15 @@
+# The same key that lists events cannot read the calendar resource itself.
+id: af:google-calendar:probe:calendar-get-needs-oauth
+service: google-calendar
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com"}
+  - {do: http, method: GET, path: /calendar/v3/users/me/calendarList}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: $.error.status, equals: UNAUTHENTICATED}
+  - {step: 1, json_path: $.error.message, contains: "API keys are not supported by this API"}
+  - {step: 2, status: 401}
+  - {step: 2, json_path: $.error.status, equals: UNAUTHENTICATED}
+  - {step: 2, json_path: $.error.message, contains: "API keys are not supported by this API"}

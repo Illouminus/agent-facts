@@ -1,0 +1,15 @@
+# timeMin is RFC 3339 with an offset: a date, or a time without Z/offset, is a bare "Bad Request".
+id: af:google-calendar:probe:time-min-needs-offset
+service: google-calendar
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {timeMin: "2026-10-24"}}
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {timeMin: "2026-10-24T00:00:00"}}
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {timeMin: "{{now_rfc3339}}"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.message, equals: Bad Request}
+  - {step: 1, json_path: "$.error.errors[0].reason", equals: badRequest}
+  - {step: 2, status: 400}
+  - {step: 3, status: 200}

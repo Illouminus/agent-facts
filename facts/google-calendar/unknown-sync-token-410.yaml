@@ -1,0 +1,30 @@
+id: af:google-calendar:unknown-sync-token-410
+service: google-calendar
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 410
+  error_string: "Sync token is no longer valid, a full sync is required."
+  normalized: "sync token is no longer valid, a full sync is required."
+claim: "A syncToken the server does not know, even a made-up string, returns HTTP 410 Gone (reason fullSyncRequired), not 400."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: remove_param, name: syncToken, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:sync-token-errors
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:27Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

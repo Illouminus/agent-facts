@@ -1,0 +1,30 @@
+id: af:google-calendar:max-results-zero-refused
+service: google-calendar
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 400
+  error_string: "Invalid value '0'. Values must be within the range: [1, ∞)"
+  normalized: "invalid value '#'. values must be within the range: [#, ∞)"
+claim: "maxResults=0 returns HTTP 400 \"Invalid value '0'. Values must be within the range: [1, ∞)\" (reason invalidParameter)."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: set_param, name: maxResults, value_source: literal:250, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:max-results-bounds
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

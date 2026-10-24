@@ -1,0 +1,30 @@
+id: af:google-calendar:invalid-page-token-400
+service: google-calendar
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 400
+  error_string: "Invalid page token value."
+  normalized: "invalid page token value."
+claim: "A pageToken the API did not issue returns HTTP 400 \"Invalid page token value.\"."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: paginate_with, cursor_field: nextPageToken, param_name: pageToken, page_size_max: 2500}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:invalid-page-token
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

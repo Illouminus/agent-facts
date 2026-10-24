@@ -1,0 +1,13 @@
+# A calendar shared publicly as free/busy only: events.list works with an API key, as freeBusyReader.
+id: af:google-calendar:probe:events-free-busy-reader
+service: google-calendar
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {maxResults: 5}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.kind, equals: "calendar#events"}
+  - {step: 1, json_path: $.accessRole, equals: freeBusyReader}
+  - {step: 1, json_path: $.items, exists: true}
+  - {step: 1, json_path: $.nextSyncToken, exists: true}
