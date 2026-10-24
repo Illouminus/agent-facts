@@ -1,0 +1,31 @@
+id: af:google-sheets:invalid-value-render-option-400
+service: google-sheets
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Invalid value at 'value_render_option' (type.googleapis.com/google.apps.sheets.v4.ValueRenderOption), \"PRETTY\""
+  normalized: "invalid value at 'value_render_option' (type.googleapis.com/google.apps.sheets.v#.valuerenderoption), \"pretty\""
+claim: "An unknown valueRenderOption returns HTTP 400 INVALID_ARGUMENT naming the field in snake_case (value_render_option) and the rejected value."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: set_param, name: valueRenderOption, value_source: literal:FORMATTED_VALUE, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:invalid-value-render-option
+  first_seen: 2026-10-24T08:32:30Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:42:09Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

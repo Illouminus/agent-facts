@@ -1,0 +1,22 @@
+id: af:google-sheets:request-timeout-180s
+service: google-sheets
+kind: latency_profile
+target:
+  surface: http
+  method: PUT
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+claim: "A request that Sheets processes for more than 180 seconds returns a timeout error; a 2 MB payload is the recommended maximum."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: reduce_payload, field: values, max_bytes: 2000000}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://developers.google.com/workspace/sheets/api/limits
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

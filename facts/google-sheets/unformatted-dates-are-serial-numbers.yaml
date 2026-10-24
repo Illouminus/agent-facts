@@ -1,0 +1,28 @@
+id: af:google-sheets:unformatted-dates-are-serial-numbers
+service: google-sheets
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 200
+claim: "With valueRenderOption=UNFORMATTED_VALUE numbers and booleans are JSON numbers and booleans, and a date is its serial number: 2026-10-24 comes back as 46319."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: set_param, name: dateTimeRenderOption, value_source: literal:FORMATTED_STRING, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:fixture-unformatted-values
+  first_seen: 2026-10-24T09:42:08Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:42:08Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
