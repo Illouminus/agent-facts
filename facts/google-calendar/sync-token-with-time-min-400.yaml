@@ -1,0 +1,30 @@
+id: af:google-calendar:sync-token-with-time-min-400
+service: google-calendar
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 400
+  error_string: "Sync token cannot be used with other request restrictions."
+  normalized: "sync token cannot be used with other request restrictions."
+claim: "A syncToken combined with timeMin returns HTTP 400 \"Sync token cannot be used with other request restrictions.\"."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: remove_param, name: timeMin, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:sync-token-errors
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:27Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

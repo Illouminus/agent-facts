@@ -52,6 +52,13 @@ from agentfacts.probe.http import (
 from agentfacts.probe.keys import DEFAULT_KEYS_DIR, has_key, read_key
 from agentfacts.probe.ledger import LEDGER_FILE, EvidenceLedger
 from agentfacts.probe.loader import LoadedProbe, Repo, load_repo
+from agentfacts.probe.oauth_refresh import (
+    instance_base_url,
+    parse_auth_url,
+    refresh_access_token,
+    token_url,
+)
+from agentfacts.probe.oauth_refresh import secrets_of as oauth_secrets_of
 from agentfacts.probe.redact import Redactor
 from agentfacts.probe.results import (
     ResultsLog,
@@ -76,6 +83,11 @@ DEFAULT_VANTAGE = "illouminus"
 KILL_FILE = Path("ops") / "KILL"
 _VANTAGE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 TOKEN_MARGIN_S = 300  # a minted token is not sent in its last 5 minutes
+# A refresh grant answers no lifetime; a Salesforce org's session timeout can be as short as
+# 15 minutes, so a refreshed token is reused for at most 10 (with TOKEN_MARGIN_S).
+OAUTH_LIFETIME_S = 900
+MINTING_KINDS = frozenset({"google_service_account", "oauth_refresh_token"})
+REFUSING_AUTH_ERRORS = frozenset({"bad_key_file", "foreign_host", "foreign_instance"})
 
 
 def check_vantage(vantage: str) -> str:
@@ -183,7 +195,7 @@ def _select(
 
     plan: list[tuple[_Candidate, str, str]] = []
     used: set[TemplateKey] = set()
-    minting: set[str] = set()  # service-account services whose token request is counted
+    minting: set[str] = set()  # minting services whose token request is counted
     started = requests = 0
     for c in sorted(candidates, key=age):
         budget = c.service.probe_budget.per_template_seconds
@@ -208,7 +220,7 @@ def _select(
             continue
         # The token request of a service-account service counts once per tick, with its first
         # keyed probe (a re-mint before expiry in a long tick is not budgeted ahead).
-        mints = c.keyed and c.service.auth.kind == "google_service_account"
+        mints = c.keyed and c.service.auth.kind in MINTING_KINDS
         cost = c.requests + (1 if mints and c.service.key not in minting else 0)
         if started >= options.max_probes or requests + cost > options.max_requests:
             plan.append((c, "deferred", "tick budget spent"))
@@ -337,10 +349,11 @@ class _Tick:
     state: BudgetState
     ledger: EvidenceLedger
     report: TickReport
-    google_token_url: str = GOOGLE_TOKEN_URL
-    # service → (access token, epoch it stops being used), or why there is none: a failure is
-    # not retried within the tick, a token is minted again before it expires.
-    tokens: dict[str, tuple[str, float] | AuthError] = field(default_factory=dict)
+    token_urls: Mapping[str, str] = field(default_factory=dict)
+    # service → (access token, base URL the token names or None, epoch it stops being used), or
+    # why there is none: a failure is not retried within the tick, a token is minted again
+    # before it expires.
+    tokens: dict[str, tuple[str, str | None, float] | AuthError] = field(default_factory=dict)
 
     def line(self, c: _Candidate, outcome: str, detail: str) -> None:
         self.report.counts[_count_key(outcome)] += 1
@@ -359,8 +372,11 @@ class _Tick:
         }
         redactor = Redactor.for_keys(keys.values())
         for service_key, value in keys.items():
-            if self.repo.services[service_key].auth.kind == "google_service_account":
+            kind = self.repo.services[service_key].auth.kind
+            if kind == "google_service_account":
                 redactor.add(secrets_of(value))
+            elif kind == "oauth_refresh_token":
+                redactor.add(oauth_secrets_of(value))
         log = ResultsLog(results, redactor)
         with make_client(timeout=self.options.timeout_s) as client:
             for c, decision, detail in plan:
@@ -403,17 +419,24 @@ class _Tick:
         redactor: Redactor,
     ) -> None:
         now = self.clock()
-        secret, templates = key, c.templates
-        if c.keyed and c.service.auth.kind == "google_service_account":
-            secret = self._access_token(c.service, key, client, redactor)
+        secret, templates, base_urls = key, c.templates, self.base_urls
+        if c.keyed and c.service.auth.kind in MINTING_KINDS:
+            minted = self._access_token(c.service, key, client, redactor)
+            if isinstance(minted, AuthError):
+                secret = minted
+            else:
+                secret, instance = minted
+                if instance is not None and c.service.key not in base_urls:
+                    base_urls = {**base_urls, c.service.key: instance}
         if isinstance(secret, AuthError):
-            # No request was sent: a bad key file is refused (an operator fixes it), a failed
-            # token exchange is an outage. Neither is evidence; no template was used.
+            # No probe request was sent: a bad key file or a host off the service's hosts is
+            # refused (an operator fixes it), a failed token exchange is an outage. Neither is
+            # evidence; no template was used.
             run = _Run("error", f"auth:{secret.code}: {secret.message}",
-                       refused=secret.code == "bad_key_file")
+                       refused=secret.code in REFUSING_AUTH_ERRORS)
             templates = []
         else:
-            run = _execute(c, secret, self.base_urls, client, self.sleep, now, redactor)
+            run = _execute(c, secret, base_urls, client, self.sleep, now, redactor)
         record = _record(c, self.options, now, run)
         if run.outcome in ("pass", "fail"):
             for loaded in self.repo.facts_citing(c.id):
@@ -435,25 +458,36 @@ class _Tick:
 
     def _access_token(
         self, service: Service, key: str | None, client: httpx.Client, redactor: Redactor
-    ) -> str | AuthError:
-        """A token per service, reused within the tick until `TOKEN_MARGIN_S` before it expires
-        (sleep steps can make a tick long); it joins the redactor before any write."""
+    ) -> tuple[str, str | None] | AuthError:
+        """(access token, base URL it names or None) per service, reused within the tick until
+        `TOKEN_MARGIN_S` before it expires (sleep steps can make a tick long); the token joins
+        the redactor before any write, and before its instance URL is even checked."""
         cached = self.tokens.get(service.key)
         if isinstance(cached, AuthError):
             return cached
         now = self.clock()
-        if cached is not None and now.timestamp() < cached[1]:
-            return cached[0]
+        if cached is not None and now.timestamp() < cached[2]:
+            return cached[0], cached[1]
+        instance = None
         try:
-            account = parse_service_account(key or "")
-            token, lifetime = mint_access_token(client, account, service.auth.scopes, now,
-                                                self.google_token_url)
+            if service.auth.kind == "google_service_account":
+                account = parse_service_account(key or "")
+                url = self.token_urls.get(service.key, GOOGLE_TOKEN_URL)
+                token, lifetime = mint_access_token(client, account, service.auth.scopes, now,
+                                                    url)
+                redactor.add({token})
+            else:
+                grant = parse_auth_url(key or "")
+                url = token_url(service, grant)  # refuses a key host off the service's hosts
+                token, answered = refresh_access_token(
+                    client, grant, self.token_urls.get(service.key, url))
+                redactor.add({token})
+                instance, lifetime = instance_base_url(service, answered), OAUTH_LIFETIME_S
         except AuthError as exc:
             self.tokens[service.key] = exc
             return exc
-        redactor.add({token})
-        self.tokens[service.key] = (token, now.timestamp() + lifetime - TOKEN_MARGIN_S)
-        return token
+        self.tokens[service.key] = (token, instance, now.timestamp() + lifetime - TOKEN_MARGIN_S)
+        return token, instance
 
 
 def _count_key(outcome: str) -> str:
@@ -493,11 +527,11 @@ def run_tick(
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], datetime] = _utcnow,
     environ: Mapping[str, str] | None = None,
-    google_token_url: str = GOOGLE_TOKEN_URL,
+    token_urls: Mapping[str, str] | None = None,
 ) -> TickReport:
-    """Run one tick. `base_urls` (service → URL) and `google_token_url` are test seams: they
-    replace the env URL and its vendor-host check, and the fixed Google token endpoint; neither
-    is reachable from the CLI."""
+    """Run one tick. `base_urls` and `token_urls` (service → URL) are test seams: they replace
+    the env URL (or the instance a token names) and its vendor-host check, and the token
+    endpoint; neither is reachable from the CLI."""
     environ = os.environ if environ is None else environ
     results = state_dir / RESULTS_FILE
     report = TickReport(results_path=None if options.dry_run else results)
@@ -518,7 +552,7 @@ def run_tick(
         ):
             plan = _select(repo, state, options, clock().timestamp(), keys_dir)
             tick = _Tick(root, options, keys_dir, base_urls or {}, sleep, clock, environ, repo,
-                         state, ledger, report, google_token_url)
+                         state, ledger, report, token_urls or {})
             if options.dry_run:
                 tick.dry_run(plan)
             else:

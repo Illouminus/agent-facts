@@ -1,0 +1,11 @@
+id: af:google-calendar:probe:calendar-not-found
+service: google-calendar
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: /calendar/v3/calendars/agent-facts-no-such-calendar@group.calendar.google.com/events}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error.message, equals: Not Found}
+  - {step: 1, json_path: "$.error.errors[0].reason", equals: notFound}
+  - {step: 1, json_path: $.error.status, exists: false}

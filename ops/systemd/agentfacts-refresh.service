@@ -12,3 +12,16 @@ WorkingDirectory=%h/apps/agent-facts
 ExecStart=%h/apps/agent-facts/.venv/bin/agentfacts probe run --refresh-evidence --root %h/apps/agent-facts
 Nice=10
 TimeoutStartSec=1200
+# Hardening (sec card 2026-10-23, D-089): seccomp and prctl only. Mount-namespace options
+# (ProtectSystem, PrivateTmp, ReadWritePaths, InaccessiblePaths…) cannot work in user units on
+# illouminus: AppArmor restricts unprivileged user namespaces (ops/README.md → Hardening).
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK

@@ -13,7 +13,7 @@ from pathlib import Path
 from pydantic import ValidationError
 from ruamel.yaml.error import YAMLError
 
-from agentfacts.schema.models import VERIFIED_STATUSES, Fact, Source, Status
+from agentfacts.schema.models import VERIFIED_STATUSES, Fact, Source
 from agentfacts.schema.substance import substance
 from agentfacts.schema.yamlio import load_yaml, load_yaml_text, plain
 
@@ -105,13 +105,10 @@ def _evidence(fact: Fact) -> str:
 
 
 def _eligible(fact: Fact) -> bool:
-    """Verified, or reported from quorum; and authored by the bot (a fact a human wrote needs a
-    human review `[tap]`)."""
-    if fact.provenance.author != "bot":
-        return False
-    return fact.status in VERIFIED_STATUSES or (
-        fact.status is Status.reported and fact.provenance.source is Source.observation_quorum
-    )
+    """`verified:*` and authored by the bot. A `reported` fact — even from quorum — and a fact a
+    human wrote need a human review `[tap]`: anonymous reporters must not publish on their own
+    (sec card 2026-10-23, variant 1, D-089)."""
+    return fact.provenance.author == "bot" and fact.status in VERIFIED_STATUSES
 
 
 def _counters_only(root: Path, path: str, local: object) -> bool:

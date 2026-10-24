@@ -174,10 +174,14 @@ def test_path_prefix_refuses_a_key_that_is_not_one_plain_segment(key):
     {"kind": "header", "key_name": "k", "env": "sandbox", "header_name": "X-Api-Key"},
     PATH_AUTH,
 ])
-def test_a_json_key_file_is_never_sent_raw(kind):
-    # A service-account JSON key (with its private key) only ever goes through google_sa.
+@pytest.mark.parametrize("grant", [
+    ' {"type": "service_account", "private_key": "x"}',
+    "force://PlatformCLI::5A" "ep861FAKErefresh@acme.my.salesforce.com",
+])
+def test_a_grant_key_file_is_never_sent_raw(kind, grant):
+    # A service-account JSON key or an sfdx auth URL only ever goes through its minting module.
     with pytest.raises(Refused) as exc:
-        auth_for(make_service(auth=kind), ' {"type": "service_account", "private_key": "x"}')
+        auth_for(make_service(auth=kind), grant)
     assert exc.value.code == "unminted_key"
 
 

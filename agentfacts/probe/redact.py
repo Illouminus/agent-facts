@@ -4,7 +4,7 @@ Three levels:
 - exact key values (the runner's injected secrets and their derived forms) — everywhere;
 - strict patterns `sk_[a-z]+_[A-Za-z0-9]{8,}`, `Bearer [A-Za-z0-9._-]{16,}` and the vendor key
   shapes of the keyed seed (PEM private keys, Google API keys and access tokens, Telegram bot
-  tokens) — everywhere;
+  tokens, Salesforce auth URLs, session ids and refresh tokens) — everywhere;
 - generic runs: hex ≥ 32 always, base64 ≥ 32 when the run holds a digit and a letter (so words,
   slugs and URL paths survive) — on every field except the identifiers the runner itself produces,
   named by their full path in the run record (`EXEMPT_PATHS`), which a generic rule would otherwise
@@ -29,6 +29,10 @@ _STRICT = (
     re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
     re.compile(r"ya29\.[0-9A-Za-z_-]{16,}"),
     re.compile(r"(?<![0-9])[0-9]{6,12}:[A-Za-z0-9_-]{30,}"),  # also inside /bot<token>/
+    # Salesforce: an sfdx auth URL, a session id (access token), a refresh token.
+    re.compile(r"force://[^\s\"']+"),
+    re.compile(r"00D[A-Za-z0-9]{12,15}![A-Za-z0-9._]{20,}"),
+    re.compile(r"5Aep[A-Za-z0-9._]{40,}"),
 )
 _HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
 _B64_RUN = re.compile(r"[A-Za-z0-9+/_=-]{32,}")

@@ -22,7 +22,7 @@ Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 | `agentfacts-probe.timer` | every 15 min, `probe run --due --max 50 --vantage illouminus` | yes |
 | `agentfacts-digest.timer` | Monday 08:00 Europe/Paris, `ops/digest.py` | yes |
 | `agentfacts-refresh.timer` | daily 03:00 Europe/Paris, `probe run --refresh-evidence` | by hand after the deploy that adds it |
-| `agentfacts-quorum.timer` | hourly, quorum + bot | **no** — after W4 lands |
+| `agentfacts-quorum.timer` | hourly, quorum + bot (own token, verified-only auto-merge) | after the D-089 PR |
 
 ## First install (once)
 
@@ -70,6 +70,38 @@ until the bot publishes those edits, `deploy.sh` carries them across checkouts a
 parks a patch that no longer applies in `var/deploy/` instead of dropping it. The journal hook
 (`ops/state_journal.py --prev`) writes a megabrain line only when a deploy changes what the
 registry says (new, removed or re-statused facts, claims), never for counters or code.
+
+## Bot token
+
+The bot (`agentfacts bot publish`) talks to GitHub only with its own fine-grained PAT, Contents +
+Pull requests on this repository: `keyput agent-facts-bot` → `~/.private_keys/agent-facts-bot.key`
+(D-089). `gh` gets it as `GH_TOKEN`; git push/fetch/ls-remote get it through an env-only credential
+helper that first resets `~/.gitconfig`'s `gh auth git-credential` (the owner's login, every
+repository). Missing file → `error: no bot token …`, exit 1, nothing pushed. `deploy.sh` fetches
+the public repo with `-c credential.helper=` (anonymous).
+
+## Hardening
+
+Every `agentfacts-*.service` sets `NoNewPrivileges`, `RestrictSUIDSGID`, `LockPersonality`,
+`RestrictRealtime`, `RestrictNamespaces`, `SystemCallArchitectures=native`,
+`SystemCallFilter=@system-service` (`EPERM`), `MemoryDenyWriteExecute` and `RestrictAddressFamilies`
+(unix, inet, inet6, netlink) — checked on the host 2026-10-24 (`NoNewPrivs: 1`, `Seccomp: 2`; probe,
+quorum, bot dry runs, uvicorn, gh, git and HTTPS work under it). No `UMask`: the digest writes into
+the megabrain state, whose files other readers expect group/world-readable.
+
+Impossible in user units on illouminus (Ubuntu 24.04, systemd 255,
+`kernel.apparmor_restrict_unprivileged_userns=1`): the user manager's user namespace lands in the
+`unprivileged_userns` AppArmor profile without `CAP_SYS_ADMIN`, so there is no mount namespace.
+`ProtectSystem`, `ProtectHome`, `PrivateTmp`, `ReadWritePaths`, `InaccessiblePaths`, `ProtectProc`,
+`ProtectKernelTunables`, `ProtectControlGroups` are silently ignored; `PrivateUsers`,
+`PrivateDevices`, `TemporaryFileSystem`, `BindReadOnlyPaths`, `ProtectClock` make the unit fail with
+`226/NAMESPACE` ("Failed to set up mount namespacing: Operation not supported"). Hence no read-only
+filesystem and no per-unit key access: every unit runs as `ubuntu` and could read all of
+`~/.private_keys`. Way out (root, Edouard's call): system units with `User=agentfacts`, a dedicated
+user whose own keys directory holds only the agent-facts keys (mount namespaces work for system
+units); lifting the AppArmor restriction would weaken the whole host and is not proposed.
+
+Check a property before adding it: `systemd-run --user --pipe --wait -p <Property>=… /bin/sh -c 'grep -E "NoNewPrivs|Seccomp" /proc/self/status'`.
 
 ## Kill switch
 

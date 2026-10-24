@@ -46,7 +46,12 @@ stays `reported` and is listed in the weekly digest under "needs a probe" (an ag
 - One branch `bot/facts-<date>-<n>`, one PR, body = table of facts (id, kind, status, evidence), label
   `facts`. Never touches code paths.
 - Merge: the PR auto-merges when CI (schema validation + pages build) is green **and** every fact in it
-  is `verified:*` or `reported` from quorum. Facts touched by a human PR require a human review `[tap]`.
+  is `verified:*` written by the bot. A PR with a `reported` fact (quorum drafts included) or a fact a
+  human wrote opens without auto-merge, labelled `needs-review`, and waits for a human `[tap]`: an
+  anonymous quorum never publishes on its own (sec card 2026-10-23, variant 1, D-089).
+- Token: the bot's own fine-grained PAT, `agent-facts-bot` (this repo only, Contents + Pull requests),
+  read by name from the keys directory; `gh` gets it as `GH_TOKEN`, git through an env-only credential
+  helper. No token → the bot refuses; it never uses the host owner's `gh` login.
 - Commit author `agent-facts-bot`, `Co-Authored-By` none; signed-off trailer with the runner's vantage.
 - Kill switch (`04`) also stops the bot.
 

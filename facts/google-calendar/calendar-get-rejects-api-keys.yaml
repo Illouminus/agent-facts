@@ -1,0 +1,31 @@
+id: af:google-calendar:calendar-get-rejects-api-keys
+service: google-calendar
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}"
+signal:
+  status: 401
+  error_code: UNAUTHENTICATED
+  error_string: "API keys are not supported by this API. Expected OAuth2 access token or other authentication credentials that assert a principal. See https://cloud.google.com/docs/authentication"
+  normalized: "api keys are not supported by this api. expected oauth# access token or other authentication credentials that assert a principal. see <url>"
+claim: "The API key that lists a public calendar's events gets HTTP 401 UNAUTHENTICATED (\"API keys are not supported by this API\") on calendars.get and users/me/calendarList."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: request_scope, scope: https://www.googleapis.com/auth/calendar.readonly}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:calendar-get-needs-oauth
+  first_seen: 2026-10-24T08:41:03Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

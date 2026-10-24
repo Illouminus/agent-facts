@@ -1,0 +1,22 @@
+id: af:google-calendar:events-page-default-250
+service: google-calendar
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+claim: "events.list returns at most 250 events per page by default and never more than 2500; further pages need pageToken."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: paginate_with, cursor_field: nextPageToken, param_name: pageToken, page_size_max: 2500}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://developers.google.com/workspace/calendar/api/v3/reference/events/list
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

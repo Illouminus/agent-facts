@@ -1,0 +1,31 @@
+id: af:google-calendar:time-min-without-offset-bad-request
+service: google-calendar
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 400
+  error_string: "Bad Request"
+  normalized: "bad request"
+claim: "timeMin as a date (2026-10-24) or a time without offset (2026-10-24T00:00:00) returns HTTP 400 with only \"Bad Request\" (reason badRequest); a timestamp with Z is accepted."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: encode_as, field: timeMin, encoding: rfc3339}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:time-min-needs-offset
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  official_url: https://developers.google.com/workspace/calendar/api/v3/reference/events/list
+  last_confirmed: 2026-10-24T08:41:27Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

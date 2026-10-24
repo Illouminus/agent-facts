@@ -8,6 +8,9 @@ A key is bound to its service by name (`key_bound_to_service`: `stripe-test` for
 a vendor family key (`google-api-key` for `google-sheets`) whose services list only the family's
 API hosts and scopes (`registry.KEY_FAMILIES`); the validator rejects any other name in CI and
 the runner refuses it again at run time, key unread.
+Two kinds hold a grant, not a credential: a service-account JSON key (`google_service_account`)
+and an sfdx auth URL (`oauth_refresh_token`); only `google_sa` / `oauth_refresh` read them, to
+mint an access token, and `http.auth_for` refuses to send either as is.
 `has_key` only looks at the file (dry runs and `probe list` never read a value).
 """
 

@@ -1,0 +1,28 @@
+id: af:google-calendar:public-free-busy-calendar-via-api-key
+service: google-calendar
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 200
+claim: "events.list with only an API key works on a calendar shared publicly as free/busy: HTTP 200 with accessRole freeBusyReader, items and a nextSyncToken."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:events-free-busy-reader
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
