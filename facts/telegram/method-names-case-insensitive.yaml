@@ -1,0 +1,29 @@
+id: af:telegram:method-names-case-insensitive
+service: telegram
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/{bot_token}/getMe"
+signal:
+  status: 200
+claim: "Method names are case-insensitive: /getme and /GETME answer like /getMe."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:telegram:probe:method-names-case-insensitive
+  first_seen: 2026-10-24T08:17:39Z
+  confirmations: 1
+  stale_counter: 0
+  official_url: https://core.telegram.org/bots/api#making-requests
+  last_confirmed: 2026-10-24T08:17:39Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

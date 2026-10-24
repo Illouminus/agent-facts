@@ -1,0 +1,10 @@
+# limit outside the documented 1-100 range.
+id: af:telegram:probe:get-updates-limit-out-of-range
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: /getUpdates, query: {limit: 0}}
+  - {do: http, method: GET, path: /getUpdates, query: {limit: 1000}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 2, status: 200}

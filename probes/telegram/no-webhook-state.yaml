@@ -1,0 +1,15 @@
+# The probe bot has no webhook: getWebhookInfo reports url as an empty string, getUpdates works.
+# getUpdates without offset confirms nothing.
+id: af:telegram:probe:no-webhook-state
+service: telegram
+env: prod
+account_state: no_webhook
+steps:
+  - {do: http, method: GET, path: /getWebhookInfo}
+  - {do: http, method: GET, path: /getUpdates, query: {limit: 1}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.result.url, equals: ""}
+  - {step: 1, json_path: $.result.pending_update_count, exists: true}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.ok, equals: true}

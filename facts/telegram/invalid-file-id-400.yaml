@@ -1,0 +1,30 @@
+id: af:telegram:invalid-file-id-400
+service: telegram
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/{bot_token}/getFile"
+signal:
+  status: 400
+  error_string: "Bad Request: invalid file_id"
+  normalized: "bad request: invalid file_id"
+claim: "getFile with a file_id that is not one Telegram issued returns HTTP 400 \"Bad Request: invalid file_id\"."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:telegram:probe:get-file-invalid
+  first_seen: 2026-10-24T08:17:36Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:17:36Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
