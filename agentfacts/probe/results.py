@@ -48,6 +48,7 @@ _ERROR_PATHS = (
     ".error",
     ".errors[0].message",
     ".title",
+    ".description",  # Telegram: {ok: false, error_code, description}
 )
 ERROR_MAX = 512
 _TEXT_ERROR_MAX = 200
