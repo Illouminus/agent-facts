@@ -1,0 +1,19 @@
+# Fixture agent_facts/typed (written by the orchestrator): one field of each value type.
+id: af:google-firestore:probe:typed-document
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts/typed"}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.fields.int.integerValue, equals: "42"}
+  - {step: 1, json_path: $.fields.dbl.doubleValue, equals: 3.5}
+  - {step: 1, json_path: $.fields.ts.timestampValue, equals: "2026-10-24T00:00:00Z"}
+  - {step: 1, json_path: $.fields.flag.booleanValue, equals: true}
+  - {step: 1, json_path: $.fields.nothing.nullValue, equals: null}
+  - {step: 1, json_path: "$.fields.tags.arrayValue.values[0].stringValue", equals: a}
+  - {step: 1, json_path: $.fields.nested.mapValue.fields.k.stringValue, equals: v}
+  - {step: 1, json_path: $.createTime, exists: true}
+  - {step: 1, json_path: $.updateTime, exists: true}
+  - {step: 1, json_path: $.name, equals: "projects/agent-facts-probes/databases/(default)/documents/agent_facts/typed"}

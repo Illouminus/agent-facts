@@ -2,7 +2,7 @@
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · HTTP 404 `NOT_FOUND`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 3 confirmations from 1 vantage
 
 > Getting a document that does not exist returns HTTP 404 NOT_FOUND with the full document name in the message (Document "projects/…/documents/\<path\>" not found.).
 

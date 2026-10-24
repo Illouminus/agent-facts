@@ -2,7 +2,7 @@
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · HTTP 404 `NOT_FOUND`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 3 confirmations from 1 vantage
 
 > While a database runs on test-mode security rules, REST reads with no credentials at all are allowed: a missing document is 404 NOT_FOUND and a list is HTTP 200, rather than 401 or 403.
 

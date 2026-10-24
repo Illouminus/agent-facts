@@ -1,8 +1,8 @@
-# In REST documents, integerValue is a JSON string (int64 format), while doubleValue is a JSON number; timestampValue and bytesValue are strings too.
+# In REST documents an integer field comes back as a JSON string (integerValue: "42", int64 format), while a double is a JSON number (doubleValue: 3.5).
 
-**Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document}**
+**Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · HTTP 200**
 
-Status: 🔵 official · first seen 2026-10-24
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
 
 ## What to do
 
@@ -10,11 +10,11 @@ Status: 🔵 official · first seen 2026-10-24
 
 ## Dimensions
 
-env: prod · plan: any · region: any · account_state: any
+env: prod · plan: any · region: any · account_state: service_account
 
 ## Evidence
 
-official doc: <https://firebase.google.com/docs/firestore/reference/rest/v1/Value>
+Probe `af:google-firestore:probe:typed-document` (declarative, [source](../../probes/google-firestore/typed-document.yaml)) · official doc: <https://firebase.google.com/docs/firestore/reference/rest/v1/Value>
 
 Observations: none from reporters yet.
 
@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ```sh
 curl -s https://facts.baillot.dev/v0/check \
   -H 'content-type: application/json' \
-  -d '{"target":{"method":"GET","url":"https://firestore.googleapis.com/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"}}'
+  -d '{"target":{"method":"GET","url":"https://firestore.googleapis.com/v1/projects/{project}/databases/{database}/documents/{collection}/{document}"},"error":{"status":200}}'
 ```
 
 YAML: [facts/google-firestore/integer-value-is-a-string.yaml](../../facts/google-firestore/integer-value-is-a-string.yaml)

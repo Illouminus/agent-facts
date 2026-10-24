@@ -1,6 +1,6 @@
 # Cloud Firestore (Firebase) REST API
 
-Hosts: `firestore.googleapis.com` · 14 facts
+Hosts: `firestore.googleapis.com` · 18 facts
 
 ## Error meanings
 
@@ -16,10 +16,13 @@ Hosts: `firestore.googleapis.com` · 14 facts
 
 ## Silent behavior
 
+- ✅ verified:server:prod · [Arrays and maps are wrapped twice: an array is arrayValue.values\[\] of typed values (stringValue: "a"), a map is mapValue.fields.\<key\> holding a typed value.](array-and-map-values-are-wrapped.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · env prod
 - ✅ verified:server:prod · [Listing a collection that has no documents returns HTTP 200 with an empty object {}: no documents field (not documents: \[\]) and no nextPageToken.](empty-collection-returns-empty-object.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection} · env prod
-- 🔵 official · [In REST documents, integerValue is a JSON string (int64 format), while doubleValue is a JSON number; timestampValue and bytesValue are strings too.](integer-value-is-a-string.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · env prod
+- ✅ verified:server:prod · [In REST documents an integer field comes back as a JSON string (integerValue: "42", int64 format), while a double is a JSON number (doubleValue: 3.5).](integer-value-is-a-string.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · env prod
+- ✅ verified:server:prod · [A null field comes back as {nullValue: null}: the type key is present and its value is JSON null, so a field set to null is not the same as a missing field.](null-value-is-json-null.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · env prod
 - ✅ verified:server:prod · [orderBy on a field that no document has is accepted with HTTP 200 instead of being refused.](order-by-unknown-field-accepted.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection} · env prod
 - ✅ verified:server:prod · [Listing a subcollection under a parent document that does not exist returns HTTP 200 {} rather than 404: the parent's absence is not reported.](subcollection-of-missing-document-is-empty.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document}/{subcollection} · env prod
+- ✅ verified:server:prod · [A timestamp field comes back as timestampValue, an RFC 3339 string in UTC with a Z suffix ("2026-10-24T00:00:00Z").](timestamp-value-rfc3339-utc.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · env prod
 
 ## Auth quirks
 
@@ -30,6 +33,10 @@ Hosts: `firestore.googleapis.com` · 14 facts
 ## Pagination
 
 - ✅ verified:server:prod · [`invalid page token`](invalid-page-token-400.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection} · env prod
+
+## Schema drift
+
+- ✅ verified:server:prod · [A REST document has exactly four top-level keys: name (the full resource path), fields, createTime and updateTime.](document-envelope-keys.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · env prod
 
 ---
 

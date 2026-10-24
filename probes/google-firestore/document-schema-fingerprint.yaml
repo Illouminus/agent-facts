@@ -1,0 +1,11 @@
+# Drift detector: sha256 of the sorted top-level keys of a document (createTime, fields, name,
+# updateTime on 2026-10-24).
+id: af:google-firestore:probe:document-schema-fingerprint
+service: google-firestore
+env: prod
+account_state: service_account
+steps:
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts/typed"}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, schema_fingerprint: 2100baeafd9c4f9ebdc74d003a221cbffc7ffc78c27374e0362c70dddecd0580}
