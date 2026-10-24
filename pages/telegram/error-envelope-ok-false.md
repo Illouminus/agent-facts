@@ -1,8 +1,8 @@
-# Errors are a JSON object with ok: false, a description and an integer error_code equal to the HTTP status; there is no result field.
+# Errors are a JSON object with ok: false, a description and an integer error_code equal to the HTTP status (documented as subject to change); there is no result field.
 
 **Telegram Bot API · GET /{bot_token}/{method} · HTTP 400**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 ## What to do
 
@@ -14,7 +14,7 @@ env: prod · plan: any · region: any · account_state: any
 
 ## Evidence
 
-Probe `af:telegram:probe:error-envelope` (declarative, [source](../../probes/telegram/error-envelope.yaml))
+Probe `af:telegram:probe:error-envelope` (declarative, [source](../../probes/telegram/error-envelope.yaml)) · official doc: <https://core.telegram.org/bots/api#making-requests>
 
 Observations: none from reporters yet.
 

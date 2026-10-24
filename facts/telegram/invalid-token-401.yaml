@@ -9,7 +9,7 @@ signal:
   status: 401
   error_string: "Unauthorized"
   normalized: "unauthorized"
-claim: "A token-shaped bot token (<digits>:<secret>) that is not valid returns HTTP 401 \"Unauthorized\"; a path segment that is not token-shaped returns 404 \"Not Found\" instead."
+claim: "A token-shaped bot token (<digits>:<secret>) that is not valid returns HTTP 401 {ok: false, description: \"Unauthorized\"}."
 dimensions:
   env: prod
   account_state: any
@@ -19,9 +19,9 @@ status: verified:server:prod
 evidence:
   probe: af:telegram:probe:invalid-token
   first_seen: 2026-10-24T08:17:39Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T08:17:39Z
+  last_confirmed: 2026-10-24T08:20:15Z
   vantages: [mac-dev]
 provenance:
   source: probe

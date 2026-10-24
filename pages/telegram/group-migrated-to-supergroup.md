@@ -6,7 +6,7 @@ Status: 🔵 official · first seen 2026-10-24
 
 ## What to do
 
-1. Set body parameter chat_id to the account setting migrate_to_chat_id.
+1. No client-side fix known (by design).
 
 ## Dimensions
 

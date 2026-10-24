@@ -9,7 +9,7 @@ signal:
   status: 400
   error_string: "Bad Request: chat_id is empty"
   normalized: "bad request: chat_id is empty"
-claim: "A method that needs chat_id, called without it, returns HTTP 400 \"Bad Request: chat_id is empty\"."
+claim: "getChat called without chat_id returns HTTP 400 \"Bad Request: chat_id is empty\"."
 dimensions:
   env: prod
   account_state: any
@@ -19,9 +19,9 @@ status: verified:server:prod
 evidence:
   probe: af:telegram:probe:get-chat-id-empty
   first_seen: 2026-10-24T08:17:36Z
-  confirmations: 1
+  confirmations: 2
   stale_counter: 0
-  last_confirmed: 2026-10-24T08:17:36Z
+  last_confirmed: 2026-10-24T08:20:11Z
   vantages: [mac-dev]
 provenance:
   source: probe

@@ -2,7 +2,7 @@
 
 **Telegram Bot API · GET /{bot_token}/getChat · HTTP 400**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 > getChat for a chat the bot has never seen (chat_id=1) returns HTTP 400 {ok: false, error_code: 400, description: "Bad Request: chat not found"}.
 

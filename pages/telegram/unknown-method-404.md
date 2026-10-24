@@ -2,7 +2,7 @@
 
 **Telegram Bot API · GET /{bot_token}/{method} · HTTP 404**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 > A method name the Bot API does not know returns HTTP 404 {ok: false, error_code: 404, description: "Not Found"}.
 
