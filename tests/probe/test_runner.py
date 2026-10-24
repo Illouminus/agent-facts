@@ -676,3 +676,14 @@ def test_a_family_key_is_never_read_for_a_service_off_the_family_hosts(repo, htt
     assert read == [] and httpserver.log == []
     assert FAKE_KEY.encode() not in b"".join(p.read_bytes() for p in repo.state.rglob("*")
                                              if p.is_file())
+
+
+def test_a_top_level_error_array_gives_its_first_message(repo, httpserver):
+    """Salesforce's error shape: [{message, errorCode}]."""
+    repo.service()
+    repo.key()
+    repo.probe()
+    body = [{"message": "Session expired or invalid", "errorCode": "INVALID_SESSION_ID"}]
+    httpserver.expect_request("/v1/items").respond_with_json(body, status=401)
+    tick(repo, httpserver)
+    assert repo.results()[0]["steps"][0]["error_string"] == "Session expired or invalid"
