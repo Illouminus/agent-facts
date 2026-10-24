@@ -1,0 +1,31 @@
+id: af:google-gemini:gemini-1-5-models-retired
+service: google-gemini
+kind: deprecation
+target:
+  surface: http
+  method: GET
+  path_template: "/v1beta/models/{model}"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "Model is not found: models/gemini-1.5-flash for api version v1beta"
+  normalized: "model is not found: models/gemini-#.#-flash for api version v#beta"
+claim: "The model names gemini-1.5-flash, gemini-1.5-pro and gemini-pro return HTTP 404 NOT_FOUND on v1beta; they are no longer served."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: use_endpoint, method: GET, path_template: /v1beta/models}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:gemini-1-5-retired
+  first_seen: 2026-10-24T08:03:53Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:03:53Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

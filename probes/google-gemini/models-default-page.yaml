@@ -1,0 +1,11 @@
+# Without pageSize the list holds 50 models and a nextPageToken (60 models on v1beta, 2026-10-24).
+id: af:google-gemini:probe:models-default-page
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: "$.models[49].name", exists: true}
+  - {step: 1, json_path: "$.models[50]", exists: false}
+  - {step: 1, json_path: $.nextPageToken, exists: true}

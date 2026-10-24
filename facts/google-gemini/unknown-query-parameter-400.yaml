@@ -1,0 +1,31 @@
+id: af:google-gemini:unknown-query-parameter-400
+service: google-gemini
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: /v1beta/models
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Invalid JSON payload received. Unknown name \"agent_facts_unknown\": Cannot bind query parameter. Field 'agent_facts_unknown' could not be found in request message."
+  normalized: "invalid json payload received. unknown name \"agent_facts_unknown\": cannot bind query parameter. field 'agent_facts_unknown' could not be found in request message."
+claim: "An unknown query parameter returns HTTP 400 INVALID_ARGUMENT (\"Cannot bind query parameter\") instead of being ignored."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:unknown-query-parameter
+  first_seen: 2026-10-24T08:03:54Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:03:54Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

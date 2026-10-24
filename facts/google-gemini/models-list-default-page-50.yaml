@@ -1,0 +1,28 @@
+id: af:google-gemini:models-list-default-page-50
+service: google-gemini
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: /v1beta/models
+signal:
+  status: 200
+claim: "GET /v1beta/models without pageSize returns 50 models and a nextPageToken; the rest of the list is only reachable with pageToken."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: paginate_with, cursor_field: nextPageToken, param_name: pageToken, page_size_max: 1000}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:models-default-page
+  first_seen: 2026-10-24T08:03:54Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:03:54Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

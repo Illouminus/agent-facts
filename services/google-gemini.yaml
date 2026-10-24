@@ -1,0 +1,37 @@
+# Gemini API (Google AI for Developers), wave 1 seed, keyed. The key google-gemini-api reaches
+# production only, so probes are read-only: model metadata and listing. generateContent and the
+# other model methods are POST /v1beta/models/<model>:<method>; a template slot fills one whole
+# path segment, so they are registered as one slot ({model_and_method}).
+key: google-gemini
+name: Gemini API
+hosts: [generativelanguage.googleapis.com]
+doc_hosts: [ai.google.dev]
+surfaces:
+  http:
+    base_url: https://generativelanguage.googleapis.com
+    templates:
+      - {method: GET, path: /v1beta/models}
+      - {method: GET, path: "/v1beta/models/{model}"}
+      - {method: POST, path: "/v1beta/models/{model_and_method}"}
+      - {method: GET, path: /v1/models}
+      - {method: GET, path: "/v1/models/{model}"}
+      - {method: POST, path: "/v1/models/{model_and_method}"}
+    signal_fields:
+      - status
+      - error.code
+      - error.status
+      - error.message
+      - error.details.reason
+      - retry-after
+  sdk:
+    - {ecosystem: pypi, package: google-genai}
+    - {ecosystem: npm, package: "@google/genai"}
+dimensions:
+  env: {prod: https://generativelanguage.googleapis.com}
+  account_state: [free_tier, paid_tier]
+auth: {kind: header, key_name: google-gemini-api, env: prod, header_name: x-goog-api-key}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://ai.google.dev/gemini-api/terms
+probe_budget: {per_template_seconds: 300}

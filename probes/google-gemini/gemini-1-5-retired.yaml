@@ -1,0 +1,13 @@
+# Retired model names that code from 2024 still uses.
+id: af:google-gemini:probe:gemini-1-5-retired
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models/gemini-1.5-flash}
+  - {do: http, method: GET, path: /v1beta/models/gemini-1.5-pro}
+  - {do: http, method: GET, path: /v1beta/models/gemini-pro}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error.message, equals: "Model is not found: models/gemini-1.5-flash for api version v1beta"}
+  - {step: 2, status: 404}
+  - {step: 3, status: 404}

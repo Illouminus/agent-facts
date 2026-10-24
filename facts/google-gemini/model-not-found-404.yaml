@@ -1,0 +1,31 @@
+id: af:google-gemini:model-not-found-404
+service: google-gemini
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v1beta/models/{model}"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "Model is not found: models/gemini-agent-facts-nosuch for api version v1beta"
+  normalized: "model is not found: models/gemini-agent-facts-nosuch for api version v#beta"
+claim: "An unknown model name returns HTTP 404 NOT_FOUND with the message \"Model is not found: models/<name> for api version v1beta\"."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: use_endpoint, method: GET, path_template: /v1beta/models}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:model-not-found
+  first_seen: 2026-10-24T08:03:54Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:03:54Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
