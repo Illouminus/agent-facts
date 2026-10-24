@@ -447,7 +447,8 @@ class Auth(_Closed):
     scopes: Annotated[tuple[GoogleScope, ...], Field(min_length=1, max_length=5)] | None = None
     token_path: _pattern(r"^(/[A-Za-z0-9_.~-]+){1,8}$") | None = None
     # oauth_refresh_token: where the auth URL's host and the token's instance may be (a host or
-    # a subdomain of one); tenant domains live here, not in the service's hosts check() matches.
+    # a subdomain of one); tenant domains live here, not in `hosts`. check() matches them too
+    # (D-090), so a report from an org's own domain reaches the service.
     instance_hosts: Annotated[tuple[Hostname, ...], Field(min_length=1, max_length=5)] | None = None
 
     @model_validator(mode="after")

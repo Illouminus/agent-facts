@@ -15,6 +15,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from agentfacts.schema.error_paths import CODE_PATHS, LIST_MESSAGE_PATHS, first_string
 from agentfacts.schema.models import Signal
 
 MAX_EXCERPT = 2048  # spec 03: body_excerpt kept, 2 KB in
@@ -196,6 +197,16 @@ def _json_body(excerpt: str) -> Any:
         return None
 
 
+def _as_code(value: Any) -> str | None:
+    """A vendor code as a fact's `signal.error_code`: an enum-like word, never secret-shaped."""
+    if not isinstance(value, str | int) or isinstance(value, bool):
+        return None
+    candidate = str(value)
+    if not _is_error_code(candidate) or len(candidate) > 64:
+        return None
+    return candidate if redact_secrets(candidate) == candidate else None
+
+
 def _first_line(excerpt: str) -> str | None:
     return next((line.strip() for line in excerpt.splitlines() if line.strip()), None)
 
@@ -204,8 +215,10 @@ def extract_signal(
     status: int | None, body_excerpt: str | None, signal_fields: Iterable[str]
 ) -> ExtractedSignal:
     """Spec 03 step 2: status; vendor code and message through the service's whitelist; error
-    string = first whitelisted message field. A JSON (or truncated JSON) body without one yields
-    no string, only the status (Q4); any other body falls back to its first line."""
+    string = first whitelisted message field. An error inside a list, which a whitelist name cannot
+    address, is read through the runner's list paths (D-090: Salesforce `[0].message` /
+    `[0].errorCode`, Google `error.errors[0].reason`). A JSON (or truncated JSON) body without a
+    message yields no string, only the status (Q4); any other body falls back to its first line."""
     excerpt = (body_excerpt or "")[:MAX_EXCERPT]
     json_shaped = _json_shaped(excerpt)
     data = _json_body(excerpt) if json_shaped else None
@@ -218,13 +231,12 @@ def extract_signal(
         value = _lookup(data, path)
         leaf = path[-1].lower()
         if code is None and leaf in _CODE_LEAVES and isinstance(value, str | int):
-            candidate = str(value)
-            # a code is an enum-like vendor word; anything secret-shaped is not one
-            if not isinstance(value, bool) and _is_error_code(candidate):
-                if len(candidate) <= 64 and redact_secrets(candidate) == candidate:
-                    code = candidate
+            code = _as_code(value)
         elif message is None and leaf in _MESSAGE_LEAVES and isinstance(value, str):
             message = value.strip() or None
+    if data is not None:  # errors inside a list: the runner's paths (D-090)
+        code = code or _as_code(first_string(data, CODE_PATHS))
+        message = message or (first_string(data, LIST_MESSAGE_PATHS) or "").strip() or None
     raw = message if json_shaped else _first_line(excerpt)
     normalized = normalize(raw) if raw else None
     normalized = normalized or None

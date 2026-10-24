@@ -18,7 +18,8 @@ from typing import Any
 from agentfacts.probe.assertions import schema_fingerprint
 from agentfacts.probe.http import PreparedRequest, Refused, StepResponse
 from agentfacts.probe.redact import Redactor
-from agentfacts.probe.templating import NOT_JSON, lookup
+from agentfacts.probe.templating import NOT_JSON
+from agentfacts.schema.error_paths import MESSAGE_PATHS, first_string
 from agentfacts.schema.models import AssertHeader, HttpStep, Probe, Service
 
 BASE_HEADERS = frozenset(
@@ -39,18 +40,6 @@ BASE_HEADERS = frozenset(
 )
 NEVER_HEADERS = frozenset({"authorization", "proxy-authorization", "cookie", "set-cookie"})
 _HEADER_NAME = re.compile(r"^[A-Za-z0-9-]{1,128}$")
-# Where vendors put the human-readable error, most specific first.
-_ERROR_PATHS = (
-    ".error.message",
-    ".error_description",
-    ".message",
-    ".detail",
-    ".error",
-    ".errors[0].message",
-    ".title",
-    ".description",  # Telegram: {ok: false, error_code, description}
-    "[0].message",  # Salesforce: [{message, errorCode}]
-)
 ERROR_MAX = 512
 _TEXT_ERROR_MAX = 200
 FIELD_MAX = 1024  # any string in a record, clipped after redaction
@@ -82,14 +71,8 @@ def error_text(response: StepResponse, redactor: Redactor) -> str | None:
     if response.status is None or response.status < 400:
         return None
     if response.json is not NOT_JSON:
-        for path in _ERROR_PATHS:
-            try:
-                value = lookup(response.json, path)
-            except LookupError:
-                continue
-            if isinstance(value, str) and value.strip():
-                return _squash(redactor.text(value))
-        return None
+        value = first_string(response.json, MESSAGE_PATHS)
+        return _squash(redactor.text(value)) if value is not None else None
     body = redactor.text(response.body.decode("utf-8", errors="replace"))
     return _squash(body, _TEXT_ERROR_MAX) or None
 
