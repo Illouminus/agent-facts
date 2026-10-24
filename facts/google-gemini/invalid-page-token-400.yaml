@@ -1,0 +1,31 @@
+id: af:google-gemini:invalid-page-token-400
+service: google-gemini
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: /v1beta/models
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Invalid page_token."
+  normalized: "invalid page_token."
+claim: "A pageToken that the API did not issue returns HTTP 400 INVALID_ARGUMENT \"Invalid page_token.\"."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: paginate_with, cursor_field: nextPageToken, param_name: pageToken, page_size_max: 1000}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:models-invalid-page-token
+  first_seen: 2026-10-24T08:03:54Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:07:09Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

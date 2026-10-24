@@ -3,14 +3,20 @@
 
 After a successful deploy `ops/deploy.sh` calls
 
-    python ops/state_journal.py --sha <40 hex> --subject <commit subject> --root <checkout>
+    python ops/state_journal.py --sha <40 hex> --prev <deployed before> --subject <subject> \
+        --root <checkout>
 
-which puts one entry at the top of `## Журнал` in `<state>/projects/agent-facts.md`:
+which puts one entry at the top of `## Журнал` in `<state>/projects/agent-facts.md` — only when
+the registry says something new between `--prev` and `--sha` (a fact added, removed, or changed in
+anything but its evidence counters; `agentfacts.schema.substance`). A code-only or counter-only
+deploy writes nothing (incident 2026-10-20..24: ~40 lines «деплой X» for counter refreshes):
 
-    ### 2026-10-21 — деплой a1b2c3d на illouminus
+    ### 2026-10-24 — деплой a1b2c3d на illouminus
 
-    - main a1b2c3d «<subject>»: фактов 53 (verified 39, official 14, reported 0, stale 0,
-      retracted 0), /healthz ok.   [one line in the file]
+    - main a1b2c3d «<subject>»: фактов 55 (+2; verified 41 (+2), official 14, reported 0,
+      stale 0, retracted 0); новые: af:x:a, af:x:b; /healthz ok.   [one line in the file]
+
+Without `--prev` (by hand) the entry is written with the counts only.
 
 and commits only that file with `bin/state-commit --as agent-facts --expect-sha <path>=<blob>`
 (the state repo has many writers; `git add -A` there is forbidden). The same sha twice writes and
@@ -26,12 +32,17 @@ import subprocess
 import sys
 from collections import Counter
 from collections.abc import Iterable, Sequence
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from ruamel.yaml.error import YAMLError
+
 from agentfacts.pages.build import load_registry
 from agentfacts.schema.models import VERIFIED_STATUSES, Fact
+from agentfacts.schema.substance import substance
+from agentfacts.schema.yamlio import load_yaml_text, plain
 
 ACTOR = "agent-facts"
 PROJECT_FILE = "projects/agent-facts.md"
@@ -95,31 +106,122 @@ def commit(state_dir: Path, message: str, paths: Iterable[str]) -> int:
         return 127
 
 
+def bucket(status: str) -> str:
+    """verified:* → verified; every other status is its own bucket."""
+    return "verified" if status in VERIFIED_STATUSES else status
+
+
 def status_counts(facts: Iterable[Fact]) -> dict[str, int]:
     """verified (any verified:*), official, reported, stale, retracted — in that order."""
-    by_status = Counter(fact.status.value for fact in facts)
-    verified = sum(n for status, n in by_status.items() if status in VERIFIED_STATUSES)
-    counts = {"verified": verified}
-    for status in ("official", "reported", "stale", "retracted"):
-        counts[status] = by_status.get(status, 0)
-    return counts
+    by_bucket = Counter(bucket(fact.status.value) for fact in facts)
+    return {name: by_bucket.get(name, 0)
+            for name in ("verified", "official", "reported", "stale", "retracted")}
+
+
+@dataclass
+class Delta:
+    """What the registry says differently at `sha` than at `prev` (counters excluded)."""
+
+    new: list[tuple[str, str]] = field(default_factory=list)  # (id, status)
+    removed: list[tuple[str, str]] = field(default_factory=list)
+    status: list[tuple[str, str, str]] = field(default_factory=list)  # (id, old, new)
+    changed: list[str] = field(default_factory=list)  # same status, other substance
+
+    def __bool__(self) -> bool:
+        return bool(self.new or self.removed or self.status or self.changed)
+
+    def buckets(self) -> Counter:
+        moves: Counter = Counter()
+        for _, status in self.new:
+            moves[bucket(status)] += 1
+        for _, status in self.removed:
+            moves[bucket(status)] -= 1
+        for _, old, new in self.status:
+            moves[bucket(old)] -= 1
+            moves[bucket(new)] += 1
+        return moves
+
+
+def _git(root: Path, *args: str) -> str:
+    done = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True,
+                          check=False)
+    if done.returncode != 0:
+        raise JournalError(f"git {' '.join(args[:2])}: {done.stderr.strip()}")
+    return done.stdout
+
+
+def _fact_at(root: Path, rev: str, path: str) -> dict:
+    try:
+        data = plain(load_yaml_text(_git(root, "show", f"{rev}:{path}")))
+    except YAMLError as exc:
+        raise JournalError(f"{rev[:7]}:{path}: not YAML ({exc.__class__.__name__})") from None
+    return data if isinstance(data, dict) else {}
+
+
+def registry_delta(root: Path, prev: str, sha: str) -> Delta:
+    """Fact files added, removed or changed in substance between two commits (git, not the
+    working tree: the runner's uncommitted counters never count)."""
+    out = _git(root, "diff", "--name-status", "--no-renames", "-z", prev, sha, "--", "facts")
+    fields = out.split("\0")
+    delta = Delta()
+    for code, path in zip(fields[0::2], fields[1::2], strict=False):
+        if not path.endswith(".yaml"):
+            continue
+        before = {} if code == "A" else _fact_at(root, prev, path)
+        after = {} if code == "D" else _fact_at(root, sha, path)
+        fact_id = str(after.get("id") or before.get("id") or Path(path).stem)
+        if code == "A":
+            delta.new.append((fact_id, str(after.get("status"))))
+        elif code == "D":
+            delta.removed.append((fact_id, str(before.get("status"))))
+        elif before.get("status") != after.get("status"):
+            delta.status.append((fact_id, str(before.get("status")), str(after.get("status"))))
+        elif substance(before) != substance(after):
+            delta.changed.append(fact_id)
+    return delta
+
+
+def _signed(n: int) -> str:
+    return "±0" if n == 0 else f"{n:+d}"
+
+
+def _ids(items: Sequence[str], limit: int = 10) -> str:
+    shown = ", ".join(items[:limit])
+    return shown + (f" и ещё {len(items) - limit}" if len(items) > limit else "")
 
 
 def deploy_entry(
-    sha: str, subject: str, facts: Sequence[Fact], today: date
+    sha: str, subject: str, facts: Sequence[Fact], today: date, delta: Delta | None = None
 ) -> tuple[str, list[str]]:
     counts = status_counts(facts)
-    split = ", ".join(f"{name} {n}" for name, n in counts.items())
+    moves = delta.buckets() if delta else Counter()
+    split = ", ".join(
+        f"{name} {n}" + (f" ({_signed(moves[name])})" if moves[name] else "")
+        for name, n in counts.items()
+    )
     short = sha[:7]
     title = f"{today.isoformat()} — деплой {short} на illouminus"
-    bullet = f"- main {short} «{subject}»: фактов {len(facts)} ({split}), /healthz ok."
-    return title, [bullet]
+    if delta is None:
+        bullet = f"- main {short} «{subject}»: фактов {len(facts)} ({split}), /healthz ok."
+        return title, [bullet]
+    total = _signed(len(delta.new) - len(delta.removed))
+    parts = [f"фактов {len(facts)} ({total}; {split})"]
+    if delta.new:
+        parts.append("новые: " + _ids([i for i, _ in delta.new]))
+    if delta.status:
+        parts.append("статус: " + _ids([f"{i} {old} → {new}" for i, old, new in delta.status]))
+    if delta.changed:
+        parts.append("изменены: " + _ids(delta.changed))
+    if delta.removed:
+        parts.append("удалены: " + _ids([i for i, _ in delta.removed]))
+    return title, [f"- main {short} «{subject}»: " + "; ".join(parts) + "; /healthz ok."]
 
 
 def _args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--sha", required=True)
     parser.add_argument("--subject", required=True)
+    parser.add_argument("--prev", default=None, help="sha deployed before; enables the delta")
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--state-dir", type=Path, default=DEFAULT_STATE)
     parser.add_argument("--today", type=date.fromisoformat, default=None)
@@ -144,9 +246,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     if f"деплой {sha[:7]} на illouminus" in text:
         print(f"journal: deploy {sha[:7]} already recorded")
         return 0
+    delta = None
+    if args.prev:
+        try:
+            delta = registry_delta(args.root, args.prev, sha)
+        except JournalError as exc:
+            print(f"journal: {exc}", file=sys.stderr)
+            return 1
+        if not delta:
+            print(f"journal: registry unchanged since {args.prev[:7]} (code or evidence counters "
+                  "only); nothing written")
+            return 0
     _, facts = load_registry(args.root)
     today = args.today or datetime.now(PARIS).date()  # Edouard's date, not the host's
-    title, bullets = deploy_entry(sha, args.subject, facts, today)
+    title, bullets = deploy_entry(sha, args.subject, facts, today, delta)
     try:
         updated = insert_entry(text, title, bullets)
     except JournalError as exc:

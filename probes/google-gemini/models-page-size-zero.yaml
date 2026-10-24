@@ -1,0 +1,11 @@
+# pageSize=0 is taken as "default", not refused.
+id: af:google-gemini:probe:models-page-size-zero
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models, query: {pageSize: 0}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: "$.models[49].name", exists: true}
+  - {step: 1, json_path: "$.models[50]", exists: false}
+  - {step: 1, json_path: $.nextPageToken, exists: true}

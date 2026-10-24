@@ -11,9 +11,11 @@ import typer
 
 from agentfacts.probe.runner import (
     DEFAULT_VANTAGE,
+    RefreshReport,
     TickOptions,
     TickReport,
     probe_status,
+    refresh_evidence,
     rfc3339_epoch,
     run_tick,
 )
@@ -46,6 +48,27 @@ def _summary(report: TickReport) -> str:
     )
 
 
+def _refresh(root: Path, state_dir: Path, dry_run: bool) -> None:
+    report: RefreshReport = refresh_evidence(root, state_dir, dry_run=dry_run)
+    if report.killed:
+        typer.echo(f"kill switch on ({report.killed}): nothing written", err=True)
+        raise typer.Exit(EXIT_OK)
+    if report.busy:
+        typer.echo("a probe tick is running (probe.lock): refresh skipped", err=True)
+        raise typer.Exit(EXIT_OK)
+    for problem in report.problems:
+        typer.echo(str(problem), err=True)
+    n = report.changes
+    if dry_run:
+        facts = n["would-refresh"]
+        typer.echo(f"dry run: {facts} fact{'s' if facts != 1 else ''} with pending evidence, "
+                   f"{n['dropped']} pending for facts that are gone", err=True)
+    else:
+        typer.echo(f"evidence refresh: {n['refreshed']} written, {n['unchanged']} unchanged, "
+                   f"{n['dropped']} dropped; marker: {report.marker}", err=True)
+    raise typer.Exit(EXIT_OK if report.ok else EXIT_INVALID)
+
+
 @app.command("run")
 def run(
     run_all: Annotated[
@@ -59,10 +82,25 @@ def run(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Plan only: no request, no key read, no write.")
     ] = False,
+    refresh: Annotated[
+        bool,
+        typer.Option(
+            "--refresh-evidence",
+            help="Run no probe: write the ledger's confirmation counters into the fact files "
+            "(daily timer).",
+        ),
+    ] = False,
     root: Root = Path("."),
     state_dir: StateDir = None,
 ) -> None:
-    """Run one tick: due probes (or --all), at most --max, results to results.jsonl."""
+    """Run one tick: due probes (or --all), at most --max, results to results.jsonl. A tick
+    writes a fact file only on a status change or a new vantage; --refresh-evidence writes the
+    counters (spec 04)."""
+    if refresh:
+        if run_all:
+            typer.echo("error: --refresh-evidence runs no probe; run --all separately", err=True)
+            raise typer.Exit(EXIT_USAGE)
+        _refresh(root, state_dir or root / "var", dry_run)
     try:
         options = TickOptions(run_all=run_all, max_probes=max_probes, max_requests=max_requests,
                               vantage=vantage, dry_run=dry_run)

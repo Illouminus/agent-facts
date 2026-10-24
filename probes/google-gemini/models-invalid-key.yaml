@@ -1,0 +1,11 @@
+# Keyless step with a made-up key in the query: a key that does not exist is a 400, not a 401.
+id: af:google-gemini:probe:models-invalid-key
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models, auth: none, query: {key: agent-facts-invalid-key}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.status, equals: INVALID_ARGUMENT}
+  - {step: 1, json_path: $.error.message, equals: "API key not valid. Please pass a valid API key."}
+  - {step: 1, json_path: "$.error.details[0].reason", equals: API_KEY_INVALID}
