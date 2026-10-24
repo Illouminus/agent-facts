@@ -38,7 +38,11 @@ stays `reported` and is listed in the weekly digest under "needs a probe" (an ag
 
 ## Bot
 
-- Runs after quorum and after each runner tick. Collects new/changed files under `facts/`.
+- Runs after quorum (hourly). Collects new/changed files under `facts/`. A PR opens at once only for
+  a new or deleted fact or a change beyond the evidence counters (status, claim, …); counter-only
+  changes (`last_confirmed`, `confirmations`, `stale_counter`, `vantages`, `observations`) go out as
+  one PR a day, "facts: daily evidence refresh (<date>)", after `probe run --refresh-evidence`
+  (incident 2026-10-24: a PR per counter refresh, 62 PRs in three days).
 - One branch `bot/facts-<date>-<n>`, one PR, body = table of facts (id, kind, status, evidence), label
   `facts`. Never touches code paths.
 - Merge: the PR auto-merges when CI (schema validation + pages build) is green **and** every fact in it

@@ -1,0 +1,29 @@
+id: af:google-gemini:gemini-2-0-flash-served-past-shutdown-date
+service: google-gemini
+kind: deprecation
+target:
+  surface: http
+  method: GET
+  path_template: "/v1beta/models/{model}"
+signal:
+  status: 200
+claim: "gemini-2.0-flash, whose earliest shutdown date on the deprecations page is June 1, 2026, still answers GET /v1beta/models/gemini-2.0-flash with HTTP 200 and version 2.0."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-gemini:probe:gemini-2-0-flash-served
+  first_seen: 2026-10-24T08:03:54Z
+  confirmations: 2
+  stale_counter: 0
+  official_url: https://ai.google.dev/gemini-api/docs/deprecations
+  last_confirmed: 2026-10-24T08:07:09Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

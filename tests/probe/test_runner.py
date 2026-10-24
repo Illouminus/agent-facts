@@ -9,6 +9,7 @@ from probe_builders import FAKE_KEY
 from werkzeug import Response
 
 from agentfacts.probe import USER_AGENT
+from agentfacts.probe.ledger import LEDGER_FILE, EvidenceLedger, Pending
 from agentfacts.probe.runner import TickOptions, kill_reason, run_tick
 from agentfacts.schema.yamlio import load_yaml, plain
 
@@ -41,6 +42,11 @@ def tick(repo, httpserver, *, clock=None, environ=None, sleeps=None, **options):
 
 def fact(repo, slug="items-list-ok"):
     return plain(load_yaml(repo.root / "facts" / "acme" / f"{slug}.yaml"))
+
+
+def pending(repo, slug="items-list-ok"):
+    with EvidenceLedger(repo.state / LEDGER_FILE, read_only=True) as ledger:
+        return ledger.get(f"af:acme:{slug}")
 
 
 def outcomes(report):
@@ -95,9 +101,9 @@ def test_two_step_probe_with_reference_and_sleep_confirms_the_fact(repo, httpser
     assert [a["ok"] for a in line["asserts"]] == [True, True, True]
     assert line["facts"] == [{"id": "af:acme:items-list-ok", "change": "confirmed"}]
 
-    ev = fact(repo)["evidence"]
-    assert ev["confirmations"] == 2 and ev["stale_counter"] == 0
-    assert ev["last_confirmed"] == "2026-10-20T10:00:00Z"
+    # the counters wait in the ledger; the YAML changes on status changes and the daily refresh
+    assert fact(repo)["evidence"]["confirmations"] == 1
+    assert pending(repo) == Pending(1, "2026-10-20T10:00:00Z", 0)
 
 
 def test_three_failed_runs_make_the_fact_stale(repo, httpserver):
@@ -143,7 +149,7 @@ def test_expected_429_is_asserted_normally(repo, httpserver):
     httpserver.expect_request("/v1/items").respond_with_json({}, status=429,
                                                              headers={"Retry-After": "1"})
     assert outcomes(tick(repo, httpserver)) == {"items-list": "pass"}
-    assert fact(repo)["evidence"]["confirmations"] == 2
+    assert pending(repo).confirmations == 1
 
 
 def test_transport_error_is_not_evidence(repo, httpserver):

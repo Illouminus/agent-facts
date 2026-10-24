@@ -1,0 +1,9 @@
+id: af:google-gemini:probe:models-page-size-negative
+service: google-gemini
+env: prod
+steps:
+  - {do: http, method: GET, path: /v1beta/models, query: {pageSize: -1}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.status, equals: INVALID_ARGUMENT}
+  - {step: 1, json_path: $.error.message, contains: "ListModelsRequest.page_size: page_size must be positive"}

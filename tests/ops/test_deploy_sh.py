@@ -233,3 +233,32 @@ def test_edits_that_main_already_has_are_dropped_not_parked(host):
     assert "already in" in result.stdout
     assert list((host.app / "var" / "deploy").glob("facts-unapplied-*.patch")) == []
     assert git(host.app, "status", "--porcelain", "--", "facts") == ""
+
+
+def test_new_unit_files_are_linked_before_the_daemon_reload(host):
+    linked = host.home / ".config" / "systemd" / "user"
+    linked.mkdir(parents=True)
+    (linked / "agentfacts-api.service").symlink_to(host.app / "ops/systemd/agentfacts-api.service")
+    host.write("ops/systemd/agentfacts-refresh.timer", "[Timer]\nOnCalendar=daily\n")
+    c2 = host.commit("new timer")
+    result = host.deploy(c2)
+    assert result.returncode == 0, result.stdout + result.stderr
+    calls = host.calls()
+    link = f"systemctl --user link {host.app}/ops/systemd/agentfacts-refresh.timer"
+    assert link in calls and calls.index(link) < calls.index("systemctl --user daemon-reload")
+    assert not any("link" in c and "agentfacts-api.service" in c for c in calls)
+    assert not any("enable" in c for c in calls)  # enabling stays a deliberate step
+
+
+def test_journal_hook_gets_the_previous_sha(host):
+    state = host.home / "claude-hub" / "state"
+    state.mkdir(parents=True)
+    python = host.app / ".venv" / "bin" / "python"
+    python.parent.mkdir(parents=True)
+    python.write_text('#!/bin/sh\necho "python $*" >> "$HOME/calls.log"\n', encoding="utf-8")
+    python.chmod(0o755)
+    host.write("README", "two\n")
+    c2 = host.commit("c2")
+    assert host.deploy(c2).returncode == 0
+    [call] = [c for c in host.calls() if c.startswith("python ")]
+    assert f"--sha {c2} --prev {host.c1} --subject c2" in call
