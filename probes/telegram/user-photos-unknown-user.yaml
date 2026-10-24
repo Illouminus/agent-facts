@@ -1,0 +1,8 @@
+id: af:telegram:probe:user-photos-unknown-user
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: /getUserProfilePhotos, query: {user_id: 1}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.description, equals: "Bad Request: user not found"}

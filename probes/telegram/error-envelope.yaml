@@ -1,0 +1,12 @@
+# The error shape alone: HTTP status mirrored in error_code, ok false, a description, no result.
+id: af:telegram:probe:error-envelope
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: /getChat}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.ok, equals: false}
+  - {step: 1, json_path: $.error_code, equals: 400}
+  - {step: 1, json_path: $.description, exists: true}
+  - {step: 1, json_path: $.result, exists: false}
