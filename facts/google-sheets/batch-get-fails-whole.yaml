@@ -1,0 +1,31 @@
+id: af:google-sheets:batch-get-fails-whole
+service: google-sheets
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values:batchGet"
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Unable to parse range: AgentFactsNoSuchSheet!A1"
+  normalized: "unable to parse range: agentfactsnosuchsheet!a#"
+claim: "values:batchGet with an unparsable range fails as a whole with HTTP 400 \"Unable to parse range\"; without any ranges it returns 200 and no valueRanges field."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:batch-get-one-bad-range
+  first_seen: 2026-10-24T08:32:29Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:32:29Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,13 @@
+# batchGet with one good and one unparsable range fails as a whole.
+id: af:google-sheets:probe:batch-get-one-bad-range
+service: google-sheets
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values:batchGet", query: {ranges: "AgentFactsNoSuchSheet!A1"}}
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values:batchGet"}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.message, equals: "Unable to parse range: AgentFactsNoSuchSheet!A1"}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.valueRanges, exists: false}

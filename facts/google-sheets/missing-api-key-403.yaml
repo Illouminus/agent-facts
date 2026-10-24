@@ -1,0 +1,31 @@
+id: af:google-sheets:missing-api-key-403
+service: google-sheets
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 403
+  error_code: PERMISSION_DENIED
+  error_string: "Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."
+  normalized: "method doesn't allow unregistered callers (callers without established identity). please use api key or other form of api consumer identity to call this api."
+claim: "Reading even a public spreadsheet with no API key or token returns HTTP 403 PERMISSION_DENIED (\"Method doesn't allow unregistered callers\")."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: set_param, name: key, value_source: account_setting:api_key, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:no-api-key
+  first_seen: 2026-10-24T08:32:31Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:32:31Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

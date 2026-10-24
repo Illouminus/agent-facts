@@ -1,0 +1,31 @@
+id: af:google-sheets:invalid-fields-mask-generic-400
+service: google-sheets
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}"
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Request contains an invalid argument."
+  normalized: "request contains an invalid argument."
+claim: "A fields mask naming a field that does not exist returns HTTP 400 with the generic \"Request contains an invalid argument.\", without naming the field."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: remove_param, name: fields, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:invalid-fields-mask
+  first_seen: 2026-10-24T08:32:30Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:32:30Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

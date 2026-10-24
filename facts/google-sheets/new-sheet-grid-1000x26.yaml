@@ -1,0 +1,28 @@
+id: af:google-sheets:new-sheet-grid-1000x26
+service: google-sheets
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}"
+signal:
+  status: 200
+claim: "A newly created sheet has a grid of 1000 rows by 26 columns (gridProperties.rowCount and columnCount), the bounds ranges are clipped to."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:new-sheet-grid
+  first_seen: 2026-10-24T08:32:31Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:32:31Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

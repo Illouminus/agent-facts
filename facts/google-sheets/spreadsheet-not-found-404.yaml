@@ -1,0 +1,31 @@
+id: af:google-sheets:spreadsheet-not-found-404
+service: google-sheets
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "Requested entity was not found."
+  normalized: "requested entity was not found."
+claim: "A spreadsheet id that does not exist returns HTTP 404 NOT_FOUND \"Requested entity was not found.\"."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:spreadsheet-not-found
+  first_seen: 2026-10-24T08:32:32Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:32:32Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
