@@ -61,7 +61,8 @@ class BotAuth:
 
     def git_env(self, base: Mapping[str, str]) -> dict[str, str]:
         env = {k: v for k, v in base.items()
-               if k not in ("GH_TOKEN", "GITHUB_TOKEN") and not k.startswith("GIT_CONFIG_")}
+               if k not in ("GH_TOKEN", "GITHUB_TOKEN", "GIT_CONFIG_COUNT")
+               and not k.startswith(("GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_"))}
         env["GIT_TERMINAL_PROMPT"] = "0"
         env["GIT_CONFIG_COUNT"] = "2" if self.token else "1"
         env["GIT_CONFIG_KEY_0"], env["GIT_CONFIG_VALUE_0"] = "credential.helper", ""  # reset
@@ -71,7 +72,7 @@ class BotAuth:
         return env
 
     def redact(self, text: str) -> str:
-        return Redactor.for_keys([self.token]).text(text) if self.token else text
+        return Redactor.for_keys([self.token]).text_strict(text) if self.token else text
 
     def git(self, root: Path, *args: str) -> str:
         """git that talks to the remote (fetch, ls-remote, push) with this token only."""

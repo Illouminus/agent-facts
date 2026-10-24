@@ -84,9 +84,10 @@ the public repo with `-c credential.helper=` (anonymous).
 
 Every `agentfacts-*.service` sets `NoNewPrivileges`, `RestrictSUIDSGID`, `LockPersonality`,
 `RestrictRealtime`, `RestrictNamespaces`, `SystemCallArchitectures=native`,
-`SystemCallFilter=@system-service` (`EPERM`), `MemoryDenyWriteExecute`, `RestrictAddressFamilies`
-(unix, inet, inet6, netlink) and `UMask=0077` — checked on the host 2026-10-24 (`NoNewPrivs: 1`,
-`Seccomp: 2`; probe, quorum, bot dry runs, uvicorn, gh, git and HTTPS work under it).
+`SystemCallFilter=@system-service` (`EPERM`), `MemoryDenyWriteExecute` and `RestrictAddressFamilies`
+(unix, inet, inet6, netlink) — checked on the host 2026-10-24 (`NoNewPrivs: 1`, `Seccomp: 2`; probe,
+quorum, bot dry runs, uvicorn, gh, git and HTTPS work under it). No `UMask`: the digest writes into
+the megabrain state, whose files other readers expect group/world-readable.
 
 Impossible in user units on illouminus (Ubuntu 24.04, systemd 255,
 `kernel.apparmor_restrict_unprivileged_userns=1`): the user manager's user namespace lands in the

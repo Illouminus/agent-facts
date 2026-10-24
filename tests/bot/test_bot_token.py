@@ -129,3 +129,19 @@ def test_cli_missing_key_is_exit_1_with_the_message(repo, bot_keys):
     r = CliRunner().invoke(app, ["bot", "publish", "--root", str(repo.work)],
                            env={"AGENTFACTS_KILL": "0"})
     assert r.exit_code == 1 and "keyput agent-facts-bot" in r.output
+
+
+def test_git_env_keeps_unrelated_git_config_variables():
+    base = {"GIT_CONFIG_GLOBAL": "/tmp/g", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_PARAMETERS": "x",
+            "GIT_CONFIG_COUNT": "3", "GIT_CONFIG_KEY_2": "a", "GIT_CONFIG_VALUE_2": "b"}
+    env = BotAuth(FAKE_BOT_TOKEN).git_env(base)
+    assert {k: env[k] for k in ("GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM",
+                                "GIT_CONFIG_PARAMETERS")} == {
+        "GIT_CONFIG_GLOBAL": "/tmp/g", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_PARAMETERS": "x"}
+    assert env["GIT_CONFIG_COUNT"] == "2" and "GIT_CONFIG_KEY_2" not in env
+
+
+def test_redaction_keeps_shas_readable():
+    sha = "c2567507c886bc075b4f3ddd154338271b273fdf"
+    out = BotAuth(FAKE_BOT_TOKEN).redact(f"push {sha} with {FAKE_BOT_TOKEN} refused")
+    assert sha in out and FAKE_BOT_TOKEN not in out

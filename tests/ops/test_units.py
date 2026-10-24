@@ -138,7 +138,6 @@ HARDENING = {
     "SystemCallErrorNumber": "EPERM",
     "MemoryDenyWriteExecute": "yes",
     "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6 AF_NETLINK",
-    "UMask": "0077",
 }
 NEEDS_MOUNT_NAMESPACE = (
     "ProtectSystem", "ProtectHome", "PrivateTmp", "ReadWritePaths", "ReadOnlyPaths",
