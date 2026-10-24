@@ -1,0 +1,12 @@
+# A new sheet's grid: 1000 rows x 26 columns (what ranges are clipped to).
+id: af:google-sheets:probe:new-sheet-grid
+service: google-sheets
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I", query: {fields: sheets.properties}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: "$.sheets[0].properties.gridProperties.rowCount", equals: 1000}
+  - {step: 1, json_path: "$.sheets[0].properties.gridProperties.columnCount", equals: 26}
+  - {step: 1, json_path: "$.sheets[0].properties.title", equals: Feuille 1}

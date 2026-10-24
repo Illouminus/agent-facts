@@ -1,0 +1,14 @@
+# The spreadsheet's locale names the first sheet: Sheet1 does not exist on a French-locale file.
+id: af:google-sheets:probe:default-sheet-name-localized
+service: google-sheets
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/Sheet1!A1"}
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/'Feuille%201'!A1"}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.status, equals: INVALID_ARGUMENT}
+  - {step: 1, json_path: $.error.message, equals: "Unable to parse range: Sheet1!A1"}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.range, equals: "'Feuille 1'!A1"}

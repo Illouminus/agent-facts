@@ -1,0 +1,9 @@
+id: af:google-sheets:probe:no-api-key
+service: google-sheets
+env: prod
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A1", auth: none}
+assert:
+  - {step: 1, status: 403}
+  - {step: 1, json_path: $.error.status, equals: PERMISSION_DENIED}
+  - {step: 1, json_path: $.error.message, contains: "Method doesn't allow unregistered callers"}

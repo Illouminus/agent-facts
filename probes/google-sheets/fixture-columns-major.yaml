@@ -1,0 +1,14 @@
+# COLUMNS: an empty cell before a column's last value is "", the ones after it are dropped.
+id: af:google-sheets:probe:fixture-columns-major
+service: google-sheets
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A1:E5", query: {majorDimension: COLUMNS}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.majorDimension, equals: COLUMNS}
+  - {step: 1, json_path: "$.values[0][3]", equals: ""}
+  - {step: 1, json_path: "$.values[0][4]", equals: after empty row}
+  - {step: 1, json_path: "$.values[1][2]", equals: x}
+  - {step: 1, json_path: "$.values[1][3]", exists: false}

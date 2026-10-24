@@ -1,0 +1,28 @@
+id: af:google-sheets:range-clipped-to-grid
+service: google-sheets
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 200
+claim: "A range that runs past the sheet's grid is clipped instead of refused: A1:ZZZ1 comes back as A1:Z1 and A1:B2000 as A1:B1000 on a 1000x26 sheet, with HTTP 200."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:range-clipped-to-grid
+  first_seen: 2026-10-24T08:32:31Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:42:09Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

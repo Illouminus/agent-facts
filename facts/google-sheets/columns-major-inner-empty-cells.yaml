@@ -1,0 +1,28 @@
+id: af:google-sheets:columns-major-inner-empty-cells
+service: google-sheets
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 200
+claim: "With majorDimension=COLUMNS an empty cell before a column's last value comes back as \"\" and the empty cells after it are dropped."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:fixture-columns-major
+  first_seen: 2026-10-24T09:42:07Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:42:07Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

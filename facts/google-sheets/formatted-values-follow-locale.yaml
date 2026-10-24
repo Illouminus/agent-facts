@@ -1,0 +1,28 @@
+id: af:google-sheets:formatted-values-follow-locale
+service: google-sheets
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 200
+claim: "By default values.get returns every cell as a string formatted in the spreadsheet's locale: on a fr_FR file 3.14159 comes back as \"3,14159\", a date as \"24/10/2026\" and a boolean as \"TRUE\"."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: set_param, name: valueRenderOption, value_source: literal:UNFORMATTED_VALUE, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:fixture-formatted-values
+  first_seen: 2026-10-24T09:42:08Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:42:08Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

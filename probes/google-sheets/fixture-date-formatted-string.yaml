@@ -1,0 +1,10 @@
+id: af:google-sheets:probe:fixture-date-formatted-string
+service: google-sheets
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A1:E5", query: {valueRenderOption: UNFORMATTED_VALUE, dateTimeRenderOption: FORMATTED_STRING}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: "$.values[1][3]", equals: "24/10/2026"}
+  - {step: 1, json_path: "$.values[1][1]", equals: 3.14159}

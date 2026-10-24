@@ -1,0 +1,28 @@
+id: af:google-sheets:formulas-in-locale-syntax
+service: google-sheets
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 200
+claim: "With valueRenderOption=FORMULA formulas come back as text in the spreadsheet locale's syntax: =DATE(2026;10;24) with semicolons on a fr_FR file, while plain numbers and booleans stay typed."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:fixture-formula-values
+  first_seen: 2026-10-24T09:42:08Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:42:08Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
