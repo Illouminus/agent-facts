@@ -610,3 +610,20 @@ def test_a_top_level_description_is_the_error_string(repo, httpserver):
     step = repo.results()[0]["steps"][0]
     assert step["error_string"] == "Bad Request: chat not found"
     assert step["normalized"] == "bad request: chat not found"
+
+
+def test_a_family_key_runs_for_a_family_service_on_family_hosts(repo, httpserver):
+    host = "https://sheets.googleapis.com"
+    repo.service(key="google-acme", hosts=["sheets.googleapis.com"],
+                 surfaces={"http": {"base_url": host, "templates": [
+                     {"method": "GET", "path": "/v1/items"}]}},
+                 dimensions={"env": {"prod": host}},
+                 auth={"kind": "query", "key_name": "google-api-key", "env": "prod",
+                       "param_name": "key"})
+    repo.probe(id="af:google-acme:probe:items-list", service="google-acme", env="prod")
+    repo.key("google-api-key")
+    httpserver.expect_request("/v1/items").respond_with_json({})
+    report = run_tick(repo.root, repo.state, TickOptions(), keys_dir=repo.keys,
+                      base_urls={"google-acme": httpserver.url_for("")}, environ={})
+    assert report.problems == [] and [line.outcome for line in report.lines] == ["pass"]
+    assert httpserver.log[0][0].args["key"] == FAKE_KEY

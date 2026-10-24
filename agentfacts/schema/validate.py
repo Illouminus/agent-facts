@@ -264,8 +264,12 @@ def _service_checks(doc: _Doc, registry: Registry) -> list[Problem]:
             message = f"{url} is not on {key}'s hosts ({', '.join(data['hosts'])})"
             problems.append(doc.problem(path, "foreign_env_url", message))
     auth = data.get("auth") or {}
-    if (name := auth.get("key_name")) and not key_bound_to_service(name, key):
-        message = f"key {name} is not named after the service ({key}, {key}-…, {key}_…)"
+    scopes = auth.get("scopes") or ()
+    if (name := auth.get("key_name")) and not key_bound_to_service(
+        name, key, data["hosts"], scopes
+    ):
+        message = (f"key {name} is not named after the service ({key}, {key}-…, {key}_…) nor a "
+                   "family key on the family's hosts and scopes")
         problems.append(doc.problem(["auth", "key_name"], "key_not_bound", message))
     service = registry.services[key]
     if service.jsonrpc and not service.has_template("POST", service.jsonrpc.path):

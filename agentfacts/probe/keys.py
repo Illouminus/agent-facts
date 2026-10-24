@@ -4,8 +4,10 @@ The runner is the only reader (invariant 4). `key_name` is pattern-checked by th
 (`^[a-z0-9][a-z0-9_-]{0,63}$`), so it cannot leave `keys_dir`. A missing or blank file means no key:
 the service's keyed probes are skipped, never an error.
 
-A key is bound to its service by name (`key_bound_to_service`: `stripe-test` for `stripe`); the
-validator rejects any other name in CI and the runner refuses it again at run time, key unread.
+A key is bound to its service by name (`key_bound_to_service`: `stripe-test` for `stripe`), or is
+a vendor family key (`google-api-key` for `google-sheets`) whose services all sit on the family's
+domains; the validator rejects any other name in CI and the runner refuses it again at run time,
+key unread.
 `has_key` only looks at the file (dry runs and `probe list` never read a value).
 """
 

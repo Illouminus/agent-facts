@@ -127,3 +127,91 @@ def test_model_agrees_with_the_schema(auth, ok):
     else:
         with pytest.raises(ValidationError):
             Auth.model_validate(doc)
+
+
+@pytest.mark.parametrize(
+    ("key", "service", "hosts", "bound"),
+    [
+        # A family key (google-…) serves google-<x> services whose hosts all sit on googleapis.com.
+        ("google-api-key", "google-sheets", ["sheets.googleapis.com"], True),
+        ("google-service-account", "google-firestore", ["firestore.googleapis.com"], True),
+        ("google-api-key", "google-calendar", ["www.googleapis.com"], True),
+        ("google-api-key", "google-sheets", ["sheets.googleapis.com", "evil.example"], False),
+        ("google-api-key", "google-sheets", ["googleapis.com.evil.example"], False),
+        ("google-api-key", "google-sheets", ["evilgoogleapis.com"], False),
+        ("google-api-key", "google-sheets", [], False),
+        ("google-api-key", "googlesheets", ["sheets.googleapis.com"], False),  # not google-<x>
+        ("google-api-key", "github", ["api.github.com"], False),
+        ("stripe-test", "stripe-terminal", ["api.stripe.com"], False),  # stripe is no family
+        ("stripe-terminal-test", "stripe-terminal", [], True),  # the name rule, hosts unused
+        ("github-token", "google-sheets", ["sheets.googleapis.com"], False),  # no such family
+        # A family key obeys the family hosts even when the name rule alone would bind it.
+        ("google-api-key", "google", ["collector.example.org"], False),
+        ("google-api-key", "google-api", ["collector.example.org"], False),
+        ("google-api-key", "google", ["sheets.googleapis.com"], True),
+        # Only the listed API hosts, not every googleapis.com host (storage serves user buckets).
+        ("google-api-key", "google-storage", ["storage.googleapis.com"], False),
+        ("google-api-key", "google-sheets", ["evil.sheets.googleapis.com"], False),
+    ],
+)
+def test_key_families(key, service, hosts, bound):
+    assert key_bound_to_service(key, service, hosts) is bound
+
+
+GOOGLE_SHEETS = """key: google-sheets
+name: Google Sheets API
+hosts: [sheets.googleapis.com]
+surfaces:
+  http:
+    base_url: https://sheets.googleapis.com
+    templates:
+      - {method: GET, path: "/v4/spreadsheets/{id}"}
+dimensions:
+  env: {prod: https://sheets.googleapis.com}
+auth: {kind: query, key_name: google-api-key, env: prod, param_name: key}
+tos: {automated_access: allowed, publish_measurements: allowed, source: https://developers.google.com/terms}
+"""
+
+
+def google_codes(tmp_path: Path, text: str) -> set[str]:
+    path = tmp_path / "services" / "google-sheets.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return {p.code for p in validate_paths([path], root=tmp_path).problems}
+
+
+def test_validator_accepts_a_family_key_on_family_hosts(tmp_path):
+    assert google_codes(tmp_path, GOOGLE_SHEETS) == set()
+
+
+def test_validator_refuses_a_family_key_with_a_host_off_the_family_domain(tmp_path):
+    text = GOOGLE_SHEETS.replace("hosts: [sheets.googleapis.com]",
+                                 "hosts: [sheets.googleapis.com, collector.example.org]")
+    assert google_codes(tmp_path, text) == {"key_not_bound"}
+
+
+@pytest.mark.parametrize(
+    ("scopes", "bound"),
+    [
+        ((), True),
+        (("https://www.googleapis.com/auth/spreadsheets.readonly",), True),
+        (("https://www.googleapis.com/auth/calendar.readonly",
+          "https://www.googleapis.com/auth/datastore"), True),
+        (("https://www.googleapis.com/auth/cloud-platform",), False),
+        (("https://www.googleapis.com/auth/spreadsheets",), False),  # write scope
+        (("https://www.googleapis.com/auth/spreadsheets.readonly",
+          "https://www.googleapis.com/auth/drive"), False),
+    ],
+)
+def test_family_service_accounts_get_only_the_family_scopes(scopes, bound):
+    hosts = ["sheets.googleapis.com"]
+    assert key_bound_to_service("google-service-account", "google-sheets", hosts, scopes) is bound
+
+
+def test_validator_refuses_a_family_service_account_with_a_broad_scope(tmp_path):
+    text = GOOGLE_SHEETS.replace(
+        "auth: {kind: query, key_name: google-api-key, env: prod, param_name: key}",
+        "auth: {kind: google_service_account, key_name: google-service-account, env: prod,"
+        " scopes: [https://www.googleapis.com/auth/cloud-platform]}",
+    )
+    assert google_codes(tmp_path, text) == {"key_not_bound"}
