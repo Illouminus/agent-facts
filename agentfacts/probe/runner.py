@@ -26,6 +26,13 @@ from agentfacts import __version__
 from agentfacts.probe.assertions import evaluate
 from agentfacts.probe.budget import BudgetState, TemplateKey
 from agentfacts.probe.evidence import apply_outcome
+from agentfacts.probe.google_sa import (
+    GOOGLE_TOKEN_URL,
+    AuthError,
+    mint_access_token,
+    parse_service_account,
+    secrets_of,
+)
 from agentfacts.probe.http import (
     NO_CREDENTIALS,
     TIMEOUT_S,
@@ -300,6 +307,9 @@ class _Tick:
     repo: Repo
     state: BudgetState
     report: TickReport
+    google_token_url: str = GOOGLE_TOKEN_URL
+    # service → access token minted this tick, or why there is none (asked once per tick)
+    tokens: dict[str, str | AuthError] = field(default_factory=dict)
 
     def line(self, c: _Candidate, outcome: str, detail: str) -> None:
         self.report.counts[_count_key(outcome)] += 1
@@ -317,6 +327,9 @@ class _Tick:
             and (value := read_key(c.service.auth.key_name, self.keys_dir)) is not None
         }
         redactor = Redactor.for_keys(keys.values())
+        for service_key, value in keys.items():
+            if self.repo.services[service_key].auth.kind == "google_service_account":
+                redactor.add(secrets_of(value))
         log = ResultsLog(results, redactor)
         with make_client(timeout=self.options.timeout_s) as client:
             for c, decision, detail in plan:
@@ -359,7 +372,17 @@ class _Tick:
         redactor: Redactor,
     ) -> None:
         now = self.clock()
-        run = _execute(c, key, self.base_urls, client, self.sleep, now, redactor)
+        secret, templates = key, c.templates
+        if c.keyed and c.service.auth.kind == "google_service_account":
+            secret = self._access_token(c.service, key, client, redactor)
+        if isinstance(secret, AuthError):
+            # No request was sent: a bad key file is refused (an operator fixes it), a failed
+            # token exchange is an outage. Neither is evidence; no template was used.
+            run = _Run("error", f"auth:{secret.code}: {secret.message}",
+                       refused=secret.code == "bad_key_file")
+            templates = []
+        else:
+            run = _execute(c, secret, self.base_urls, client, self.sleep, now, redactor)
         record = _record(c, self.options, now, run)
         if run.outcome in ("pass", "fail"):
             for loaded in self.repo.facts_citing(c.id):
@@ -373,10 +396,27 @@ class _Tick:
                         Problem(loaded.path, 1, "fact_not_updated", message)
                     )
         redacted = log.append(record)
-        self.state.record(c.id, c.templates, self.options.vantage, now.timestamp(), run.outcome)
+        self.state.record(c.id, templates, self.options.vantage, now.timestamp(), run.outcome)
         if run.refused:
             self.report.refused.append(c.id)
         self.line(c, run.outcome, redacted["detail"])
+
+
+    def _access_token(
+        self, service: Service, key: str | None, client: httpx.Client, redactor: Redactor
+    ) -> str | AuthError:
+        """One token per service per tick; the token joins the redactor before any write."""
+        if service.key not in self.tokens:
+            try:
+                account = parse_service_account(key or "")
+                token = mint_access_token(client, account, service.auth.scopes, self.clock(),
+                                          self.google_token_url)
+            except AuthError as exc:
+                self.tokens[service.key] = exc
+            else:
+                redactor.add({token})
+                self.tokens[service.key] = token
+        return self.tokens[service.key]
 
 
 def _count_key(outcome: str) -> str:
@@ -410,9 +450,11 @@ def run_tick(
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], datetime] = _utcnow,
     environ: Mapping[str, str] | None = None,
+    google_token_url: str = GOOGLE_TOKEN_URL,
 ) -> TickReport:
-    """Run one tick. `base_urls` (service → URL) is a test seam: it replaces the env URL and its
-    vendor-host check, and is not reachable from the CLI."""
+    """Run one tick. `base_urls` (service → URL) and `google_token_url` are test seams: they
+    replace the env URL and its vendor-host check, and the fixed Google token endpoint; neither
+    is reachable from the CLI."""
     environ = os.environ if environ is None else environ
     results = state_dir / RESULTS_FILE
     report = TickReport(results_path=None if options.dry_run else results)
@@ -430,7 +472,7 @@ def run_tick(
         with BudgetState(state_dir / STATE_FILE, read_only=options.dry_run) as state:
             plan = _select(repo, state, options, clock().timestamp(), keys_dir)
             tick = _Tick(root, options, keys_dir, base_urls or {}, sleep, clock, environ, repo,
-                         state, report)
+                         state, report, google_token_url)
             if options.dry_run:
                 tick.dry_run(plan)
             else:

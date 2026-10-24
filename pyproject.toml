@@ -7,6 +7,7 @@ license = "MIT"
 license-files = ["LICENSE"]  # the wheel ships code only; data (CC BY 4.0) stays in the repo
 requires-python = ">=3.12"
 dependencies = [
+    "cryptography>=50.0.2",
     "fastapi>=0.150.0",
     "httpx>=0.28.1",
     "jsonschema>=4.26.0",
