@@ -1,0 +1,16 @@
+# A range past the sheet's grid (1000 rows x 26 columns) is clipped, not refused.
+id: af:google-sheets:probe:range-clipped-to-grid
+service: google-sheets
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A1:ZZZ1"}
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A1:B2000"}
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A:A"}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.range, equals: "'Feuille 1'!A1:Z1"}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.range, equals: "'Feuille 1'!A1:B1000"}
+  - {step: 3, status: 200}
+  - {step: 3, json_path: $.range, equals: "'Feuille 1'!A1:A1000"}

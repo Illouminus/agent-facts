@@ -1,0 +1,35 @@
+# `request contains an invalid argument.`
+
+**Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id} · HTTP 400 `INVALID_ARGUMENT`**
+
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 3 confirmations from 1 vantage
+
+> A fields mask naming a field that does not exist returns HTTP 400 with the generic "Request contains an invalid argument.", without naming the field.
+
+## What to do
+
+1. Omit query parameter fields.
+
+## Dimensions
+
+env: prod · plan: any · region: any · account_state: api_key
+
+## Evidence
+
+Probe `af:google-sheets:probe:invalid-fields-mask` (declarative, [source](../../probes/google-sheets/invalid-fields-mask.yaml))
+
+Observations: none from reporters yet.
+
+## Machine access
+
+```sh
+curl -s https://facts.baillot.dev/v0/check \
+  -H 'content-type: application/json' \
+  -d '{"target":{"method":"GET","url":"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}"},"error":{"status":400,"body_excerpt":"request contains an invalid argument."}}'
+```
+
+YAML: [facts/google-sheets/invalid-fields-mask-generic-400.yaml](../../facts/google-sheets/invalid-fields-mask-generic-400.yaml)
+
+---
+
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
