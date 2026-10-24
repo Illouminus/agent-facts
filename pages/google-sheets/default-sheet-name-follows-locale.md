@@ -2,9 +2,9 @@
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · HTTP 400 `INVALID_ARGUMENT`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
-> The first sheet's default name follows the spreadsheet locale (Feuille 1 for French), so Sheet1!A1 returns HTTP 400 "Unable to parse range: Sheet1!A1"; a range without a sheet name reads the first sheet.
+> The first sheet is not always Sheet1: on this French-locale spreadsheet it is Feuille 1, and Sheet1!A1 returns HTTP 400 "Unable to parse range: Sheet1!A1"; a range without a sheet name reads the first sheet.
 
 ## What to do
 

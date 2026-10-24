@@ -1,8 +1,8 @@
-# A newly created sheet has a grid of 1000 rows by 26 columns (gridProperties.rowCount and columnCount), the bounds ranges are clipped to.
+# The untouched first sheet of a new spreadsheet has a grid of 1000 rows by 26 columns (gridProperties.rowCount and columnCount), the bounds ranges are clipped to.
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id} · HTTP 200**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 ## What to do
 

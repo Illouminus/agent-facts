@@ -18,7 +18,7 @@ Hosts: `sheets.googleapis.com` · 14 facts
 ## Silent behavior
 
 - ✅ verified:server:prod · [values.get on a range with no data returns HTTP 200 with range and majorDimension but no values field at all, not values: \[\].](empty-range-omits-values.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
-- ✅ verified:server:prod · [A newly created sheet has a grid of 1000 rows by 26 columns (gridProperties.rowCount and columnCount), the bounds ranges are clipped to.](new-sheet-grid-1000x26.md) · GET /v4/spreadsheets/{spreadsheet_id} · env prod
+- ✅ verified:server:prod · [The untouched first sheet of a new spreadsheet has a grid of 1000 rows by 26 columns (gridProperties.rowCount and columnCount), the bounds ranges are clipped to.](new-sheet-grid-1000x26.md) · GET /v4/spreadsheets/{spreadsheet_id} · env prod
 - ✅ verified:server:prod · [A range that runs past the sheet's grid is clipped instead of refused: A1:ZZZ1 comes back as A1:Z1 and A1:B2000 as A1:B1000 on a 1000x26 sheet, with HTTP 200.](range-clipped-to-grid.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 - ✅ verified:server:prod · [An open range such as A:A is answered with explicit bounds, A1:A1000 on a 1000-row sheet, and the first sheet's quoted name ('Feuille 1'!A1:A1000).](whole-column-range-expanded.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 

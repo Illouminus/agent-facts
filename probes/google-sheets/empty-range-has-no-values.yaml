@@ -1,12 +1,13 @@
-# An empty range comes back without a values field (not values: []).
+# An empty range comes back without a values field (not values: []). Far corner of the grid, so
+# filling the sheet's first cells leaves this probe alone.
 id: af:google-sheets:probe:empty-range-has-no-values
 service: google-sheets
 env: prod
 account_state: api_key
 steps:
-  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A1:F12"}
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/X990:Z999"}
 assert:
   - {step: 1, status: 200}
-  - {step: 1, json_path: $.range, equals: "'Feuille 1'!A1:F12"}
+  - {step: 1, json_path: $.range, equals: "'Feuille 1'!X990:Z999"}
   - {step: 1, json_path: $.majorDimension, equals: ROWS}
   - {step: 1, json_path: $.values, exists: false}

@@ -2,7 +2,7 @@
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · HTTP 404 `NOT_FOUND`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 > A spreadsheet id that does not exist returns HTTP 404 NOT_FOUND "Requested entity was not found.".
 
