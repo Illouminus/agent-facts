@@ -1,0 +1,13 @@
+# Keyless steps with made-up tokens: a token-shaped one, and a segment that is not token-shaped.
+id: af:telegram:probe:invalid-token
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: "/bot123456789:AAagentfactsInvalidTokenInvalidToken00/getMe", auth: none}
+  - {do: http, method: GET, path: /botagentfacts/getMe, auth: none}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: $.ok, equals: false}
+  - {step: 1, json_path: $.description, equals: Unauthorized}
+  - {step: 2, status: 404}
+  - {step: 2, json_path: $.description, equals: Not Found}

@@ -1,0 +1,22 @@
+id: af:telegram:get-updates-blocked-by-webhook
+service: telegram
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/{bot_token}/getUpdates"
+claim: "getUpdates does not work while an outgoing webhook is set up; the webhook has to be removed before updates can be polled."
+dimensions:
+  env: prod
+  account_state: webhook_set
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://core.telegram.org/bots/api#getupdates
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

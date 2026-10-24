@@ -1,0 +1,30 @@
+id: af:telegram:malformed-token-404
+service: telegram
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/{bot_token}/getMe"
+signal:
+  status: 404
+  error_string: "Not Found"
+  normalized: "not found"
+claim: "A /bot<token>/ segment whose token lacks the <digits>:<secret> shape returns HTTP 404 \"Not Found\", the same answer as an unknown method, not 401."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:telegram:probe:invalid-token
+  first_seen: 2026-10-24T08:17:39Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:17:39Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

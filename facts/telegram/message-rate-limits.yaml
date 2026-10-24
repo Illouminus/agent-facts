@@ -1,0 +1,24 @@
+id: af:telegram:message-rate-limits
+service: telegram
+kind: rate_limit
+target:
+  surface: http
+  method: POST
+  path_template: "/{bot_token}/sendMessage"
+signal:
+  status: 429
+claim: "Bots should send no more than one message per second to a chat and at most 20 messages per minute to a group; broadcasts are capped at about 30 messages per second; beyond that the API answers 429."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: backoff_exponential, base_ms: 1000, factor: 2, max_ms: 60000, max_attempts: 5, jitter: true}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

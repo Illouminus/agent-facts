@@ -1,0 +1,22 @@
+id: af:telegram:group-migrated-to-supergroup
+service: telegram
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: "/{bot_token}/sendMessage"
+claim: "When a group has been migrated to a supergroup, the error's parameters.migrate_to_chat_id holds the supergroup's new identifier."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: set_param, name: chat_id, value_source: account_setting:migrate_to_chat_id, location: body}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://core.telegram.org/bots/api#responseparameters
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

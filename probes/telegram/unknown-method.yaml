@@ -1,0 +1,9 @@
+id: af:telegram:probe:unknown-method
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: /agentFactsNoSuchMethod}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error_code, equals: 404}
+  - {step: 1, json_path: $.description, equals: Not Found}
