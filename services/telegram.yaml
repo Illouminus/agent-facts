@@ -1,0 +1,39 @@
+# Telegram Bot API (wave 1 seed, keyed). The bot token lives in the URL path
+# (https://api.telegram.org/bot<token>/<method>). Probes are written against the token-free
+# templates (/getMe …) and the runner puts /bot<token> in front (auth kind path_prefix). Agents
+# report the full URL, which the /{bot_token}/… templates match; check() stores templates only,
+# never the token segment. Probes are read-only GETs of methods that change nothing (getUpdates
+# without offset confirms no update). The probe bot @facstIllouminusBot has no webhook.
+key: telegram
+name: Telegram Bot API
+hosts: [api.telegram.org]
+doc_hosts: [core.telegram.org]
+surfaces:
+  http:
+    base_url: https://api.telegram.org
+    templates:
+      - {method: GET, path: /getMe}
+      - {method: GET, path: /getUpdates}
+      - {method: GET, path: /getWebhookInfo}
+      - {method: GET, path: /getChat}
+      - {method: GET, path: /getFile}
+      - {method: GET, path: /getUserProfilePhotos}
+      - {method: GET, path: "/{method}"}
+      - {method: GET, path: "/{bot_token}/getMe"}
+      - {method: GET, path: "/{bot_token}/getUpdates"}
+      - {method: GET, path: "/{bot_token}/getChat"}
+      - {method: GET, path: "/{bot_token}/getFile"}
+      - {method: POST, path: "/{bot_token}/sendMessage"}
+      - {method: GET, path: "/{bot_token}/{method}"}
+      - {method: POST, path: "/{bot_token}/{method}"}
+    # error_code only mirrors the HTTP status; description is the message check() hashes
+    signal_fields: [status, description, parameters.retry_after, parameters.migrate_to_chat_id, retry-after]
+dimensions:
+  env: {prod: https://api.telegram.org}
+  account_state: [no_webhook, webhook_set]
+auth: {kind: path_prefix, key_name: telegram-bot, env: prod, path_prefix: "/bot{key}"}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://telegram.org/tos/bot-developers
+probe_budget: {per_template_seconds: 300}
