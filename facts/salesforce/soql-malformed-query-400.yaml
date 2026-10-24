@@ -1,0 +1,31 @@
+id: af:salesforce:soql-malformed-query-400
+service: salesforce
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/query"
+signal:
+  status: 400
+  error_code: MALFORMED_QUERY
+  error_string: "unexpected token: 'SELEC'"
+  normalized: "unexpected token: '<redacted>'"
+claim: "A SOQL query with a syntax error returns HTTP 400 MALFORMED_QUERY naming the unexpected token (\"unexpected token: 'SELEC'\")."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:soql-malformed-query
+  first_seen: 2026-10-24T09:20:10Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:54Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -10,6 +10,7 @@ Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how i
 | [Gemini API](google-gemini/index.md) | 17 | 13 | 4 | 0 | 0 | 0 |
 | [Google Sheets API](google-sheets/index.md) | 20 | 18 | 2 | 0 | 0 | 0 |
 | [PyPI (Python Package Index)](pypi/index.md) | 16 | 12 | 4 | 0 | 0 | 0 |
+| [Salesforce Platform REST API](salesforce/index.md) | 18 | 15 | 3 | 0 | 0 | 0 |
 | [Solana JSON-RPC (public mainnet endpoint)](solana/index.md) | 14 | 11 | 3 | 0 | 0 | 0 |
 | [Stripe API](stripe/index.md) | 26 | 23 | 3 | 0 | 0 | 0 |
 | [Telegram Bot API](telegram/index.md) | 16 | 11 | 5 | 0 | 0 | 0 |

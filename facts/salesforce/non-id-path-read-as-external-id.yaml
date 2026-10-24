@@ -1,0 +1,31 @@
+id: af:salesforce:non-id-path-read-as-external-id
+service: salesforce
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/sobjects/{object}/{id}"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "Provided external ID field does not exist or is not accessible: notanid"
+  normalized: "provided external id field does not exist or is not accessible: notanid"
+claim: "A record path whose last segment is not an id (…/sobjects/Account/notanid) is read as an external ID field name: HTTP 404 \"Provided external ID field does not exist or is not accessible: notanid\"."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:non-id-read-as-external-id
+  first_seen: 2026-10-24T09:20:09Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:53Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

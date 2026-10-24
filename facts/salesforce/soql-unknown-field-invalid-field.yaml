@@ -1,0 +1,31 @@
+id: af:salesforce:soql-unknown-field-invalid-field
+service: salesforce
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/query"
+signal:
+  status: 400
+  error_code: INVALID_FIELD
+  error_string: "SELECT NoSuchField__c FROM Account ^ ERROR at Row:1:Column:8 No such column 'NoSuchField__c' on entity 'Account'. If you are attempting to use a custom field, be sure to append the '__c' after the custom field name. Please reference your WSDL or the describe call for the appropriate names."
+  normalized: "select nosuchfield__c from account ^ error at row:#:column:# no such column 'nosuchfield__c' on entity 'account'. if you are attempting to use a custom field, be sure to append the '__c' after the custom field name. please reference your wsdl or the describe call for the appropriate names."
+claim: "A SOQL query naming a field the object does not have returns HTTP 400 INVALID_FIELD (\"No such column '<field>' on entity '<object>'\") with the row and column of the error."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: use_endpoint, method: GET, path_template: "/services/data/{version}/sobjects/{object}/describe"}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:soql-unknown-field
+  first_seen: 2026-10-24T09:20:11Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:54Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

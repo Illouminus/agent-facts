@@ -1,0 +1,10 @@
+id: af:salesforce:probe:record-not-found
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/sobjects/Account/001000000000000AAA}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: "$[0].errorCode", equals: NOT_FOUND}
+  - {step: 1, json_path: "$[0].message", equals: The requested resource does not exist}

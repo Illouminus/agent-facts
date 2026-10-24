@@ -1,0 +1,22 @@
+id: af:salesforce:soap-login-rate-3600-per-hour
+service: salesforce
+kind: rate_limit
+target:
+  surface: http
+  method: POST
+  path_template: "/services/Soap/u/{version}"
+claim: "login() is limited to 3,600 calls per user per hour; past it the call fails with \"Login Rate Exceeded\" and the user is blocked from logging in for an hour."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: backoff_exponential, base_ms: 60000, factor: 2, max_ms: 3600000, max_attempts: 3, jitter: true}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://developer.salesforce.com/docs/platform/api/guide/sforce-api-calls-login.html
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,14 @@
+# Keyless: REST sent to the login host (login.salesforce.com) instead of the org's instance.
+id: af:salesforce:probe:rest-on-login-host
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/limits, auth: none}
+  - {do: http, method: GET, path: /services/data, auth: none}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: "$[0].errorCode", equals: URL_NOT_RESET}
+  - {step: 1, json_path: "$[0].message", equals: Destination URL not reset. The URL returned from login must be set}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: "$[0].errorCode", equals: URL_NOT_RESET}

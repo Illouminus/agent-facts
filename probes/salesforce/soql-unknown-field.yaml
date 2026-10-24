@@ -1,0 +1,11 @@
+id: af:salesforce:probe:soql-unknown-field
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/query, query: {q: "SELECT NoSuchField__c FROM Account"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: "$[0].errorCode", equals: INVALID_FIELD}
+  - {step: 1, json_path: "$[0].message", contains: "No such column 'NoSuchField__c' on entity 'Account'"}
+  - {step: 1, json_path: "$[0].message", contains: "ERROR at Row:1:Column:8"}
