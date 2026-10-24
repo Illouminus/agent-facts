@@ -1,0 +1,11 @@
+id: af:telegram:probe:method-names-case-insensitive
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: /getme}
+  - {do: http, method: GET, path: /GETME}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.result.is_bot, equals: true}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.ok, equals: true}

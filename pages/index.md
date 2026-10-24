@@ -1,6 +1,6 @@
 # agent-facts registry
 
-Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-24 · 6 services · 114 facts.
+Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-24 · 7 services · 130 facts.
 
 | Service | Facts | ✅ verified | 🔵 official | 🟡 reported | ⚪ stale | ⛔ retracted |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -10,6 +10,7 @@ Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how i
 | [Salesforce Platform REST API](salesforce/index.md) | 18 | 15 | 3 | 0 | 0 | 0 |
 | [Solana JSON-RPC (public mainnet endpoint)](solana/index.md) | 14 | 11 | 3 | 0 | 0 | 0 |
 | [Stripe API](stripe/index.md) | 26 | 23 | 3 | 0 | 0 | 0 |
+| [Telegram Bot API](telegram/index.md) | 16 | 11 | 5 | 0 | 0 | 0 |
 
 ## Machine access
 

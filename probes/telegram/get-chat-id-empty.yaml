@@ -1,0 +1,8 @@
+id: af:telegram:probe:get-chat-id-empty
+service: telegram
+env: prod
+steps:
+  - {do: http, method: GET, path: /getChat}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.description, equals: "Bad Request: chat_id is empty"}
