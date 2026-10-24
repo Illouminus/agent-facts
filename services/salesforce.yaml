@@ -1,0 +1,38 @@
+# Salesforce Platform REST API (wave 1 seed, keyed): a Developer Edition org (sandbox env, 15,000
+# API requests a day), reached through the sfdx auth URL salesforce-sfdx-auth-url (auth kind
+# oauth_refresh_token). The token response names the org's instance (on instance_hosts); probes go
+# there, so the org's own domain is not in this file, and tenant domains stay out of hosts.
+# Probes are read-only GETs. Errors are a JSON array of {message, errorCode}.
+key: salesforce
+name: Salesforce Platform REST API
+hosts: [login.salesforce.com, test.salesforce.com]
+doc_hosts: [developer.salesforce.com, help.salesforce.com]
+surfaces:
+  http:
+    base_url: https://login.salesforce.com
+    templates:
+      - {method: GET, path: /services/data}
+      - {method: GET, path: "/services/data/{version}/limits"}
+      - {method: GET, path: "/services/data/{version}/sobjects/{object}/describe"}
+      - {method: GET, path: "/services/data/{version}/sobjects/{object}/{id}"}
+      - {method: GET, path: "/services/data/{version}/query"}
+      - {method: GET, path: "/services/data/{version}/query/{locator}"}
+      - {method: POST, path: "/services/Soap/u/{version}"}
+    signal_fields: [status, errorCode, message, sforce-limit-info]
+  sdk:
+    - {ecosystem: pypi, package: simple-salesforce}
+    - {ecosystem: npm, package: jsforce}
+dimensions:
+  env: {sandbox: https://login.salesforce.com}
+  account_state: [developer_edition]
+auth:
+  kind: oauth_refresh_token
+  key_name: salesforce-sfdx-auth-url
+  env: sandbox
+  token_path: /services/oauth2/token
+  instance_hosts: [my.salesforce.com]  # the org's instance: <org>.my.salesforce.com
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://www.salesforce.com/company/legal/
+probe_budget: {per_template_seconds: 300}

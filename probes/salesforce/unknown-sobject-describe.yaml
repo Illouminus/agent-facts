@@ -1,0 +1,9 @@
+id: af:salesforce:probe:unknown-sobject-describe
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/sobjects/NoSuchObject__c/describe}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: "$[0].errorCode", equals: NOT_FOUND}

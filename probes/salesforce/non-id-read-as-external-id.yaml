@@ -1,0 +1,11 @@
+# A record path whose last segment is not an id is read as an external ID field name.
+id: af:salesforce:probe:non-id-read-as-external-id
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/sobjects/Account/notanid}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: "$[0].errorCode", equals: NOT_FOUND}
+  - {step: 1, json_path: "$[0].message", equals: "Provided external ID field does not exist or is not accessible: notanid"}

@@ -1,0 +1,28 @@
+id: af:salesforce:sforce-limit-info-header
+service: salesforce
+kind: rate_limit
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/limits"
+signal:
+  status: 200
+claim: "Authenticated REST responses such as /limits and a SOQL query carry Sforce-Limit-Info: api-usage=<used>/<daily limit> (…/15000 on a Developer Edition org)."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:daily-api-limit
+  first_seen: 2026-10-24T09:20:08Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:52Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

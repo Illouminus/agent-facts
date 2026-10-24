@@ -1,0 +1,31 @@
+id: af:salesforce:unknown-sobject-describe-404
+service: salesforce
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/sobjects/{object}/describe"
+signal:
+  status: 404
+  error_code: NOT_FOUND
+  error_string: "The requested resource does not exist"
+  normalized: "the requested resource does not exist"
+claim: "describe on an object the org does not have returns HTTP 404 NOT_FOUND \"The requested resource does not exist\"."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:unknown-sobject-describe
+  first_seen: 2026-10-24T09:20:11Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:55Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

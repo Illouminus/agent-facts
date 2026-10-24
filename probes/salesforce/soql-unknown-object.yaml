@@ -1,0 +1,10 @@
+id: af:salesforce:probe:soql-unknown-object
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/query, query: {q: "SELECT Id FROM NoSuchObject__c"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: "$[0].errorCode", equals: INVALID_TYPE}
+  - {step: 1, json_path: "$[0].message", contains: "sObject type 'NoSuchObject__c' is not supported"}

@@ -1,0 +1,12 @@
+id: af:salesforce:probe:soql-empty-result
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/query, query: {q: "SELECT Id FROM Account WHERE Name = 'agent-facts-no-such-account'"}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: $.totalSize, equals: 0}
+  - {step: 1, json_path: $.done, equals: true}
+  - {step: 1, json_path: "$.records[0]", exists: false}
+  - {step: 1, json_path: $.nextRecordsUrl, exists: false}

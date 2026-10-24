@@ -1,0 +1,18 @@
+# On the org's instance: the version list answers without any credential, /limits needs one.
+# Step 1 is keyed only so that the runner learns the instance from the token response.
+id: af:salesforce:probe:versions-without-session
+service: salesforce
+env: sandbox
+account_state: developer_edition
+steps:
+  - {do: http, method: GET, path: /services/data/v62.0/limits}
+  - {do: http, method: GET, path: /services/data, auth: none}
+  - {do: http, method: GET, path: /services/data/v62.0/limits, auth: none}
+assert:
+  - {step: 1, status: 200}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: "$[0].version", exists: true}
+  - {step: 2, json_path: "$[0].url", exists: true}
+  - {step: 3, status: 401}
+  - {step: 3, json_path: "$[0].errorCode", equals: INVALID_SESSION_ID}
+  - {step: 3, json_path: "$[0].message", equals: Session expired or invalid}

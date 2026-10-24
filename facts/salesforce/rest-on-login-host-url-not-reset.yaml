@@ -1,0 +1,31 @@
+id: af:salesforce:rest-on-login-host-url-not-reset
+service: salesforce
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/limits"
+signal:
+  status: 400
+  error_code: URL_NOT_RESET
+  error_string: "Destination URL not reset. The URL returned from login must be set"
+  normalized: "destination url not reset. the url returned from login must be set"
+claim: "REST calls sent to login.salesforce.com instead of the org's instance return HTTP 400 URL_NOT_RESET \"Destination URL not reset. The URL returned from login must be set\", even /services/data."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:rest-on-login-host
+  first_seen: 2026-10-24T09:20:10Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:53Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

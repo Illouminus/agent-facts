@@ -1,0 +1,31 @@
+id: af:salesforce:soql-fields-all-needs-limit
+service: salesforce
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/query"
+signal:
+  status: 400
+  error_code: MALFORMED_QUERY
+  error_string: "The SOQL FIELDS function must have a LIMIT of at most 200"
+  normalized: "the soql fields function must have a limit of at most ###"
+claim: "SELECT FIELDS(ALL) without a LIMIT returns HTTP 400 MALFORMED_QUERY \"The SOQL FIELDS function must have a LIMIT of at most 200\"."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:soql-fields-all-needs-limit
+  first_seen: 2026-10-24T09:20:10Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:53Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

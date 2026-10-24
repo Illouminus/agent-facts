@@ -1,0 +1,31 @@
+id: af:salesforce:missing-session-401
+service: salesforce
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/limits"
+signal:
+  status: 401
+  error_code: INVALID_SESSION_ID
+  error_string: "Session expired or invalid"
+  normalized: "session expired or invalid"
+claim: "A REST call with no access token returns HTTP 401 [{errorCode: INVALID_SESSION_ID, message: \"Session expired or invalid\"}]."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:versions-without-session
+  first_seen: 2026-10-24T09:20:11Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:55Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

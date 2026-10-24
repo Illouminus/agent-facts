@@ -1,0 +1,30 @@
+id: af:salesforce:retired-api-version-410
+service: salesforce
+kind: deprecation
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/limits"
+signal:
+  status: 410
+  error_string: "The requested resource no longer exists."
+  normalized: "the requested resource no longer exists."
+claim: "A retired REST API version (v30.0) returns HTTP 410 \"The requested resource no longer exists.\", while a version that does not exist yet (v99.0) returns 404."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: use_endpoint, method: GET, path_template: /services/data}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:api-version-retired-or-unknown
+  first_seen: 2026-10-24T09:20:07Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:51Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

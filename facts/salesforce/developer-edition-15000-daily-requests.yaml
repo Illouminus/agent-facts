@@ -1,0 +1,28 @@
+id: af:salesforce:developer-edition-15000-daily-requests
+service: salesforce
+kind: rate_limit
+target:
+  surface: http
+  method: GET
+  path_template: "/services/data/{version}/limits"
+signal:
+  status: 200
+claim: "A Developer Edition org allows 15,000 API requests a day: /limits reports DailyApiRequests.Max 15000 and its Remaining count."
+dimensions:
+  env: sandbox
+  account_state: developer_edition
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:salesforce:probe:daily-api-limit
+  first_seen: 2026-10-24T09:20:08Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:27:52Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
