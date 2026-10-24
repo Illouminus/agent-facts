@@ -1,6 +1,7 @@
 """ops/state_journal.py: one journal entry per deploy in megabrain projects/agent-facts.md."""
 
 import hashlib
+import subprocess
 
 import state_journal
 from ops_builders import REPORTED
@@ -99,3 +100,80 @@ def test_remove_entry_drops_only_the_marked_block():
     text = ("## Журнал\n\n### b — новая\n\n- отчёт (x/r-2)\n\n### a — старая\n\n- было\n")
     assert state_journal.remove_entry(text, "x/r-2)") == "## Журнал\n\n### a — старая\n\n- было\n"
     assert state_journal.remove_entry(text, "nothing") == text
+
+
+# ── --prev: a line only when the registry's substance changed (incident 2026-10-20..24) ────────
+
+GIT = ["git", "-c", "user.name=t", "-c", "user.email=t@example.com",
+       "-c", "init.defaultBranch=main"]
+
+
+def commit_all(root, message) -> str:
+    def run(*args):
+        return subprocess.run([*GIT, *args], cwd=root, check=True, capture_output=True,
+                              text=True).stdout.strip()
+
+    if not (root / ".git").exists():
+        run("init", "-q")
+    run("add", "-A")
+    run("commit", "-q", "--allow-empty", "-m", message)
+    return run("rev-parse", "HEAD")
+
+
+def deploy_range(registry, state, prev, sha) -> int:
+    return state_journal.main([
+        "--sha", sha, "--prev", prev, "--subject", "facts: refresh", "--root", str(registry.root),
+        "--state-dir", str(state.root), "--today", "2026-10-24",
+    ])
+
+
+def test_counter_only_deploy_writes_nothing(registry, state, capsys):
+    registry.fact("one")
+    c1 = commit_all(registry.root, "c1")
+    registry.fact("one", evidence__confirmations=40,
+                  evidence__last_confirmed="2026-10-24T01:00:00Z",
+                  evidence__vantages=["illouminus", "freebox"])
+    c2 = commit_all(registry.root, "counters")
+    before = state.journal.read_text(encoding="utf-8")
+    assert deploy_range(registry, state, c1, c2) == 0
+    assert state.journal.read_text(encoding="utf-8") == before
+    assert state.calls() == []
+    assert "registry unchanged since" in capsys.readouterr().out
+
+
+def test_code_only_deploy_writes_nothing(registry, state):
+    registry.fact("one")
+    c1 = commit_all(registry.root, "c1")
+    (registry.root / "README.md").write_text("code\n")
+    c2 = commit_all(registry.root, "code")
+    before = state.journal.read_text(encoding="utf-8")
+    assert deploy_range(registry, state, c1, c2) == 0
+    assert state.journal.read_text(encoding="utf-8") == before
+
+
+def test_new_fact_status_change_and_removal_are_journaled_with_the_delta(registry, state):
+    registry.fact("one")
+    registry.fact("two")
+    registry.fact("gone", base=REPORTED)
+    c1 = commit_all(registry.root, "c1")
+    registry.fact("two", status="stale", evidence__confirmations=9)
+    registry.fact("new", base=REPORTED)
+    (registry.root / "facts" / "stripe" / "gone.yaml").unlink()
+    registry.fact("one", claim="Reworded claim of the fact.")
+    c2 = commit_all(registry.root, "c2")
+    assert deploy_range(registry, state, c1, c2) == 0
+    head = state.journal.read_text(encoding="utf-8").split("### 2026-10-20 — старая")[0]
+    assert f"### 2026-10-24 — деплой {c2[:7]} на illouminus" in head
+    assert (f"- main {c2[:7]} «facts: refresh»: фактов 3 (±0; verified 1 (-1), official 0, "
+            "reported 1, stale 1 (+1), retracted 0); новые: af:stripe:new; "
+            "статус: af:stripe:two verified:server:prod → stale; изменены: af:stripe:one; "
+            "удалены: af:stripe:gone; /healthz ok.") in head
+    assert len(state.calls()) == 1
+
+
+def test_unknown_prev_is_an_error_and_writes_nothing(registry, state):
+    registry.fact("one")
+    c1 = commit_all(registry.root, "c1")
+    before = state.journal.read_text(encoding="utf-8")
+    assert deploy_range(registry, state, "f" * 40, c1) == 1
+    assert state.journal.read_text(encoding="utf-8") == before

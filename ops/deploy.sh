@@ -10,10 +10,11 @@
 # Steps: fetch → the sha must be on origin/main → keep the probe runner's uncommitted edits under
 # facts/ as a patch → checkout --detach <sha> → re-apply the patch (if it no longer applies it is
 # parked in var/deploy/facts-unapplied-*.patch, never lost) → uv sync --frozen --no-dev →
-# daemon-reload when ops/systemd/ changed → restart agentfacts-api → poll /healthz. Failure → the
-# same steps back to the previous sha, exit 1: a red deploy means "prod alive on the old version".
-# Success → var/deploy/deployed + one journal entry in megabrain state (ops/state_journal.py; its
-# failure is logged and never fails the deploy).
+# when ops/systemd/ changed: link unit files not yet linked, daemon-reload (enabling a new unit
+# stays a deliberate step) → restart agentfacts-api → poll /healthz. Failure → the same steps back
+# to the previous sha, exit 1: a red deploy means "prod alive on the old version". Success →
+# var/deploy/deployed + ops/state_journal.py --prev, which writes a megabrain journal entry only
+# when the registry's substance changed (its failure is logged and never fails the deploy).
 #
 # Everything runs inside main(): bash has parsed the whole body before `git checkout` replaces this
 # file. `restrict` means no profile is sourced, hence the pinned PATH. Must also run under macOS
@@ -86,7 +87,7 @@ main() {
   if switch "$prev" "$sha"; then
     printf '%s\n' "$sha" >"$deploy_dir/deployed"
     log "deployed $sha, /healthz ok"
-    journal "$app" "$sha"
+    journal "$app" "$sha" "$prev"
     return 0
   fi
   log "release $sha unhealthy or failed; rolling back to $prev"
@@ -149,6 +150,7 @@ switch() {
     return 1
   fi
   if ! git diff --quiet "$from" "$to" -- ops/systemd; then
+    link_new_units || return 1
     systemctl --user daemon-reload || { log "daemon-reload failed"; return 1; }
   fi
   if ! systemctl --user restart agentfacts-api.service; then
@@ -158,15 +160,30 @@ switch() {
   healthy || { log "/healthz not ok after $HEALTH_TRIES tries"; return 1; }
 }
 
+# A unit file new in ops/systemd/ gets `systemctl --user link`ed (the others are links already).
+link_new_units() {
+  local unit name dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+  for unit in "$PWD"/ops/systemd/agentfacts-*; do
+    [ -f "$unit" ] || continue
+    name="$(basename "$unit")"
+    [ -e "$dir/$name" ] || [ -L "$dir/$name" ] && continue
+    if ! systemctl --user link "$unit" >>"$LOG" 2>&1; then
+      log "systemctl --user link $name failed"
+      return 1
+    fi
+    log "linked new unit $name (enable it by hand: ops/README.md)"
+  done
+}
+
 journal() {
-  local app="$1" sha="$2" subject
+  local app="$1" sha="$2" prev="$3" subject
   if [ ! -x "$app/.venv/bin/python" ] || [ ! -d "$STATE_DIR" ]; then
     log "journal hook skipped (no .venv or no $STATE_DIR)"
     return 0
   fi
   subject="$(git log -1 --format=%s "$sha")"
-  if ! "$app/.venv/bin/python" "$app/ops/state_journal.py" --sha "$sha" --subject "$subject" \
-      --root "$app" --state-dir "$STATE_DIR" >>"$LOG" 2>&1; then
+  if ! "$app/.venv/bin/python" "$app/ops/state_journal.py" --sha "$sha" --prev "$prev" \
+      --subject "$subject" --root "$app" --state-dir "$STATE_DIR" >>"$LOG" 2>&1; then
     log "WARN: journal hook failed (deploy is fine; see $LOG)"
   fi
 }
