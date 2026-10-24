@@ -1,0 +1,24 @@
+id: af:telegram:flood-control-429-retry-after
+service: telegram
+kind: rate_limit
+target:
+  surface: http
+  method: POST
+  path_template: "/{bot_token}/sendMessage"
+signal:
+  status: 429
+claim: "Exceeding flood control returns HTTP 429; parameters.retry_after holds the number of seconds left to wait before the request can be repeated."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: backoff_exponential, base_ms: 1000, factor: 2, max_ms: 60000, max_attempts: 5, jitter: true}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://core.telegram.org/bots/api#responseparameters
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
