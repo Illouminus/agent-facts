@@ -28,7 +28,7 @@ _STRICT = (
                re.DOTALL),
     re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
     re.compile(r"ya29\.[0-9A-Za-z_-]{16,}"),
-    re.compile(r"\b[0-9]{6,12}:[A-Za-z0-9_-]{30,}"),
+    re.compile(r"(?<![0-9])[0-9]{6,12}:[A-Za-z0-9_-]{30,}")  # also inside /bot<token>/,
 )
 _HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
 _B64_RUN = re.compile(r"[A-Za-z0-9+/_=-]{32,}")

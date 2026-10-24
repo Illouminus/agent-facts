@@ -27,6 +27,7 @@ from agentfacts.probe.assertions import evaluate
 from agentfacts.probe.budget import BudgetState, TemplateKey
 from agentfacts.probe.evidence import apply_outcome
 from agentfacts.probe.http import (
+    NO_CREDENTIALS,
     TIMEOUT_S,
     Refused,
     auth_for,
@@ -238,8 +239,13 @@ def _execute(
             run.steps.append(refused_step_record(i, step, exc))
             run.detail, run.refused = f"refused:{exc.code}: {exc.message}", True
             return run
-        headers, query = auth_for(service, key) if request.uses_key else ({}, {})
-        response = send(client, base_url, request, headers, query)
+        try:
+            credentials = auth_for(service, key) if request.uses_key else NO_CREDENTIALS
+        except Refused as exc:
+            run.steps.append(refused_step_record(i, step, exc))
+            run.detail, run.refused = f"refused:{exc.code}: {exc.message}", True
+            return run
+        response = send(client, base_url, request, credentials)
         responses[i] = response
         ctx.responses[i] = response.json
         run.steps.append(http_step_record(i, request, response, whitelist, redactor))

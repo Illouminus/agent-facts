@@ -136,11 +136,12 @@ PEM = (
         "AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfa_-1",  # Google API key shape
         "ya29.a0AfB_FAKEfakeFAKEfake-FAKE",  # Google OAuth access token
         "123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x",  # Telegram bot token
+        "https://api.telegram.org/bot123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x/getMe",
     ],
 )
 def test_vendor_secret_shapes_are_strict(secret):
     out = Redactor(set()).line(f'{{"x": "{secret}"}}')
-    assert secret.strip() not in out and REDACTED in out
+    assert secret.strip() not in out and REDACTED in out and "FakeFake" not in out
     assert "PRIVATE KEY" not in out and "MIIEvQ" not in out
 
 
