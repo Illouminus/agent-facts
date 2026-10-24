@@ -1,5 +1,9 @@
 """What the bot would publish: fact files changed in the checkout, minus any that `main` changed
-in the meantime, with the facts read for the PR table and the auto-merge rule (spec 05 Bot)."""
+in the meantime, with the facts read for the PR table and the auto-merge rule (spec 05 Bot).
+
+A row is `substantive` when the fact is new, deleted, unreadable, or its substance changed
+(`schema.substance`: anything but the evidence counters); a counter-only row waits for the daily
+evidence refresh PR."""
 
 import subprocess
 from collections.abc import Mapping, Sequence
@@ -10,7 +14,8 @@ from pydantic import ValidationError
 from ruamel.yaml.error import YAMLError
 
 from agentfacts.schema.models import VERIFIED_STATUSES, Fact, Source, Status
-from agentfacts.schema.yamlio import load_yaml, plain
+from agentfacts.schema.substance import substance
+from agentfacts.schema.yamlio import load_yaml, load_yaml_text, plain
 
 FACTS_DIR = "facts"
 BASE = "origin/main"
@@ -85,6 +90,7 @@ class FactRow:
     status: str
     evidence: str
     eligible: bool  # may merge without a human (spec 05)
+    substantive: bool = True  # False: only evidence counters moved (daily refresh PR)
 
 
 def _evidence(fact: Fact) -> str:
@@ -108,6 +114,15 @@ def _eligible(fact: Fact) -> bool:
     )
 
 
+def _counters_only(root: Path, path: str, local: object) -> bool:
+    """The committed version of `path` says the same as `local` but for evidence counters."""
+    try:
+        committed = load_yaml_text(git(root, "show", f"HEAD:{path}"))
+    except (GitError, YAMLError):
+        return False
+    return isinstance(committed, dict) and substance(committed) == substance(local)
+
+
 def fact_rows(root: Path, changes: Sequence[Change]) -> list[FactRow]:
     """One row per change; an unreadable or invalid file is a row with status `invalid` (never
     eligible), a deletion is never eligible either."""
@@ -119,12 +134,14 @@ def fact_rows(root: Path, changes: Sequence[Change]) -> list[FactRow]:
             continue
         kind = "new" if _blob(root, "HEAD", change.path) is None else "changed"
         try:
-            fact = Fact.model_validate(plain(load_yaml(root / change.path)))
+            data = plain(load_yaml(root / change.path))
+            fact = Fact.model_validate(data)
         except (OSError, YAMLError, ValidationError, ValueError):
             rows.append(FactRow(change.path, kind, stem, "-", "invalid", "-", False))
             continue
+        counters = kind == "changed" and _counters_only(root, change.path, data)
         rows.append(FactRow(change.path, kind, fact.id, fact.kind.value, fact.status.value,
-                            _evidence(fact), _eligible(fact)))
+                            _evidence(fact), _eligible(fact), substantive=not counters))
     return rows
 
 

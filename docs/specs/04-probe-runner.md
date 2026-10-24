@@ -38,6 +38,12 @@ fact stays `reported` or `official`.
   `stale_counter = 0`; any assert failed → `stale_counter += 1`; counter ≥ 3 → status `stale`
   (previous status kept in `history`). A failure in a **different env** than the fact's dimension never
   touches the fact (`01` rule).
+- Counters live in `var/evidence-pending.sqlite`; a tick writes the fact YAML only on a status change
+  (verified, stale, restored) or a first confirmation from a new vantage. The daily
+  `probe run --refresh-evidence` (03:00 Europe/Paris) writes the counters once. Incident 2026-10-24:
+  counters written every 15 min became 62 bot PRs, 137 CI runs and 62 deploys in three days.
+- Unexpected 429, or a 403 with `X-RateLimit-Remaining: 0` (GitHub's spent limit, shared with other
+  clients of the IP) on a step that does not assert 403, is `error`, never evidence.
 - Side effects: probes may only create objects in `env: sandbox`; a probe with `env: prod` must be
   read-only: `GET`/`HEAD`, or a `POST` whose body is one JSON-RPC call to a method listed in the
   service's `surfaces.http.jsonrpc.read_methods` (added by W7 for Solana, PR #9) — enforced by the validator.

@@ -11,6 +11,7 @@ receives the weekly journal line automatically, the Monday digest arrives in Tel
 |------|----------|------|
 | `agentfacts-probe.timer` | every 15 min | `agentfacts probe run --due --max 50` |
 | `agentfacts-quorum.timer` | hourly | `agentfacts quorum run && agentfacts bot publish` |
+| `agentfacts-refresh.timer` | daily 03:00 Europe/Paris | `agentfacts probe run --refresh-evidence` (counters → facts/, added 24.10.2026) |
 | `agentfacts-pages.timer` | on merge (CI) | pages build in CI, not on the host |
 | `agentfacts-digest.timer` | Mon 08:00 Europe/Paris | `ops/digest.py` → Telegram (question class, D-062) |
 
