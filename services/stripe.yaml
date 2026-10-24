@@ -14,10 +14,10 @@ surfaces:
       - {method: GET, path: "/v1/customers/{id}"}
       - {method: DELETE, path: "/v1/customers/{id}"}
       - {method: POST, path: /v1/payment_intents}
-    signal_fields:
+    signal_fields:  # error.code before error.type: check() takes the first code-shaped field
       - status
-      - error.type
       - error.code
+      - error.type
       - error.decline_code
       - error.advice_code
       - error.param
