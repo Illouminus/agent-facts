@@ -145,3 +145,13 @@ def test_redaction_keeps_shas_readable():
     sha = "c2567507c886bc075b4f3ddd154338271b273fdf"
     out = BotAuth(FAKE_BOT_TOKEN).redact(f"push {sha} with {FAKE_BOT_TOKEN} refused")
     assert sha in out and FAKE_BOT_TOKEN not in out
+
+
+def test_redaction_also_hides_other_github_credentials():
+    other = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4"
+    pat = "github_pat_" + "11ABCDEFG0123456789_abcdefXYZ"
+    text = f"fatal: https://owner:{other}@github.com/x.git {pat} anon"
+    for auth in (BotAuth(FAKE_BOT_TOKEN), BotAuth.anonymous()):
+        out = auth.redact(text)
+        assert other not in out and pat not in out and "owner:" not in out
+        assert "https://[redacted]@github.com/x.git" in out

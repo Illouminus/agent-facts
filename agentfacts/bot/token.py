@@ -10,19 +10,29 @@ or error messages (redacted). A dry run needs no token: its git calls go anonymo
 """
 
 import os
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 from agentfacts.bot.collect import GitError, git
 from agentfacts.probe.keys import DEFAULT_KEYS_DIR, key_path, read_key
-from agentfacts.probe.redact import Redactor
+from agentfacts.probe.redact import REDACTED, Redactor
 
 BOT_KEY = "agent-facts-bot"
 # Reads the token from the environment git passes to the helper: the value is not in git's config
 # or argv. `get` only; `store`/`erase` are no-ops.
 _HELPER = ('!f() { test "$1" = get || exit 0; echo username=x-access-token; '
            'echo "password=$GH_TOKEN"; }; f')
+
+
+# Any GitHub token shape or URL credentials, whoever's they are (a git/gh error could echo the
+# owner's token from another source); SHAs stay readable (no generic hex rule).
+_GITHUB_SECRETS = (
+    (re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
+    (re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}"), REDACTED),
+    (re.compile(r"(https?://)[^/@\s:]+:[^/@\s]+@"), rf"\1{REDACTED}@"),
+)
 
 
 class MissingToken(GitError):
@@ -72,7 +82,11 @@ class BotAuth:
         return env
 
     def redact(self, text: str) -> str:
-        return Redactor.for_keys([self.token]).text_strict(text) if self.token else text
+        if self.token:
+            text = Redactor.for_keys([self.token]).text_strict(text)
+        for pattern, replacement in _GITHUB_SECRETS:
+            text = pattern.sub(replacement, text)
+        return text
 
     def git(self, root: Path, *args: str) -> str:
         """git that talks to the remote (fetch, ls-remote, push) with this token only."""
