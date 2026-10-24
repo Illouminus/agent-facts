@@ -30,9 +30,10 @@ def publish(
     ] = None,
 ) -> None:
     """Commit changed facts/ (and regenerated pages/) on bot/facts-<date>-<n>, open one PR
-    labelled `facts`, auto-merge it when every fact is verified or reported from quorum. New
-    facts and status changes go out at once; counter-only changes once a day, after
-    `probe run --refresh-evidence`.
+    labelled `facts`; auto-merge only when every fact is `verified:*` and written by the bot,
+    otherwise the label `needs-review` (D-089). New facts and status changes go out at once;
+    counter-only changes once a day, after `probe run --refresh-evidence`. GitHub access only
+    with the bot's own token (`keyput agent-facts-bot`).
 
     Exit codes: 0 done / nothing to do / waiting / killed, 1 refused (invalid or conflicting
     files, git or gh failure), 2 usage.

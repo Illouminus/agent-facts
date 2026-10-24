@@ -16,6 +16,11 @@ receives the weekly journal line automatically, the Monday digest arrives in Tel
 | `agentfacts-digest.timer` | Mon 08:00 Europe/Paris | `ops/digest.py` → Telegram (question class, D-062) |
 
 Deploy: `vps-auto-deploy` pattern (GHCR image, forced-command SSH restart, health check on `/healthz`).
+
+GitHub access on the host: the bot uses only its own token `agent-facts-bot` (repo-scoped PAT, D-089);
+`deploy.sh` fetches the public repo anonymously. Units carry the seccomp/prctl hardening that works for
+user units; mount-namespace confinement (read-only system, per-unit key access) is impossible in user
+units on illouminus and needs system units under a dedicated user (`ops/README.md` → Hardening).
 API behind Caddy at `facts.baillot.dev` `[tap: DNS record once]`.
 
 ## Weekly digest (one message, one tap)

@@ -1,0 +1,11 @@
+id: af:google-calendar:probe:order-by-start-time
+service: google-calendar
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {orderBy: startTime}}
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {orderBy: startTime, singleEvents: true}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.message, equals: "The requested ordering is not available for the particular query."}
+  - {step: 2, status: 200}

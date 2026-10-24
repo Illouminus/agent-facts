@@ -1,0 +1,29 @@
+id: af:google-calendar:max-results-above-2500-accepted
+service: google-calendar
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 200
+claim: "maxResults=5000, above the documented page maximum of 2500, is accepted with HTTP 200 rather than refused (the error message for 0 even gives the range as [1, ∞))."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: paginate_with, cursor_field: nextPageToken, param_name: pageToken, page_size_max: 2500}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:max-results-bounds
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  official_url: https://developers.google.com/workspace/calendar/api/v3/reference/events/list
+  last_confirmed: 2026-10-24T08:41:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

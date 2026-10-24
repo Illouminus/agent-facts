@@ -1,0 +1,30 @@
+id: af:google-calendar:missing-api-key-403
+service: google-calendar
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 403
+  error_string: "Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."
+  normalized: "method doesn't allow unregistered callers (callers without established identity). please use api key or other form of api consumer identity to call this api."
+claim: "events.list on a public calendar with no API key or token returns HTTP 403 (\"Method doesn't allow unregistered callers\")."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: set_param, name: key, value_source: account_setting:api_key, location: query}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:no-api-key
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

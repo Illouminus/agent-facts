@@ -1,10 +1,11 @@
 # agent-facts registry
 
-Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-24 · 8 services · 150 facts.
+Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-24 · 9 services · 164 facts.
 
 | Service | Facts | ✅ verified | 🔵 official | 🟡 reported | ⚪ stale | ⛔ retracted |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | [GitHub REST API](github/index.md) | 23 | 16 | 7 | 0 | 0 | 0 |
+| [Google Calendar API](google-calendar/index.md) | 14 | 11 | 3 | 0 | 0 | 0 |
 | [Gemini API](google-gemini/index.md) | 17 | 13 | 4 | 0 | 0 | 0 |
 | [Google Sheets API](google-sheets/index.md) | 20 | 18 | 2 | 0 | 0 | 0 |
 | [PyPI (Python Package Index)](pypi/index.md) | 16 | 12 | 4 | 0 | 0 | 0 |

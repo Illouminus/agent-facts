@@ -12,6 +12,7 @@ from agentfacts.pages.build import build_pages, load_registry, sync
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 GIT_ENV_USER = ("-c", "user.name=Test", "-c", "user.email=test@example.invalid")
+FAKE_BOT_TOKEN = "github_pat_FAKE0bot0token0123456789abcdefABCDEF"  # conftest's agent-facts-bot.key
 
 
 def sh(cwd: Path, *args: str) -> str:

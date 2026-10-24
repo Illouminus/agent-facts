@@ -1,0 +1,22 @@
+id: af:google-calendar:time-min-filters-on-end-time
+service: google-calendar
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+claim: "timeMin is an exclusive lower bound on an event's end time, not its start time; timeMax is an exclusive upper bound on the start time."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://developers.google.com/workspace/calendar/api/v3/reference/events/list
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
