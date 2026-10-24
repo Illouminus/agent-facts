@@ -1,0 +1,14 @@
+# Test PaymentMethod pm_card_chargeDeclinedExpiredCard, confirmed at creation; creates a failed test PaymentIntent.
+id: af:stripe:probe:card-expired
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 1000, currency: usd, payment_method: pm_card_chargeDeclinedExpiredCard, confirm: "true", "automatic_payment_methods[enabled]": "true", "automatic_payment_methods[allow_redirects]": never}}
+assert:
+  - {step: 1, status: 402}
+  - {step: 1, json_path: $.error.type, equals: card_error}
+  - {step: 1, json_path: $.error.code, equals: expired_card}
+  - {step: 1, json_path: $.error.decline_code, equals: expired_card}
+  - {step: 1, json_path: $.error.advice_code, equals: confirm_card_data}
+  - {step: 1, json_path: $.error.message, equals: "Your card has expired."}
+  - {step: 1, json_path: $.error.param, equals: exp_month}

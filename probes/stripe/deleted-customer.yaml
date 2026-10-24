@@ -1,0 +1,15 @@
+# Create, delete, retrieve: a deleted customer is still answered with 200 and deleted: true.
+id: af:stripe:probe:deleted-customer
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/customers, form: {description: agent-facts probe}}
+  - {do: http, method: DELETE, path: "/v1/customers/{{step[1].json.id}}"}
+  - {do: http, method: GET, path: "/v1/customers/{{step[1].json.id}}"}
+assert:
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.deleted, equals: true}
+  - {step: 3, status: 200}
+  - {step: 3, json_path: $.deleted, equals: true}
+  - {step: 3, json_path: $.object, equals: customer}
+  - {step: 3, json_path: $.email, exists: false}

@@ -1,0 +1,14 @@
+# A 400 raised after the endpoint started executing (amount_too_small) is saved under the key and
+# replayed, unlike a validation error (see validation-error-not-replayed).
+id: af:stripe:probe:replayed-execution-error
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 10, currency: usd}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 10, currency: usd}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, header: Idempotent-Replayed, present: false}
+  - {step: 2, status: 400}
+  - {step: 2, header: Idempotent-Replayed, equals: "true"}
+  - {step: 2, json_path: $.error.code, equals: amount_too_small}

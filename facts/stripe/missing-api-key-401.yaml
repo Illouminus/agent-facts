@@ -1,0 +1,30 @@
+id: af:stripe:missing-api-key-401
+service: stripe
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: /v1/customers
+signal:
+  status: 401
+  error_string: "You did not provide an API key. You need to provide your API key in the Authorization header, using Bearer auth (e.g. 'Authorization: Bearer YOUR_SECRET_KEY'). See https://stripe.com/docs/api#authentication for details, or we can help at https://support.stripe.com/."
+  normalized: "you did not provide an api key. you need to provide your api key in the authorization header, using bearer auth (e.g. 'authorization: <redacted>'). see <url> for details, or we can help at <url>"
+claim: "A request without an Authorization header returns HTTP 401 with error type invalid_request_error and no error.code; the message says no API key was provided."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: set_header, name: Authorization, value_source: account_setting:secret_key}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:no-api-key
+  first_seen: 2026-10-24T07:53:54Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:53:54Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,31 @@
+id: af:stripe:starting-after-missing-object
+service: stripe
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: /v1/customers
+signal:
+  status: 400
+  error_code: resource_missing
+  error_string: "No such customer: 'cus_agentfactsnosuch'"
+  normalized: "no such customer: 'cus_agentfactsnosuch'"
+claim: "A list cursor starting_after naming an object that does not exist returns HTTP 400 resource_missing with error.param starting_after, not an empty page."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:starting-after-missing
+  first_seen: 2026-10-24T07:53:56Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:53:56Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

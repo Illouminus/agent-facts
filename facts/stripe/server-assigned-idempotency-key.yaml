@@ -1,0 +1,28 @@
+id: af:stripe:server-assigned-idempotency-key
+service: stripe
+kind: silent_behavior
+target:
+  surface: http
+  method: POST
+  path_template: /v1/customers
+signal:
+  status: 200
+claim: "A POST sent without an Idempotency-Key header is answered with an Idempotency-Key response header holding a UUID chosen by Stripe; a GET gets no such header."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: set_header, name: Idempotency-Key, value_source: new_uuid_per_distinct_request}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:server-idempotency-key
+  first_seen: 2026-10-24T07:53:55Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:53:55Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

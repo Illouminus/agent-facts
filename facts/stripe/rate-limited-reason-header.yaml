@@ -1,0 +1,24 @@
+id: af:stripe:rate-limited-reason-header
+service: stripe
+kind: rate_limit
+target:
+  surface: http
+  method: GET
+  path_template: /v1/customers
+signal:
+  status: 429
+claim: "A rate-limited request returns HTTP 429 with a Stripe-Rate-Limited-Reason header (global-rate, endpoint-rate, global-concurrency, endpoint-concurrency or resource-specific); a 429 without it is not a rate limit, e.g. lock_timeout."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: backoff_exponential, base_ms: 1000, factor: 2, max_ms: 32000, max_attempts: 5, jitter: true}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://docs.stripe.com/rate-limits
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

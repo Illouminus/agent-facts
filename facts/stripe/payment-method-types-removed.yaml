@@ -1,0 +1,30 @@
+id: af:stripe:payment-method-types-removed
+service: stripe
+kind: breaking_change
+target:
+  surface: http
+  method: POST
+  path_template: /v1/payment_intents
+signal:
+  status: 400
+  error_string: "The `payment_method_types` parameter is no longer supported. Payment methods are now managed from your Dashboard settings (https://dashboard.stripe.com/settings/payment_methods). For migration guidance, see https://docs.stripe.com/payments/payment-methods/dynamic-payment-methods."
+  normalized: "the `payment_method_types` parameter is no longer supported. payment methods are now managed from your dashboard settings (<url>). for migration guidance, see <url>"
+claim: "On API version 2026-09-30.endive, creating a PaymentIntent with payment_method_types returns HTTP 400 (no error code, parameter no longer supported); the same request on version 2024-06-20 succeeds."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: remove_param, name: payment_method_types, location: body}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:payment-method-types-removed
+  first_seen: 2026-10-24T07:53:54Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:53:54Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,31 @@
+id: af:stripe:validation-errors-are-not-replayed
+service: stripe
+kind: silent_behavior
+target:
+  surface: http
+  method: POST
+  path_template: /v1/customers
+signal:
+  status: 400
+  error_code: parameter_unknown
+  error_string: "Received unknown parameter: agent_facts_unknown"
+  normalized: "received unknown parameter: agent_facts_unknown"
+claim: "A 400 for a parameter that fails validation, such as parameter_unknown, is not saved under its Idempotency-Key: a retry with the same key is executed again and has no Idempotent-Replayed header."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:validation-error-not-replayed
+  first_seen: 2026-10-24T07:53:56Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:53:56Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

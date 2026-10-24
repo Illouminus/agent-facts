@@ -1,0 +1,41 @@
+# Stripe API in test mode (wave 1 seed, keyed). The test secret key stripe-test reaches the sandbox
+# only, so every probe is env sandbox; sandbox probes may create test objects (customers,
+# PaymentIntents), hence one run per template per hour.
+key: stripe
+name: Stripe API
+hosts: [api.stripe.com]
+doc_hosts: [docs.stripe.com]
+surfaces:
+  http:
+    base_url: https://api.stripe.com
+    templates:
+      - {method: GET, path: /v1/customers}
+      - {method: POST, path: /v1/customers}
+      - {method: GET, path: "/v1/customers/{id}"}
+      - {method: DELETE, path: "/v1/customers/{id}"}
+      - {method: POST, path: /v1/payment_intents}
+    signal_fields:
+      - status
+      - error.type
+      - error.code
+      - error.decline_code
+      - error.advice_code
+      - error.param
+      - error.message
+      - stripe-version
+      - idempotency-key
+      - idempotent-replayed
+      - original-request
+      - stripe-rate-limited-reason
+  sdk:
+    - {ecosystem: pypi, package: stripe}
+    - {ecosystem: npm, package: stripe}
+dimensions:
+  env: {prod: https://api.stripe.com, sandbox: https://api.stripe.com}  # same host, the key decides
+  account_state: [test_mode]
+auth: {kind: bearer, key_name: stripe-test, env: sandbox}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://stripe.com/legal/ssa
+probe_budget: {per_template_seconds: 3600}

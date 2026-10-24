@@ -1,0 +1,10 @@
+id: af:stripe:probe:amount-too-small
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 10, currency: usd}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.type, equals: invalid_request_error}
+  - {step: 1, json_path: $.error.code, equals: amount_too_small}
+  - {step: 1, json_path: $.error.message, contains: "Amount must convert to at least 50 cents"}

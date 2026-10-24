@@ -1,0 +1,30 @@
+id: af:stripe:expand-not-expandable
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: /v1/customers
+signal:
+  status: 400
+  error_string: "This property cannot be expanded (data.agent_facts)."
+  normalized: "this property cannot be expanded (data.agent_facts)."
+claim: "An expand[] path that is not expandable returns HTTP 400 invalid_request_error without an error code; the message quotes the path."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: remove_param, name: expand, location: query}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:expand-not-expandable
+  first_seen: 2026-10-24T07:53:51Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:53:51Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

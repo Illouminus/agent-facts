@@ -1,0 +1,12 @@
+# One Idempotency-Key on two endpoints: the second gets idempotency_error naming both paths.
+id: af:stripe:probe:idempotency-key-other-endpoint
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/customers, form: {description: agent-facts probe}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 100, currency: usd}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: $.error.type, equals: idempotency_error}
+  - {step: 2, json_path: $.error.message, contains: "can only be used for the same endpoint they were first used for ('/v1/payment_intents' vs '/v1/customers')"}

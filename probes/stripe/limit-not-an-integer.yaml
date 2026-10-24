@@ -1,0 +1,10 @@
+id: af:stripe:probe:limit-not-an-integer
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: GET, path: /v1/customers, query: {limit: abc}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.code, equals: parameter_invalid_integer}
+  - {step: 1, json_path: $.error.param, equals: limit}
+  - {step: 1, json_path: $.error.message, equals: "Invalid integer: abc"}

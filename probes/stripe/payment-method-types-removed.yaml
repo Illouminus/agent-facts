@@ -1,0 +1,16 @@
+# API version 2026-09-30.endive refuses payment_method_types on PaymentIntents (dynamic payment
+# methods only); the same request pinned to 2024-06-20 creates a test PaymentIntent.
+id: af:stripe:probe:payment-method-types-removed
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 100, currency: usd, "payment_method_types[0]": card}, headers: {Stripe-Version: 2026-09-30.endive}}
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 100, currency: usd, "payment_method_types[0]": card}, headers: {Stripe-Version: "2024-06-20"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, header: Stripe-Version, equals: 2026-09-30.endive}
+  - {step: 1, json_path: $.error.type, equals: invalid_request_error}
+  - {step: 1, json_path: $.error.message, contains: "The `payment_method_types` parameter is no longer supported"}
+  - {step: 2, status: 200}
+  - {step: 2, header: Stripe-Version, equals: "2024-06-20"}
+  - {step: 2, json_path: "$.payment_method_types[0]", equals: card}

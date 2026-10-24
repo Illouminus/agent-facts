@@ -1,0 +1,28 @@
+id: af:stripe:limit-zero-returns-one
+service: stripe
+kind: pagination
+target:
+  surface: http
+  method: GET
+  path_template: /v1/customers
+signal:
+  status: 200
+claim: "GET /v1/customers?limit=0, outside the documented range 1-100, is not rejected: it returns a list holding one object, with has_more: true."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: paginate_with, cursor_field: id, param_name: starting_after, page_size_max: 100}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:limit-zero-returns-one
+  first_seen: 2026-10-24T07:53:53Z
+  confirmations: 1
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:53:53Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
