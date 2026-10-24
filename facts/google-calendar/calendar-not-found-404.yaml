@@ -1,0 +1,30 @@
+id: af:google-calendar:calendar-not-found-404
+service: google-calendar
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/calendar/v3/calendars/{calendar_id}/events"
+signal:
+  status: 404
+  error_string: "Not Found"
+  normalized: "not found"
+claim: "events.list on a calendar id that does not exist returns HTTP 404 \"Not Found\" with error.errors[0].reason notFound and no error.status."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-calendar:probe:calendar-not-found
+  first_seen: 2026-10-24T08:41:04Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T08:41:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

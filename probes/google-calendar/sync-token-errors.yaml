@@ -1,0 +1,16 @@
+# A sync token the server does not know is 410 Gone (full sync required), not 400; a valid-looking
+# token combined with timeMin is 400.
+id: af:google-calendar:probe:sync-token-errors
+service: google-calendar
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {syncToken: agentfacts}}
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {maxResults: 1}}
+  - {do: http, method: GET, path: "/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com/events", query: {syncToken: "{{step[2].json.nextSyncToken}}", timeMin: "{{now_rfc3339}}"}}
+assert:
+  - {step: 1, status: 410}
+  - {step: 1, json_path: $.error.message, equals: "Sync token is no longer valid, a full sync is required."}
+  - {step: 1, json_path: "$.error.errors[0].reason", equals: fullSyncRequired}
+  - {step: 3, status: 400}
+  - {step: 3, json_path: $.error.message, equals: Sync token cannot be used with other request restrictions.}
