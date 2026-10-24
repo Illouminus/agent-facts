@@ -190,7 +190,8 @@ def _select(
             c.service.auth.key_name, c.service.key, c.service.hosts, c.service.auth.scopes or ()
         ):
             message = (f"refused:key_not_bound: key {c.service.auth.key_name} is not named after "
-                       f"service {c.service.key}")
+                       f"service {c.service.key}, nor a family key on the family's hosts and "
+                       "scopes")
             plan.append((c, "refused", message))
             continue
         if c.keyed and not has_key(c.service.auth.key_name, keys_dir):

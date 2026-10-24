@@ -627,3 +627,28 @@ def test_a_family_key_runs_for_a_family_service_on_family_hosts(repo, httpserver
                       base_urls={"google-acme": httpserver.url_for("")}, environ={})
     assert report.problems == [] and [line.outcome for line in report.lines] == ["pass"]
     assert httpserver.log[0][0].args["key"] == FAKE_KEY
+
+
+def test_probe_status_reports_family_keys_by_hosts_and_scopes(repo, monkeypatch):
+    from agentfacts.probe.runner import probe_status
+
+    host = "https://sheets.googleapis.com"
+    common = dict(key="google-acme", surfaces={"http": {"base_url": host, "templates": [
+        {"method": "GET", "path": "/v1/items"}]}}, dimensions={"env": {"prod": host}})
+    repo.service(hosts=["sheets.googleapis.com"],
+                 auth={"kind": "query", "key_name": "google-api-key", "env": "prod",
+                       "param_name": "key"}, **common)
+    repo.probe(id="af:google-acme:probe:items-list", service="google-acme", env="prod")
+    repo.key("google-api-key")
+    statuses, problems = probe_status(repo.root, repo.state, keys_dir=repo.keys)
+    assert problems == [] and [s.key for s in statuses] == ["ok"]
+
+    # A scope outside the family list: the validator refuses the service, and probe list says
+    # unbound when the loader is bypassed.
+    unvalidated(monkeypatch, {**common, "hosts": ["sheets.googleapis.com"],
+                              "auth": {"kind": "google_service_account",
+                                       "key_name": "google-service-account", "env": "prod",
+                                       "scopes": ["https://www.googleapis.com/auth/drive"]}},
+                {"env": "prod"})
+    statuses, _ = probe_status(repo.root, repo.state, keys_dir=repo.keys)
+    assert [s.key for s in statuses] == ["unbound"]
