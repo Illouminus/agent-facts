@@ -427,12 +427,22 @@ class ServiceDimensions(_Closed):
     account_state: tuple[DimensionValue, ...] | None = None
 
 
+GoogleScope = _pattern(r"^https://www\.googleapis\.com/auth/[a-z0-9._-]{1,64}$")
+
+
 class Auth(_Closed):
-    kind: Literal["none", "bearer", "basic", "header", "query"]
+    """How the runner turns the key file into credentials. `path_prefix` puts the key into a path
+    prefix the templates never contain (`/bot{key}` + `/getMe`); `google_service_account` reads a
+    service-account JSON key and sends a minted access token as Bearer."""
+
+    kind: Literal["none", "bearer", "basic", "header", "query", "path_prefix",
+                  "google_service_account"]
     key_name: _pattern(r"^[a-z0-9][a-z0-9_-]{0,63}$") | None = None
     env: Env | None = None
     header_name: HeaderName | None = None
     param_name: Identifier | None = None
+    path_prefix: _pattern(r"^(/[A-Za-z0-9_.~-]+)*/[A-Za-z0-9_.~-]*\{key\}$") | None = None
+    scopes: Annotated[tuple[GoogleScope, ...], Field(min_length=1, max_length=5)] | None = None
 
     @model_validator(mode="after")
     def _kind_fields(self) -> "Auth":
@@ -442,6 +452,11 @@ class Auth(_Closed):
             raise ValueError("auth kind header requires header_name")
         if self.kind == "query" and self.param_name is None:
             raise ValueError("auth kind query requires param_name")
+        for kind, name in (("path_prefix", "path_prefix"), ("google_service_account", "scopes")):
+            if (self.kind == kind) != (getattr(self, name) is not None):
+                raise ValueError(f"{name} is required for auth kind {kind} and only for it")
+        if self.scopes is not None and len(set(self.scopes)) != len(self.scopes):
+            raise ValueError("scopes must be unique")
         return self
 
 
