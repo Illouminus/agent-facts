@@ -1,0 +1,10 @@
+id: af:google-sheets:probe:invalid-value-render-option
+service: google-sheets
+env: prod
+account_state: api_key
+steps:
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I/values/A1", query: {valueRenderOption: PRETTY}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.status, equals: INVALID_ARGUMENT}
+  - {step: 1, json_path: $.error.message, contains: "Invalid value at 'value_render_option'"}

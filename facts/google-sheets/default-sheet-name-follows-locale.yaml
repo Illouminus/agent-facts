@@ -1,0 +1,31 @@
+id: af:google-sheets:default-sheet-name-follows-locale
+service: google-sheets
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"
+signal:
+  status: 400
+  error_code: INVALID_ARGUMENT
+  error_string: "Unable to parse range: Sheet1!A1"
+  normalized: "unable to parse range: sheet#!a#"
+claim: "The first sheet is not always Sheet1: on this French-locale spreadsheet it is Feuille 1, and Sheet1!A1 returns HTTP 400 \"Unable to parse range: Sheet1!A1\"; a range without a sheet name reads the first sheet."
+dimensions:
+  env: prod
+  account_state: api_key
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:google-sheets:probe:default-sheet-name-localized
+  first_seen: 2026-10-24T08:32:29Z
+  confirmations: 3
+  stale_counter: 0
+  last_confirmed: 2026-10-24T09:42:06Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,33 @@
+# Google Sheets API v4 (wave 1 seed, keyed): the GCP project's API key (google-api-key, a google
+# family key) reads public spreadsheets only. Probes are read-only GETs on a public test
+# spreadsheet owned by the project (French locale, so its first sheet is "Feuille 1"; still empty
+# on 2026-10-24). Value methods use the a:b custom-verb form (values:batchGet), one segment each.
+key: google-sheets
+name: Google Sheets API
+hosts: [sheets.googleapis.com]
+doc_hosts: [developers.google.com]
+surfaces:
+  http:
+    base_url: https://sheets.googleapis.com
+    templates:
+      - {method: GET, path: "/v4/spreadsheets/{spreadsheet_id}"}
+      - {method: GET, path: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"}
+      - {method: GET, path: "/v4/spreadsheets/{spreadsheet_id}/values:batchGet"}
+      - {method: PUT, path: "/v4/spreadsheets/{spreadsheet_id}/values/{range}"}
+    signal_fields:  # error.status first: check() takes the first code-shaped field
+      - status
+      - error.status
+      - error.message
+      - retry-after
+  sdk:
+    - {ecosystem: pypi, package: google-api-python-client}
+    - {ecosystem: npm, package: googleapis}
+dimensions:
+  env: {prod: https://sheets.googleapis.com}
+  account_state: [api_key, oauth]
+auth: {kind: query, key_name: google-api-key, env: prod, param_name: key}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://developers.google.com/terms
+probe_budget: {per_template_seconds: 300}
