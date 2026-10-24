@@ -24,6 +24,7 @@ from agentfacts.schema.registry import (
     ServiceInfo,
     key_bound_to_service,
     on_vendor_domain,
+    service_urls,
 )
 from agentfacts.schema.yamlio import line_of, load_yaml, plain
 
@@ -265,11 +266,15 @@ def _service_checks(doc: _Doc, registry: Registry) -> list[Problem]:
             problems.append(doc.problem(path, "foreign_env_url", message))
     auth = data.get("auth") or {}
     scopes = auth.get("scopes") or ()
+    paths = [t["path"] for t in (http or {}).get("templates") or ()]
+    if (jsonrpc := (http or {}).get("jsonrpc")) is not None:
+        paths.append(jsonrpc["path"])
+    reached = service_urls((url for _, url in urls), paths)
     if (name := auth.get("key_name")) and not key_bound_to_service(
-        name, key, data["hosts"], scopes
+        name, key, data["hosts"], scopes, reached
     ):
         message = (f"key {name} is not named after the service ({key}, {key}-…, {key}_…) nor a "
-                   "family key on the family's hosts and scopes")
+                   "family key on the family's hosts, scopes and paths")
         problems.append(doc.problem(["auth", "key_name"], "key_not_bound", message))
     service = registry.services[key]
     if service.jsonrpc and not service.has_template("POST", service.jsonrpc.path):

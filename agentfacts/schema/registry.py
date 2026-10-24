@@ -5,7 +5,7 @@ instance of a registered template, is this URL on the vendor's domain.
 """
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -54,13 +54,16 @@ def on_vendor_domain(url: str, hosts: Iterable[str]) -> bool:
 class KeyFamily:
     hosts: frozenset[str]  # exact API hosts a service using a family key may list
     scopes: frozenset[str]  # OAuth scopes a family service account may ask for
+    # A host the family shares with other APIs: the path prefixes a family key may reach on it.
+    paths: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
 
 
 # Vendor keys that several services of one vendor share (a Google Cloud API key or service
 # account serves Sheets, Calendar, Firestore). Exact hosts, not the vendor domain:
 # storage.googleapis.com serves user buckets. Scopes are read-only where the API has one
-# (Firestore has none: the service account's IAM role decides). Changed only here, in a reviewed
-# code PR.
+# (Firestore has none: the service account's IAM role decides). www.googleapis.com serves Drive,
+# YouTube and others besides Calendar, so on it the key reaches /calendar/ only. Changed only
+# here, in a reviewed code PR.
 KEY_FAMILIES: Mapping[str, KeyFamily] = {
     "google": KeyFamily(
         hosts=frozenset({
@@ -75,24 +78,70 @@ KEY_FAMILIES: Mapping[str, KeyFamily] = {
             "https://www.googleapis.com/auth/calendar.events.readonly",
             "https://www.googleapis.com/auth/datastore",
         }),
+        paths={"www.googleapis.com": ("/calendar/",)},
     ),
 }
 
 
+def _family_of(key_name: str) -> tuple[str, KeyFamily] | None:
+    for family, rules in KEY_FAMILIES.items():
+        if key_name == family or key_name.startswith((f"{family}-", f"{family}_")):
+            return family, rules
+    return None
+
+
+def family_key_reaches(key_name: str, url: str) -> bool:
+    """False if `key_name` is a family key and `url` is on a host the family shares with other
+    APIs but off the family's paths there. True for any other key, host or path. A dot segment or
+    an encoded separator in the path counts as off the paths: a server could resolve it into
+    another API."""
+    found = _family_of(key_name)
+    if found is None:
+        return True
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    prefixes = found[1].paths.get((parts.hostname or "").lower())
+    if prefixes is None:
+        return True
+    path = parts.path
+    segments = path.split("/")[1:]
+    if segments and segments[-1] == "":
+        segments.pop()  # a trailing slash
+    return path.startswith(prefixes) and all(_safe_segment(s) for s in segments)
+
+
+def service_urls(bases: Iterable[str], paths: Iterable[str]) -> tuple[str, ...]:
+    """Every URL a service's key can be sent to: each base URL joined with each template path."""
+    paths = tuple(paths)
+    return tuple(base.rstrip("/") + path for base in bases for path in paths)
+
+
 def key_bound_to_service(
-    key_name: str, service_key: str, hosts: Iterable[str] = (), scopes: Iterable[str] = ()
+    key_name: str,
+    service_key: str,
+    hosts: Iterable[str] = (),
+    scopes: Iterable[str] = (),
+    urls: Iterable[str] = (),
 ) -> bool:
     """A probe key belongs to one service by name: `stripe`, `stripe-test`, `stripe_live` for
     `stripe`. Without it any new service could name another's key file and send it to its hosts.
     A family key (`google-…`) is decided by the family alone, whatever the name match: it serves
     the family's services (`google`, `google-<x>`) only when every one of their hosts is one of
-    the family's API hosts and every OAuth scope they ask for is one of the family's scopes."""
-    for family, rules in KEY_FAMILIES.items():
-        if key_name == family or key_name.startswith((f"{family}-", f"{family}_")):
-            hosts = tuple(h.lower() for h in hosts)
-            in_family = service_key == family or service_key.startswith(f"{family}-")
-            return (in_family and bool(hosts) and all(h in rules.hosts for h in hosts)
-                    and all(scope in rules.scopes for scope in scopes))
+    the family's API hosts, every OAuth scope they ask for is one of the family's scopes and, on a
+    host the family shares with other APIs, every URL (`service_urls`) is on the family's paths
+    there. A service on such a host with no URL given is not bound: nothing shows where the key
+    goes."""
+    if (found := _family_of(key_name)) is not None:
+        family, rules = found
+        hosts, urls = tuple(h.lower() for h in hosts), tuple(urls)
+        in_family = service_key == family or service_key.startswith(f"{family}-")
+        shared = any(h in rules.paths for h in hosts)
+        return (in_family and bool(hosts) and all(h in rules.hosts for h in hosts)
+                and all(scope in rules.scopes for scope in scopes)
+                and (not shared or bool(urls))
+                and all(family_key_reaches(key_name, u) for u in urls))
     return key_name == service_key or key_name.startswith((f"{service_key}-", f"{service_key}_"))
 
 
