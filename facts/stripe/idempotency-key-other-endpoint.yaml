@@ -1,0 +1,31 @@
+id: af:stripe:idempotency-key-other-endpoint
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /v1/payment_intents
+signal:
+  status: 400
+  error_code: idempotency_error
+  error_string: "Keys for idempotent requests can only be used for the same endpoint they were first used for ('/v1/payment_intents' vs '/v1/customers'). Try using a key other than '3f1e9c2a-7b4d-4e8f-9a6c-1d2b3c4d5e6f' if you meant to execute a different request.\""
+  normalized: "keys for idempotent requests can only be used for the same endpoint they were first used for ('/v#/payment_intents' vs '/v#/customers'). try using a key other than '<id>' if you meant to execute a different request.\""
+claim: "An Idempotency-Key first used on one endpoint returns HTTP 400 idempotency_error when sent to another endpoint; the message names the current path, then the original one."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: set_header, name: Idempotency-Key, value_source: new_uuid_per_distinct_request}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:idempotency-key-other-endpoint
+  first_seen: 2026-10-24T07:53:51Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:57:24Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

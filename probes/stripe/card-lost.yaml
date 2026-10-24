@@ -1,0 +1,13 @@
+# Test PaymentMethod pm_card_visa_chargeDeclinedLostCard, confirmed at creation; creates a failed test PaymentIntent.
+id: af:stripe:probe:card-lost
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 1000, currency: usd, payment_method: pm_card_visa_chargeDeclinedLostCard, confirm: "true", "automatic_payment_methods[enabled]": "true", "automatic_payment_methods[allow_redirects]": never}}
+assert:
+  - {step: 1, status: 402}
+  - {step: 1, json_path: $.error.type, equals: card_error}
+  - {step: 1, json_path: $.error.code, equals: card_declined}
+  - {step: 1, json_path: $.error.decline_code, equals: lost_card}
+  - {step: 1, json_path: $.error.advice_code, equals: do_not_try_again}
+  - {step: 1, json_path: $.error.message, equals: "Your card was declined."}

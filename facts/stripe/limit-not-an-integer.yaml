@@ -1,0 +1,31 @@
+id: af:stripe:limit-not-an-integer
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: /v1/customers
+signal:
+  status: 400
+  error_code: parameter_invalid_integer
+  error_string: "Invalid integer: abc"
+  normalized: "invalid integer: abc"
+claim: "A non-numeric list limit returns HTTP 400 parameter_invalid_integer with error.param limit."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: set_param, name: limit, value_source: literal:100, location: query}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:limit-not-an-integer
+  first_seen: 2026-10-24T07:53:53Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:57:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

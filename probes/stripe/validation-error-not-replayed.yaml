@@ -1,0 +1,13 @@
+# A parameter that fails validation (unknown parameter) is not saved under the key: the retry runs
+# again and is not flagged as replayed.
+id: af:stripe:probe:validation-error-not-replayed
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/customers, form: {agent_facts_unknown: "1"}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+  - {do: http, method: POST, path: /v1/customers, form: {agent_facts_unknown: "1"}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: $.error.code, equals: parameter_unknown}
+  - {step: 2, header: Idempotent-Replayed, present: false}

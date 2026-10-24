@@ -1,0 +1,10 @@
+id: af:stripe:probe:parameter-unknown
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/customers, form: {agent_facts_unknown: "1"}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.code, equals: parameter_unknown}
+  - {step: 1, json_path: $.error.param, equals: agent_facts_unknown}
+  - {step: 1, json_path: $.error.message, equals: "Received unknown parameter: agent_facts_unknown"}

@@ -1,0 +1,31 @@
+id: af:stripe:amount-too-small
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /v1/payment_intents
+signal:
+  status: 400
+  error_code: amount_too_small
+  error_string: "Amount must convert to at least 50 cents. $0.10 converts to approximately €0.09."
+  normalized: "amount must convert to at least ## cents. $#.## converts to approximately €#.##."
+claim: "A PaymentIntent with amount 10 and currency usd (10 cents) returns HTTP 400 amount_too_small: the amount must convert to at least 50 cents; on a test account settling in EUR the message also gives the converted amount (€0.09)."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:amount-too-small
+  first_seen: 2026-10-24T07:53:44Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:57:19Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

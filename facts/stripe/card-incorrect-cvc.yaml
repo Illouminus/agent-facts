@@ -1,0 +1,31 @@
+id: af:stripe:card-incorrect-cvc
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: POST
+  path_template: /v1/payment_intents
+signal:
+  status: 402
+  error_code: incorrect_cvc
+  error_string: "Your card's security code is incorrect."
+  normalized: "your card's security code is incorrect."
+claim: "Confirming a PaymentIntent with test payment method pm_card_chargeDeclinedIncorrectCvc returns HTTP 402 card_error with code incorrect_cvc, decline_code incorrect_cvc and advice_code confirm_card_data; error.param is cvc."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:card-incorrect-cvc
+  first_seen: 2026-10-24T07:53:47Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:57:21Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

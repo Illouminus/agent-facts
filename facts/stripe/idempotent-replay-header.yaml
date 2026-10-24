@@ -1,0 +1,28 @@
+id: af:stripe:idempotent-replay-header
+service: stripe
+kind: silent_behavior
+target:
+  surface: http
+  method: POST
+  path_template: /v1/customers
+signal:
+  status: 200
+claim: "Repeating a POST with the same Idempotency-Key and the same body returns the saved first response with the header Idempotent-Replayed: true, which the first response does not carry."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:idempotent-replay
+  first_seen: 2026-10-24T07:53:53Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:57:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

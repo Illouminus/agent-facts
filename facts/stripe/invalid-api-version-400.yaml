@@ -1,0 +1,30 @@
+id: af:stripe:invalid-api-version-400
+service: stripe
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: /v1/customers
+signal:
+  status: 400
+  error_string: "Invalid Stripe API version: 2099-01-01"
+  normalized: "invalid stripe api version: ####-##-##"
+claim: "A Stripe-Version header naming a version that does not exist returns HTTP 400 invalid_request_error without an error code, echoing the version in the message."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: remove_param, name: Stripe-Version, location: header}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:invalid-api-version
+  first_seen: 2026-10-24T07:53:53Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:57:26Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

@@ -1,0 +1,10 @@
+# Idempotency-Key of 256 characters (one over the documented 255).
+id: af:stripe:probe:idempotency-key-too-long
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/customers, form: {description: agent-facts probe}, headers: {Idempotency-Key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.error.type, equals: idempotency_error}
+  - {step: 1, json_path: $.error.message, contains: "Idempotent Keys must be 1-255 characters long"}

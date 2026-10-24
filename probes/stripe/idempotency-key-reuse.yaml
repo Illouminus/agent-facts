@@ -1,0 +1,12 @@
+# Spec 01 example: one Idempotency-Key, two different bodies. Step 1 creates a test PaymentIntent.
+id: af:stripe:probe:idempotency-key-reuse
+service: stripe
+env: sandbox
+steps:
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 100, currency: usd}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+  - {do: http, method: POST, path: /v1/payment_intents, form: {amount: 200, currency: usd}, headers: {Idempotency-Key: "{{run_uuid}}"}}
+assert:
+  - {step: 1, status: 200}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: $.error.type, equals: idempotency_error}
+  - {step: 2, json_path: $.error.message, contains: "can only be used with the same parameters they were first used with"}

@@ -1,0 +1,28 @@
+id: af:stripe:deleted-customer-returns-200
+service: stripe
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/customers/{id}"
+signal:
+  status: 200
+claim: "Retrieving a deleted customer returns HTTP 200 with a stub object (id, object, deleted: true) instead of 404; fields such as email are absent."
+dimensions:
+  env: sandbox
+  account_state: any
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:sandbox
+evidence:
+  probe: af:stripe:probe:deleted-customer
+  first_seen: 2026-10-24T07:53:50Z
+  confirmations: 2
+  stale_counter: 0
+  last_confirmed: 2026-10-24T07:57:23Z
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]
