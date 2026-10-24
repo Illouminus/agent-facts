@@ -2,7 +2,9 @@
 
 Three levels:
 - exact key values (the runner's injected secrets and their derived forms) — everywhere;
-- strict patterns `sk_[a-z]+_[A-Za-z0-9]{8,}` and `Bearer [A-Za-z0-9._-]{16,}` — everywhere;
+- strict patterns `sk_[a-z]+_[A-Za-z0-9]{8,}`, `Bearer [A-Za-z0-9._-]{16,}` and the vendor key
+  shapes of the keyed seed (PEM private keys, Google API keys and access tokens, Telegram bot
+  tokens) — everywhere;
 - generic runs: hex ≥ 32 always, base64 ≥ 32 when the run holds a digit and a letter (so words,
   slugs and URL paths survive) — on every field except the identifiers the runner itself produces,
   named by their full path in the run record (`EXEMPT_PATHS`), which a generic rule would otherwise
@@ -20,6 +22,13 @@ REDACTED = "[redacted]"
 _STRICT = (
     re.compile(r"sk_[a-z]+_[A-Za-z0-9]{8,}", re.IGNORECASE),
     re.compile(r"Bearer [A-Za-z0-9._-]{16,}", re.IGNORECASE),
+    # Vendor key shapes of the keyed seed: a PEM private-key block (to its END line, or to the end
+    # of a clipped string), a Google API key, a Google OAuth access token, a Telegram bot token.
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|\Z)",
+               re.DOTALL),
+    re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
+    re.compile(r"ya29\.[0-9A-Za-z_-]{16,}"),
+    re.compile(r"\b[0-9]{6,12}:[A-Za-z0-9_-]{30,}"),
 )
 _HEX_RUN = re.compile(r"[0-9a-fA-F]{32,}")
 _B64_RUN = re.compile(r"[A-Za-z0-9+/_=-]{32,}")
@@ -65,7 +74,14 @@ def _generic(match: re.Match[str]) -> str:
 
 class Redactor:
     def __init__(self, secrets: Iterable[str]):
-        cleaned = sorted({s.strip() for s in secrets if s and s.strip()}, key=len, reverse=True)
+        self._secrets: set[str] = set()
+        self._exact: re.Pattern[str] | None = None
+        self.add(secrets)
+
+    def add(self, secrets: Iterable[str]) -> None:
+        """More exact secrets, e.g. an access token the runner minted mid-tick."""
+        self._secrets |= {s.strip() for s in secrets if s and s.strip()}
+        cleaned = sorted(self._secrets, key=len, reverse=True)
         # Case-insensitive: a vendor may echo a key lowercased, and `normalized` lowercases.
         self._exact = (
             re.compile("|".join(re.escape(s) for s in cleaned), re.IGNORECASE) if cleaned else None
