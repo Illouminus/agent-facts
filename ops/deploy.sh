@@ -58,7 +58,9 @@ main() {
   fi
 
   cd "$app" || return 1
-  if ! git fetch --quiet origin main 2>>"$LOG"; then
+  # The repo is public: fetch anonymously, never through the owner's `gh auth git-credential`
+  # helper in ~/.gitconfig (sec card 2026-10-23, D-089).
+  if ! GIT_TERMINAL_PROMPT=0 git -c credential.helper= fetch --quiet origin main 2>>"$LOG"; then
     log "git fetch origin main failed (see $LOG); nothing changed"
     return 1
   fi

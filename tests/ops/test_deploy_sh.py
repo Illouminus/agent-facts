@@ -262,3 +262,10 @@ def test_journal_hook_gets_the_previous_sha(host):
     assert host.deploy(c2).returncode == 0
     [call] = [c for c in host.calls() if c.startswith("python ")]
     assert f"--sha {c2} --prev {host.c1} --subject c2" in call
+
+
+def test_fetch_never_uses_the_owners_credential_helper():
+    script = (REPO / "ops" / "deploy.sh").read_text(encoding="utf-8")
+    code = [line for line in script.splitlines() if not line.lstrip().startswith(("#", "log "))]
+    fetches = [line for line in code if "git" in line and " fetch " in line]
+    assert fetches and all("-c credential.helper= fetch" in line for line in fetches)
