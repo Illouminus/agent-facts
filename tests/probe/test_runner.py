@@ -684,6 +684,31 @@ def test_a_family_key_is_never_read_for_a_service_off_the_family_hosts(repo, htt
                                              if p.is_file())
 
 
+def test_a_family_key_is_refused_off_the_family_paths_of_a_shared_host(repo, httpserver,
+                                                                       monkeypatch):
+    import agentfacts.probe.runner as runner_module
+
+    host = "https://www.googleapis.com"
+    repo.service(key="google-acme", hosts=["www.googleapis.com"],
+                 surfaces={"http": {"base_url": host, "templates": [
+                     {"method": "GET", "path": "/calendar/v1/items"}]}},
+                 dimensions={"env": {"prod": host}},
+                 auth={"kind": "query", "key_name": "google-api-key", "env": "prod",
+                       "param_name": "key"})
+    repo.probe(id="af:google-acme:probe:items-list", service="google-acme", env="prod",
+               steps=[{"do": "http", "method": "GET", "path": "/calendar/v1/items"}])
+    repo.key("google-api-key")
+    sent = []
+    monkeypatch.setattr(runner_module, "send", lambda *a: sent.append(a))
+    # The registered URLs are on /calendar/, but the URL actually built is not (a base URL that
+    # carries a path): the key is refused at send time, nothing goes out.
+    report = run_tick(repo.root, repo.state, TickOptions(), keys_dir=repo.keys,
+                      base_urls={"google-acme": host + "/drive"}, environ={})
+    assert [line.outcome for line in report.lines] == ["error"]
+    assert report.lines[0].detail.startswith("refused:key_off_family_paths")
+    assert sent == []
+
+
 def test_a_top_level_error_array_gives_its_first_message(repo, httpserver):
     """Salesforce's error shape: [{message, errorCode}]."""
     repo.service()

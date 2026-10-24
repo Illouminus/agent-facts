@@ -7,7 +7,7 @@ import yaml
 from pydantic import ValidationError
 
 from agentfacts.schema.models import Auth
-from agentfacts.schema.registry import key_bound_to_service
+from agentfacts.schema.registry import family_key_reaches, key_bound_to_service
 from agentfacts.schema.validate import validate_paths
 
 SERVICE = (Path(__file__).parents[1] / "fixtures" / "valid" / "service-stripe.yaml").read_text(
@@ -150,7 +150,8 @@ def test_model_agrees_with_the_schema(auth, ok):
         # A family key (google-…) serves google-<x> services whose hosts all sit on googleapis.com.
         ("google-api-key", "google-sheets", ["sheets.googleapis.com"], True),
         ("google-service-account", "google-firestore", ["firestore.googleapis.com"], True),
-        ("google-api-key", "google-calendar", ["www.googleapis.com"], True),
+        # www.googleapis.com is shared with Drive, YouTube…: without URLs nothing shows the paths.
+        ("google-api-key", "google-calendar", ["www.googleapis.com"], False),
         ("google-api-key", "google-sheets", ["sheets.googleapis.com", "evil.example"], False),
         ("google-api-key", "google-sheets", ["googleapis.com.evil.example"], False),
         ("google-api-key", "google-sheets", ["evilgoogleapis.com"], False),
@@ -230,3 +231,45 @@ def test_validator_refuses_a_family_service_account_with_a_broad_scope(tmp_path)
         " scopes: [https://www.googleapis.com/auth/cloud-platform]}",
     )
     assert google_codes(tmp_path, text) == {"key_not_bound"}
+
+
+CALENDAR = "https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events"
+
+
+@pytest.mark.parametrize(
+    ("urls", "bound"),
+    [
+        ([CALENDAR, "https://www.googleapis.com/calendar/v3/freeBusy"], True),
+        (["https://www.googleapis.com/drive/v3/files"], False),
+        ([CALENDAR, "https://www.googleapis.com/youtube/v3/videos"], False),
+        (["https://www.googleapis.com/calendarx/v3/x"], False),  # a prefix, not a segment match
+        (["https://www.googleapis.com/calendar/../drive/v3/files"], False),
+        (["https://www.googleapis.com/calendar/%2e%2e/drive/v3/files"], False),
+        (["https://www.googleapis.com/calendar/v3/%2Fdrive"], False),
+        (["https://www.googleapis.com/calendar/v3/.."], False),
+    ],
+)
+def test_family_key_on_a_shared_host_reaches_only_the_family_paths(urls, bound):
+    hosts = ["www.googleapis.com"]
+    assert key_bound_to_service("google-api-key", "google-calendar", hosts, (), urls) is bound
+
+
+@pytest.mark.parametrize(
+    ("key", "url", "reaches"),
+    [
+        ("google-api-key", "https://www.googleapis.com/calendar/v3/users/me/calendarList", True),
+        ("google-api-key", "https://www.googleapis.com/drive/v3/files", False),
+        ("google-api-key", "https://WWW.GOOGLEAPIS.COM/drive/v3/files", False),
+        ("google-api-key", "https://sheets.googleapis.com/v4/spreadsheets/x", True),  # own host
+        ("github-token", "https://www.googleapis.com/drive/v3/files", True),  # no family key
+    ],
+)
+def test_family_key_reaches(key, url, reaches):
+    assert family_key_reaches(key, url) is reaches
+
+
+def test_validator_refuses_a_family_key_on_a_shared_host_off_its_paths(tmp_path):
+    text = (GOOGLE_SHEETS.replace("sheets.googleapis.com", "www.googleapis.com")
+            .replace('"/v4/spreadsheets/{id}"', '"/drive/v3/files/{id}"'))
+    assert google_codes(tmp_path, text) == {"key_not_bound"}
+    assert google_codes(tmp_path, text.replace("/drive/v3/", "/calendar/v3/")) == set()

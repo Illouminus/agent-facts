@@ -69,7 +69,7 @@ from agentfacts.probe.results import (
 )
 from agentfacts.probe.templating import NOT_JSON, RunContext, rfc3339
 from agentfacts.schema.models import AssertStatus, HttpStep, Service, SleepStep
-from agentfacts.schema.registry import key_bound_to_service
+from agentfacts.schema.registry import family_key_reaches, key_bound_to_service, service_urls
 from agentfacts.schema.validate import Problem
 
 STATE_FILE = "probe-state.sqlite"
@@ -169,6 +169,16 @@ def _candidate(item: LoadedProbe, service: Service) -> _Candidate:
     return _Candidate(item, service, templates, requests, keyed)
 
 
+def _key_urls(service: Service) -> tuple[str, ...]:
+    """Every URL the service's key can be sent to: env and base URLs × template paths."""
+    http = service.surfaces.http
+    if http is None:
+        return ()
+    bases = [u for u in (service.dimensions.env.prod, service.dimensions.env.sandbox) if u]
+    paths = [t.path for t in http.templates] + ([http.jsonrpc.path] if http.jsonrpc else [])
+    return service_urls([*bases, http.base_url], paths)
+
+
 def _utcnow() -> datetime:
     return datetime.now(UTC)
 
@@ -208,11 +218,12 @@ def _select(
                 plan.append((c, "not-due", "shares a template with a probe in this tick"))
                 continue
         if c.keyed and not key_bound_to_service(
-            c.service.auth.key_name, c.service.key, c.service.hosts, c.service.auth.scopes or ()
+            c.service.auth.key_name, c.service.key, c.service.hosts, c.service.auth.scopes or (),
+            _key_urls(c.service),
         ):
             message = (f"refused:key_not_bound: key {c.service.auth.key_name} is not named after "
-                       f"service {c.service.key}, nor a family key on the family's hosts and "
-                       "scopes")
+                       f"service {c.service.key}, nor a family key on the family's hosts, "
+                       "scopes and paths")
             plan.append((c, "refused", message))
             continue
         if c.keyed and not has_key(c.service.auth.key_name, keys_dir):
@@ -286,6 +297,13 @@ def _execute(
         try:
             credentials = auth_for(service, key) if request.uses_key else NO_CREDENTIALS
         except Refused as exc:
+            run.steps.append(refused_step_record(i, step, exc))
+            run.detail, run.refused = f"refused:{exc.code}: {exc.message}", True
+            return run
+        url = base_url.rstrip("/") + credentials.path_prefix + request.path
+        if request.uses_key and not family_key_reaches(service.auth.key_name, url):
+            exc = Refused("key_off_family_paths", f"{service.auth.key_name} may not reach "
+                          f"{request.path} on a host its family shares with other APIs")
             run.steps.append(refused_step_record(i, step, exc))
             run.detail, run.refused = f"refused:{exc.code}: {exc.message}", True
             return run
@@ -665,7 +683,7 @@ def probe_status(
             key = "none"
             if c.keyed and not key_bound_to_service(
                 c.service.auth.key_name, c.service.key, c.service.hosts,
-                c.service.auth.scopes or (),
+                c.service.auth.scopes or (), _key_urls(c.service),
             ):
                 key = "unbound"
             elif c.keyed:
