@@ -1,8 +1,8 @@
 # `api key not valid. please pass a valid api key.`
 
-**Gemini API · GET /v1beta/models · HTTP 400 `API_KEY_INVALID`**
+**Gemini API · GET /v1beta/models · HTTP 400 `INVALID_ARGUMENT`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 > An API key that does not exist returns HTTP 400 INVALID_ARGUMENT, not 401 or 403; error.details\[0\].reason is API_KEY_INVALID.
 

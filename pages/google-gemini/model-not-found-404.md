@@ -2,7 +2,7 @@
 
 **Gemini API · GET /v1beta/models/{model} · HTTP 404 `NOT_FOUND`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
 > An unknown model name returns HTTP 404 NOT_FOUND with the message "Model is not found: models/\<name\> for api version v1beta".
 

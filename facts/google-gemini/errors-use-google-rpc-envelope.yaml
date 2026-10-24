@@ -15,11 +15,11 @@ fixes:
   - {action: none_known, reason_kind: by_design}
 status: verified:server:prod
 evidence:
-  probe: af:google-gemini:probe:unknown-query-parameter
+  probe: af:google-gemini:probe:error-envelope
   first_seen: 2026-10-24T08:03:54Z
   confirmations: 1
   stale_counter: 0
-  last_confirmed: 2026-10-24T08:03:54Z
+  last_confirmed: 2026-10-24T08:07:09Z
   vantages: [mac-dev]
 provenance:
   source: probe

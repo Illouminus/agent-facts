@@ -14,7 +14,7 @@ env: prod · plan: any · region: any · account_state: any
 
 ## Evidence
 
-Probe `af:google-gemini:probe:unknown-query-parameter` (declarative, [source](../../probes/google-gemini/unknown-query-parameter.yaml))
+Probe `af:google-gemini:probe:error-envelope` (declarative, [source](../../probes/google-gemini/error-envelope.yaml))
 
 Observations: none from reporters yet.
 

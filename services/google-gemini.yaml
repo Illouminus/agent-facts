@@ -16,12 +16,10 @@ surfaces:
       - {method: GET, path: /v1/models}
       - {method: GET, path: "/v1/models/{model}"}
       - {method: POST, path: "/v1/models/{model_and_method}"}
-    signal_fields:
-      - status
-      - error.code
+    signal_fields:  # error.status first: check() takes the first code-shaped field, and
+      - status       # error.code is only the HTTP status as a number
       - error.status
       - error.message
-      - error.details.reason
       - retry-after
   sdk:
     - {ecosystem: pypi, package: google-genai}

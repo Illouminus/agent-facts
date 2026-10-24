@@ -2,9 +2,9 @@
 
 **Gemini API · GET /v1beta/models/{model} · HTTP 404 `NOT_FOUND`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
 
-> The model names gemini-1.5-flash, gemini-1.5-pro and gemini-pro return HTTP 404 NOT_FOUND on v1beta; they are no longer served.
+> The model names gemini-1.5-flash, gemini-1.5-pro and gemini-pro return HTTP 404 NOT_FOUND on GET /v1beta/models/\<name\>.
 
 ## What to do
 

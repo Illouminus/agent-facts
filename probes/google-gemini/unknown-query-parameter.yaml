@@ -1,5 +1,4 @@
-# An unknown query parameter is refused; the error shows the google.rpc envelope (numeric code,
-# status name, typed details).
+# An unknown query parameter is refused instead of ignored.
 id: af:google-gemini:probe:unknown-query-parameter
 service: google-gemini
 env: prod
@@ -7,7 +6,5 @@ steps:
   - {do: http, method: GET, path: /v1beta/models, query: {agent_facts_unknown: "1"}}
 assert:
   - {step: 1, status: 400}
-  - {step: 1, json_path: $.error.code, equals: 400}
   - {step: 1, json_path: $.error.status, equals: INVALID_ARGUMENT}
   - {step: 1, json_path: $.error.message, contains: "Unknown name \"agent_facts_unknown\": Cannot bind query parameter."}
-  - {step: 1, json_path: "$.error.details[0].@type", equals: type.googleapis.com/google.rpc.BadRequest}
