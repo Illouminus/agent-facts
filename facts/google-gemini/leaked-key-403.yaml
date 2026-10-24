@@ -1,0 +1,27 @@
+id: af:google-gemini:leaked-key-403
+service: google-gemini
+kind: auth_quirk
+target:
+  surface: http
+  method: POST
+  path_template: "/v1beta/models/{model_and_method}"
+signal:
+  status: 403
+  error_code: PERMISSION_DENIED
+  error_string: "Your API key was reported as leaked. Please use another API key."
+  normalized: "your api key was reported as leaked. please use another api key."
+claim: "A key that Google has detected as leaked is blocked: requests return HTTP 403 PERMISSION_DENIED \"Your API key was reported as leaked. Please use another API key.\"."
+dimensions:
+  env: prod
+  account_state: any
+fixes:
+  - {action: enable_in_dashboard, setting_key: new_api_key, vendor_doc_url: https://ai.google.dev/gemini-api/docs/troubleshooting}
+status: official
+evidence:
+  first_seen: 2026-10-24T08:00:00Z
+  official_url: https://ai.google.dev/gemini-api/docs/troubleshooting
+provenance:
+  source: manual
+  author: bot
+  created: 2026-10-24
+  history: [{date: 2026-10-24, change: created, by: bot}]

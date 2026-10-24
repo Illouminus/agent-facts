@@ -195,9 +195,12 @@ def _select(
             if used & set(c.templates):
                 plan.append((c, "not-due", "shares a template with a probe in this tick"))
                 continue
-        if c.keyed and not key_bound_to_service(c.service.auth.key_name, c.service.key):
+        if c.keyed and not key_bound_to_service(
+            c.service.auth.key_name, c.service.key, c.service.hosts, c.service.auth.scopes or ()
+        ):
             message = (f"refused:key_not_bound: key {c.service.auth.key_name} is not named after "
-                       f"service {c.service.key}")
+                       f"service {c.service.key}, nor a family key on the family's hosts and "
+                       "scopes")
             plan.append((c, "refused", message))
             continue
         if c.keyed and not has_key(c.service.auth.key_name, keys_dir):
@@ -626,7 +629,10 @@ def probe_status(
         for item in sorted(repo.probes, key=lambda i: i.probe.id):
             c = _candidate(item, repo.services[item.probe.service])
             key = "none"
-            if c.keyed and not key_bound_to_service(c.service.auth.key_name, c.service.key):
+            if c.keyed and not key_bound_to_service(
+                c.service.auth.key_name, c.service.key, c.service.hosts,
+                c.service.auth.scopes or (),
+            ):
                 key = "unbound"
             elif c.keyed:
                 key = "ok" if has_key(c.service.auth.key_name, keys_dir) else "missing"
