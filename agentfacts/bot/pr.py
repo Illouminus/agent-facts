@@ -46,6 +46,7 @@ from agentfacts.probe.runner import (
 BOT_NAME = "agent-facts-bot"
 DEFAULT_BOT_EMAIL = "bot@facts.baillot.dev"
 LABEL = "facts"
+REVIEW_LABEL = "needs-review"  # a PR without auto-merge: some fact needs a human tap (D-089)
 BRANCH_PREFIX = "bot/facts-"
 PUBLISHED_DIRS = ("facts/", "pages/")
 BOT_STATE = "bot-state.json"
@@ -121,11 +122,12 @@ def render_body(
     lines += [f"| `{r.id}` | {r.kind} | {r.status} | {r.evidence} | {r.change} |" for r in rows]
     lines.append("")
     if auto:
-        lines.append("Auto-merge: on. Every fact is `verified:*` or `reported` from quorum and "
-                     "written by the bot; it merges when CI is green.")
+        lines.append("Auto-merge: on. Every fact is `verified:*` and written by the bot; it "
+                     "merges when CI is green.")
     else:
         held = ", ".join(f"`{r.id}`" for r in rows if not r.eligible)
-        lines.append(f"Auto-merge: off. Needs a human review `[tap]` for: {held}.")
+        lines.append(f"Auto-merge: off. Needs a human review `[tap]` for: {held}. Only "
+                     "`verified:*` facts written by the bot merge on their own (D-089).")
     if skipped:
         lines += ["", "Not included (changed on `main` since this checkout was synced): "
                   + ", ".join(f"`{p}`" for p in skipped) + "."]
@@ -292,11 +294,15 @@ def publish(
 
     title = (DAILY_TITLE.format(day=today) if daily else
              f"facts: {len(rows)} fact file{'s' if len(rows) != 1 else ''} ({today})")
+    labels = ["--label", LABEL] + ([] if auto else ["--label", REVIEW_LABEL])
     try:
         gh(["label", "create", LABEL, "--force", "--color", "0E8A16",
             "--description", "Fact files published by agent-facts-bot"])
+        if not auto:
+            gh(["label", "create", REVIEW_LABEL, "--force", "--color", "D93F0B",
+                "--description", "A fact in this PR needs a human review before merge"])
         report.url = gh(["pr", "create", "--base", "main", "--head", report.branch, "--title",
-                         title, "--body", body, "--label", LABEL]).strip()
+                         title, "--body", body, *labels]).strip()
     except GitError:  # no PR: drop the branch, or the next run would push a duplicate
         git(root, "push", "--quiet", "origin", "--delete", report.branch)
         raise
