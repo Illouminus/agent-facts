@@ -10,6 +10,7 @@ import sqlite3
 import threading
 from collections.abc import Mapping
 from datetime import date, timedelta
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,13 @@ def salt_period(day: date) -> date:
     """First day (Monday, UTC) of the salt period holding `day`: the reporter salt rotates weekly
     at Monday 00:00 UTC, and the quorum window is that same week (spec 03 Q6, spec 05)."""
     return day - timedelta(days=day.weekday())
+
+
+class Drop(StrEnum):
+    """Why `add_observation` stored nothing; the value is the counter name."""
+
+    daily_cap = "dropped_daily_cap"
+    template_cap = "dropped_template_cap"
 
 
 def _day_bounds(received_at: str) -> tuple[str, str]:
@@ -46,21 +54,32 @@ class Store:
             self.connection.close()
 
     def add_observation(
-        self, row: Mapping[str, Any], *, daily_cap: int | None = None
-    ) -> int | None:
-        """Insert one observation; its id, or None when `reporter_net` already has `daily_cap`
-        rows that UTC day (spec 05: silently dropped beyond). ValueError if the row is not a
-        valid observation; nothing is written then."""
+        self,
+        row: Mapping[str, Any],
+        *,
+        daily_cap: int | None = None,
+        template_cap: int | None = None,
+    ) -> int | Drop:
+        """Insert one observation; its id, or why not (spec 05, abuse controls):
+
+        - `Drop.daily_cap` when `reporter_net` already has `daily_cap` rows that UTC day;
+        - `Drop.template_cap` when (service, method, path_template, status) already holds
+          `template_cap` distinct error strings this salt period, all seen more than once. While
+          one of them is a single sighting, the least recent single sighting is deleted instead
+          (counter `evicted_template_cap`) and the new row goes in: the most frequent strings stay.
+
+        ValueError if the row is not a valid observation; nothing is written then."""
         with self._lock, self.connection:
+            received = str(row.get("received_at", ""))
             if daily_cap is not None:
-                start, end = _day_bounds(str(row.get("received_at", "")))
+                start, end = _day_bounds(received)
                 (n,) = self.connection.execute(
                     "SELECT COUNT(*) FROM observations"
                     " WHERE reporter_net = ? AND received_at >= ? AND received_at < ?",
                     (row.get("reporter_net"), start, end),
                 ).fetchone()
                 if n >= daily_cap:
-                    return None
+                    return Drop.daily_cap
             (next_id,) = self.connection.execute(
                 "SELECT COALESCE(MAX(id), 0) + 1 FROM observations"
             ).fetchone()
@@ -69,12 +88,50 @@ class Store:
             except ValidationError as exc:
                 raise ValueError(f"not an observation: {exc.error_count()} errors") from exc
             values = obs.model_dump(mode="json")
+            if template_cap is not None and values["error_hash"] is not None:
+                if not self._make_room(values, template_cap, received):
+                    return Drop.template_cap
             self.connection.execute(
                 f"INSERT INTO observations ({', '.join(COLUMNS)})"
                 f" VALUES ({', '.join('?' for _ in COLUMNS)})",
                 tuple(values[c] for c in COLUMNS),
             )
             return next_id
+
+    def _make_room(self, values: Mapping[str, Any], cap: int, received: str) -> bool:
+        """Under the lock: may a row with this error string join its template group?"""
+        period = salt_period(date.fromisoformat(received[:10])).isoformat() + "T00:00:00Z"
+        group = (
+            "service = ? AND method = ? AND path_template = ? AND status IS ? AND received_at >= ?"
+        )
+        key = (
+            values["service"], values["method"], values["path_template"], values["status"], period
+        )
+        known = self.connection.execute(
+            f"SELECT 1 FROM observations WHERE {group} AND error_hash = ? LIMIT 1",
+            (*key, values["error_hash"]),
+        ).fetchone()
+        if known is not None:
+            return True
+        (distinct,) = self.connection.execute(
+            f"SELECT COUNT(DISTINCT error_hash) FROM observations WHERE {group}"
+            " AND error_hash IS NOT NULL",
+            key,
+        ).fetchone()
+        if distinct < cap:
+            return True
+        single = self.connection.execute(
+            f"SELECT error_hash FROM observations WHERE {group} AND error_hash IS NOT NULL"
+            " GROUP BY error_hash HAVING COUNT(*) = 1 ORDER BY MAX(id) LIMIT 1",
+            key,
+        ).fetchone()
+        if single is None:
+            return False
+        self.connection.execute(
+            f"DELETE FROM observations WHERE {group} AND error_hash = ?", (*key, single[0])
+        )
+        self._bump("evicted_template_cap", received[:10])
+        return True
 
     def count(self) -> int:
         with self._lock:
@@ -96,11 +153,14 @@ class Store:
 
     def bump(self, name: str, day: str) -> None:
         with self._lock, self.connection:
-            self.connection.execute(
-                "INSERT INTO counters (day, name, n) VALUES (?, ?, 1)"
-                " ON CONFLICT (day, name) DO UPDATE SET n = n + 1",
-                (day, name),
-            )
+            self._bump(name, day)
+
+    def _bump(self, name: str, day: str) -> None:
+        self.connection.execute(
+            "INSERT INTO counters (day, name, n) VALUES (?, ?, 1)"
+            " ON CONFLICT (day, name) DO UPDATE SET n = n + 1",
+            (day, name),
+        )
 
     def counters(self, day: str) -> dict[str, int]:
         with self._lock:

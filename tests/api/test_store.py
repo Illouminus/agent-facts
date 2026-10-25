@@ -4,7 +4,7 @@ import sqlite3
 
 import pytest
 
-from apifacts.api.store import Store
+from apifacts.api.store import Drop, Store
 from apifacts.schema import load_schema
 
 ROW = {
@@ -70,7 +70,7 @@ def test_invalid_rows_are_refused_before_any_write(store, bad):
 def test_daily_cap_drops_beyond_the_limit(store):
     assert store.add_observation(ROW, daily_cap=2) == 1
     assert store.add_observation(ROW, daily_cap=2) == 2
-    assert store.add_observation(ROW, daily_cap=2) is None
+    assert store.add_observation(ROW, daily_cap=2) == Drop.daily_cap
     other_net = {**ROW, "reporter_net": "c" * 64}
     assert store.add_observation(other_net, daily_cap=2) == 3
     next_day = {**ROW, "received_at": "2026-10-21T00:00:00Z"}
@@ -118,3 +118,46 @@ def test_file_is_plain_sqlite(tmp_path):
     s.close()
     with sqlite3.connect(tmp_path / "o.sqlite") as conn:
         assert conn.execute("SELECT COUNT(*) FROM observations").fetchone() == (1,)
+
+
+def _hashes(store: Store) -> list[str]:
+    rows = store.connection.execute("SELECT error_hash FROM observations ORDER BY id")
+    return [h for (h,) in rows]
+
+
+def _row(n: int, **changes):
+    return {**ROW, "error_hash": f"{n:064x}", "normalized_error": f"error {n}", **changes}
+
+
+def test_template_cap_keeps_the_most_frequent_strings(store):
+    """Spec 05: at most `template_cap` distinct strings per (service, method, template, status)
+    a salt period; a new one evicts the least recent single sighting, never a repeated one."""
+    for n in range(3):
+        assert isinstance(store.add_observation(_row(n), template_cap=3), int)
+    assert isinstance(store.add_observation(_row(1), template_cap=3), int)  # known: always in
+    assert isinstance(store.add_observation(_row(3), template_cap=3), int)  # evicts _row(0)
+    assert sorted(set(_hashes(store))) == [f"{n:064x}" for n in (1, 2, 3)]
+    assert store.counters(DAY) == {"evicted_template_cap": 1}
+    for n in (2, 3):
+        store.add_observation(_row(n), template_cap=3)
+    assert store.add_observation(_row(4), template_cap=3) == Drop.template_cap  # all repeated
+    assert len(set(_hashes(store))) == 3
+
+
+def test_template_cap_is_per_group_and_per_salt_period(store):
+    for n in range(2):
+        store.add_observation(_row(n), template_cap=2)
+    store.add_observation(_row(0), template_cap=2)
+    store.add_observation(_row(1), template_cap=2)
+    assert store.add_observation(_row(9), template_cap=2) == Drop.template_cap
+    assert isinstance(store.add_observation(_row(9, status=404), template_cap=2), int)
+    assert isinstance(store.add_observation(_row(9, path_template="/v1/x"), template_cap=2), int)
+    next_week = _row(9, received_at=f"{NEXT}T00:00:00Z")
+    assert isinstance(store.add_observation(next_week, template_cap=2), int)
+
+
+def test_rows_without_an_error_string_ignore_the_template_cap(store):
+    store.add_observation(_row(0), template_cap=1)
+    store.add_observation(_row(0), template_cap=1)
+    assert isinstance(store.add_observation({**ROW, "error_hash": None, "normalized_error": None},
+                                            template_cap=1), int)

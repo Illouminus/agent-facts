@@ -62,12 +62,13 @@ from apifacts.api.models import (
 from apifacts.api.normalize import ExtractedSignal, extract_signal, find_urls, looks_like_prompt
 from apifacts.api.ratelimit import RateLimiter
 from apifacts.api.seed_hosts import metric_host
-from apifacts.api.store import Store, salt_period
+from apifacts.api.store import Drop, Store, salt_period
 from apifacts.schema.registry import on_vendor_domain
 
 LICENSE = "CC-BY-4.0"
 MAX_BODY = 8192  # spec 03: max request body
 DAILY_CAP = 1000  # spec 05: observations per reporter net per day
+TEMPLATE_CAP = 200  # spec 05: distinct error strings per (service, method, template, status) a week
 CACHE_CONTROL = "public, max-age=300"
 DEFAULT_TRUSTED_PROXIES = ("127.0.0.1", "::1")
 CHECK_PATH = "/v0/check"
@@ -93,6 +94,7 @@ class _State:
     index: FactsIndex
     store: Store
     daily_cap: int
+    template_cap: int
     trusted_proxies: tuple[Network, ...]
     utcnow: Callable[[], datetime]
     results: Path
@@ -219,8 +221,11 @@ def _ingest(
         "env_guess": (context.env_hint if context else None) or entry.env_for_host(target.host),
         "vantage_country": None,
     }
-    if state.store.add_observation(row, daily_cap=state.daily_cap) is None:
-        state.store.bump("dropped_daily_cap", day)
+    stored = state.store.add_observation(
+        row, daily_cap=state.daily_cap, template_cap=state.template_cap
+    )
+    if isinstance(stored, Drop):
+        state.store.bump(stored.value, day)
         return False
     state.store.bump("stored", day)
     return True
@@ -380,6 +385,7 @@ def create_app(
     per_net: int = 60,
     global_limit: int = 600,
     daily_cap: int = DAILY_CAP,
+    template_cap: int = TEMPLATE_CAP,
     trusted_proxies: tuple[str, ...] | None = None,
     clock: Callable[[], float] | None = None,
     utcnow: Callable[[], datetime] | None = None,
@@ -396,6 +402,7 @@ def create_app(
             index=FactsIndex.load(root, os.environ.get("APIFACTS_REGISTRY_VERSION") or None),
             store=store,
             daily_cap=daily_cap,
+            template_cap=template_cap,
             trusted_proxies=trusted,
             utcnow=utcnow or (lambda: datetime.now(UTC)),
             results=Path(

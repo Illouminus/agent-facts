@@ -11,7 +11,7 @@ from api_fixtures import STRIPE_PI
 
 from apifacts.api import app as app_module
 from apifacts.api.normalize import extract_signal
-from apifacts.api.store import Store, salt_period
+from apifacts.api.store import Drop, Store, salt_period
 
 PYPI_JSON = "https://pypi.org/pypi/requests/json"
 
@@ -252,7 +252,7 @@ def test_daily_cap_is_one_thousand_per_net_per_day(tmp_path):
         "reporter_ua_class": "sdk",
     }
     kept = [store.add_observation(row, daily_cap=app_module.DAILY_CAP) for _ in range(1001)]
-    assert kept[999] == 1000 and kept[1000] is None
+    assert kept[999] == 1000 and kept[1000] == Drop.daily_cap
     assert store.add_observation({**row, "reporter_net": "c" * 64}, daily_cap=1000) == 1001
     assert store.count() == 1001
     store.close()
