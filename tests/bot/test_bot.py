@@ -324,6 +324,30 @@ def test_quorum_drafts_gather_for_the_week_then_go_out_in_one_pr(repo):
     assert "Quorum drafts gathered over the salt period: 2." in report.body
 
 
+def test_a_draft_gone_out_another_way_drops_the_pending_week(repo):
+    pending(repo, None)
+    repo.write(DRAFT, draft())
+    assert run(repo, FakeGh()).action == "holding"
+    assert bot_state(repo)["quorum_pending"] == "2026-10-19"
+    (repo.work / DRAFT).unlink()  # a probe confirmed it before Monday: it goes out as verified
+    rel = verified(repo)
+    assert run(repo, FakeGh(), today=date(2026, 10, 23)).action == "opened"
+    assert bot_state(repo)["quorum_pending"] is None  # no draft is held any more
+
+    (repo.work / rel).unlink()  # merged and synced
+    repo.write("facts/stripe/second.yaml", draft("second"))  # a draft of the next salt week
+    report = run(repo, FakeGh(), today=date(2026, 10, 28))
+    assert report.action == "holding"  # gathered for its own week, not opened at once
+    assert bot_state(repo)["quorum_pending"] == "2026-10-26"
+
+
+def test_nothing_held_forgets_the_pending_week_without_a_dry_run(repo):
+    assert run(repo, FakeGh(), dry_run=True).action == "nothing"
+    assert bot_state(repo)["quorum_pending"] == "2026-10-12"
+    assert run(repo, FakeGh()).action == "nothing"
+    assert bot_state(repo)["quorum_pending"] is None
+
+
 def test_held_drafts_do_not_hold_other_new_facts(repo):
     pending(repo, None)
     repo.write(DRAFT, draft())

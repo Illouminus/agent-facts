@@ -184,6 +184,14 @@ def _remember_quorum(state_dir: Path, **fields: str | None) -> None:
     write_json_atomic(state_dir / BOT_STATE, {**_read_json(state_dir / BOT_STATE), **fields})
 
 
+def _forget_quorum(state_dir: Path, held: bool, dry_run: bool) -> None:
+    """Drop a pending week no draft is held for: a draft that went out another way (a probe
+    confirmed it, it reached main) must not open the next week's gate at once (D-093)."""
+    if not held and not dry_run and isinstance(
+            _read_json(state_dir / BOT_STATE).get("quorum_pending"), str):
+        _remember_quorum(state_dir, quorum_pending=None)
+
+
 def _remember_evidence_pr(state_dir: Path, today: date, refreshed: str | None) -> None:
     write_json_atomic(state_dir / BOT_STATE, {**_read_json(state_dir / BOT_STATE),
                                               "evidence_refresh": refreshed,
@@ -267,9 +275,10 @@ def publish(
     if reason := kill_reason(root, environ):
         return PublishReport("killed", detail=reason)
     changes = changed_facts(root)
+    by_path = {row.path: row for row in fact_rows(root, changes)}  # against HEAD: fetch-proof
+    _forget_quorum(state_dir, any(row.quorum_draft for row in by_path.values()), dry_run)
     if not changes:
         return PublishReport("nothing")
-    by_path = {row.path: row for row in fact_rows(root, changes)}  # against HEAD: fetch-proof
     hold, refreshed = evidence_gate(state_dir, today)
     if hold and not any(row.substantive for row in by_path.values()):
         return PublishReport("holding", detail=hold)  # no fetch, no gh: nothing goes out

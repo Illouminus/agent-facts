@@ -47,7 +47,9 @@ stays `reported` and is listed in the weekly digest under "needs a probe" (an ag
   a new or deleted fact or a change beyond the evidence counters (status, claim, …), except quorum
   drafts (new `reported` facts from `observation_quorum`): each needs a human tap, so they gather
   in the checkout and go out as one PR a salt period — the first run that sees one notes its period
-  in `bot-state.json`, the first run of a later period opens one PR with every draft gathered, and
+  in `bot-state.json` (a run that finds no draft held drops the note, so a draft that went out
+  another way does not open next week's gate at once), the first run of a later period opens one
+  PR with every draft gathered, and
   the Monday digest counts them (D-093: many networks pushing junk strings must not become a tap per
   string). Other new facts and status changes still go out at once. Counter-only
   changes (`last_confirmed`, `confirmations`, `stale_counter`, `vantages`, `observations`) go out as
