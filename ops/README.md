@@ -139,23 +139,25 @@ reload: `curl -s https://apifacts.dev/healthz`.
 and ship together from one tag. No PyPI token exists anywhere: `.github/workflows/release.yml`
 exchanges the job's GitHub OIDC token for a short-lived upload token at PyPI (trusted publishing).
 Each project on PyPI needs that publisher registered once, by the account owner, with exactly these
-values (for a project that does not exist yet: "Add a pending publisher"):
+values (for a project that does not exist yet: "Add a pending publisher"). The environment differs
+per package because PyPI binds one pending publisher per (owner, repository, workflow, environment)
+to a single project name:
 
-| Field | Value |
-|-------|-------|
-| PyPI project name | `apifacts`, then once more `apifacts-pytest` |
-| Owner | `Illouminus` |
-| Repository name | `apifacts` |
-| Workflow name | `release.yml` |
-| Environment name | `pypi` |
+| Field | `apifacts` | `apifacts-pytest` |
+|-------|------------|-------------------|
+| PyPI project name | `apifacts` | `apifacts-pytest` |
+| Owner | `Illouminus` | `Illouminus` |
+| Repository name | `apifacts` | `apifacts` |
+| Workflow name | `release.yml` | `release.yml` |
+| Environment name | `pypi` | `pypi-pytest` |
 
 Cutting a release:
 
 1. Set the same `__version__` in `apifacts/__init__.py` and `plugins/pytest/apifacts_pytest/__init__.py`
    (`tests/ops/test_release_workflow.py` keeps them equal), PR, merge.
 2. `git tag vX.Y.Z <merge commit> && git push origin vX.Y.Z`. The workflow refuses a tag whose commit is
-   not on `main` or whose version differs from either package, builds both (the `apifacts` wheel
-   carries the offline snapshot: `services/` and `facts/` as of that commit), runs `twine check` and
-   uploads; re-running a half-done release is safe (PyPI ignores files it already has).
+   not on `main` or whose version differs from either package; then one job per package builds it (the
+   `apifacts` wheel carries the offline snapshot: `services/` and `facts/` as of that commit), runs
+   `twine check` and uploads. Re-running a half-done release is safe (PyPI ignores files it already has).
 3. Check https://pypi.org/project/apifacts/ and https://pypi.org/project/apifacts-pytest/;
    `uvx apifacts version` prints the new version.

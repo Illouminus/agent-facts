@@ -1,11 +1,13 @@
 # Release = publish to PyPI. A tag `vX.Y.Z` on main builds `apifacts` and `apifacts-pytest` (both carry
-# that version), checks the metadata and uploads each one with the job's GitHub OIDC token, which PyPI
+# that version), checks the metadata and uploads each one with its job's GitHub OIDC token, which PyPI
 # exchanges for a short-lived upload token (trusted publishing): no PyPI token exists anywhere. PyPI
-# knows this workflow by the publisher registered on each project: owner Illouminus, repository
-# apifacts, workflow release.yml, environment pypi (ops/README.md → Release). One short job, no
-# third-party upload action (D-076: Actions minutes are paid); uv does the exchange itself and PyPI
-# ignores files it already has, so a half-done release is re-run as is. The two actions are pinned to
-# commit SHAs: a moved tag must not be able to run code in a job that can mint an upload token.
+# knows a job by the publisher registered on the project: owner Illouminus, repository apifacts,
+# workflow release.yml, environment `pypi` for apifacts and `pypi-pytest` for apifacts-pytest
+# (ops/README.md → Release). Two environments because PyPI binds one pending publisher per
+# (owner, repository, workflow, environment) to one project name. Two short jobs, no third-party
+# upload action (D-076: Actions minutes are paid); uv does the exchange itself and PyPI ignores files
+# it already has, so a half-done release is re-run as is. The two actions are pinned to commit SHAs:
+# a moved tag must not be able to run code in a job that can mint an upload token.
 name: Release
 
 on:
@@ -19,7 +21,7 @@ concurrency:
 permissions: {}
 
 jobs:
-  publish:
+  apifacts:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment:
@@ -47,7 +49,22 @@ jobs:
             exit 1
           }
       - run: uv build --no-sources --out-dir dist
+      - run: uvx twine check --strict dist/*
+      - run: uv publish --trusted-publishing always dist/*
+
+  apifacts-pytest:
+    needs: apifacts  # the plugin depends on apifacts; never without it
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: pypi-pytest
+      url: https://pypi.org/project/apifacts-pytest/
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
       - run: uv build --no-sources --out-dir dist plugins/pytest
       - run: uvx twine check --strict dist/*
-      - run: uv publish --trusted-publishing always dist/apifacts-*
-      - run: uv publish --trusted-publishing always dist/apifacts_pytest-*
+      - run: uv publish --trusted-publishing always dist/*

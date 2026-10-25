@@ -16,8 +16,12 @@ def load() -> dict:
     return doc
 
 
-def runs() -> list[str]:
-    return [step["run"] for step in load()["jobs"]["publish"]["steps"] if "run" in step]
+JOBS = {"apifacts": ("pypi", ""), "apifacts-pytest": ("pypi-pytest", " plugins/pytest")}
+PINNED = ("actions/checkout", "astral-sh/setup-uv")
+
+
+def runs(job: str) -> list[str]:
+    return [step["run"] for step in load()["jobs"][job]["steps"] if "run" in step]
 
 
 def test_runs_only_on_a_version_tag():
@@ -28,39 +32,41 @@ def test_releases_never_overlap_or_cancel():
     assert load()["concurrency"] == {"group": "release", "cancel-in-progress": False}
 
 
-def test_oidc_in_the_pypi_environment_and_no_token():
+def test_one_job_per_package_each_in_its_own_pypi_environment_no_token():
     doc = load()
     assert doc["permissions"] == {}
-    job = doc["jobs"]["publish"]
-    assert job["permissions"] == {"contents": "read", "id-token": "write"}
-    assert job["environment"]["name"] == "pypi"
-    assert job["timeout-minutes"] <= 5
+    assert list(doc["jobs"]) == list(JOBS)  # PyPI binds one pending publisher per environment
+    for job, (environment, _) in JOBS.items():
+        spec = doc["jobs"][job]
+        assert spec["permissions"] == {"contents": "read", "id-token": "write"}
+        assert spec["environment"]["name"] == environment
+        assert spec["timeout-minutes"] <= 5
+    assert doc["jobs"]["apifacts-pytest"]["needs"] == "apifacts"
     assert "secrets." not in WORKFLOW.read_text(encoding="utf-8")
 
 
-def test_two_sha_pinned_actions_then_build_check_publish_each_package():
-    steps = load()["jobs"]["publish"]["steps"]
-    uses = [step["uses"] for step in steps if "uses" in step]
-    assert [u.split("@")[0] for u in uses] == ["actions/checkout", "astral-sh/setup-uv"]
-    assert all(re.fullmatch(r"[^@]+@[0-9a-f]{40}", u) for u in uses)  # a moved tag cannot run here
-    script = runs()
-    builds = [r for r in script if r.startswith("uv build --no-sources --out-dir dist")]
-    assert len(builds) == 2 and builds[1].endswith(" plugins/pytest")
-    check = next(i for i, r in enumerate(script) if r == "uvx twine check --strict dist/*")
-    publish = [(i, r) for i, r in enumerate(script) if r.startswith("uv publish ")]
-    assert [r for _, r in publish] == [
-        "uv publish --trusted-publishing always dist/apifacts-*",
-        "uv publish --trusted-publishing always dist/apifacts_pytest-*",
-    ]
-    assert check < publish[0][0]
+def test_each_job_two_sha_pinned_actions_then_build_check_publish():
+    doc = load()
+    for job, (_, source) in JOBS.items():
+        uses = [step["uses"] for step in doc["jobs"][job]["steps"] if "uses" in step]
+        assert [u.split("@")[0] for u in uses] == list(PINNED)
+        assert all(re.fullmatch(r"[^@]+@[0-9a-f]{40}", u) for u in uses)  # a moved tag cannot run
+        script = runs(job)
+        build = script.index(f"uv build --no-sources --out-dir dist{source}")
+        check = script.index("uvx twine check --strict dist/*")
+        publish = script.index("uv publish --trusted-publishing always dist/*")
+        assert build < check < publish == len(script) - 1
+    pins = {step["uses"] for job in JOBS for step in doc["jobs"][job]["steps"] if "uses" in step}
+    assert len(pins) == 2  # both jobs run the same two commits
 
 
-def test_guard_runs_first_and_checks_main_and_both_versions():
-    guard = runs()[0]
+def test_guard_runs_first_in_the_core_job_and_checks_main_and_both_versions():
+    guard = runs("apifacts")[0]
     assert "git merge-base --is-ancestor HEAD origin/main" in guard
     for path in VERSION_FILES:
         assert path in guard
-    assert '${GITHUB_REF_NAME#v}' in guard
+    assert "${GITHUB_REF_NAME#v}" in guard
+    assert load()["jobs"]["apifacts"]["steps"][0]["with"] == {"fetch-depth": 0}
 
 
 def versions() -> list[str]:
