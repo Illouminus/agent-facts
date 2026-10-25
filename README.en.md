@@ -21,6 +21,24 @@ uvx apifacts check https://api.stripe.com/v1/charges -X GET --status 401   # CLI
 Both packages are on PyPI, carry the same version and ship together from one tag
 ([release](ops/README.md#release-to-pypi)). The plugin sends nothing until a test fails.
 
+## MCP
+
+One tool, `check(target, method, status, body)`, over stdio; no resources, no prompts. Claude Code:
+
+```bash
+claude mcp add apifacts -- uvx --from 'apifacts[mcp]' apifacts mcp
+```
+
+Claude Desktop, Cursor and other clients (`mcpServers` in their JSON config):
+
+```json
+{"mcpServers": {"apifacts": {"command": "uvx", "args": ["--from", "apifacts[mcp]", "apifacts", "mcp"]}}}
+```
+
+`apifacts mcp --offline` answers from the snapshot packaged in the wheel and sends nothing.
+
+<!-- mcp-name: io.github.illouminus/apifacts -->
+
 ## How a fact is verified
 
 - One fact per YAML file in `facts/<service>/`, with a kind (`error_meaning`, `rate_limit`,

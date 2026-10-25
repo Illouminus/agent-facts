@@ -38,6 +38,15 @@ Same behaviour via a custom reporter: on test failure inspect `error.response` (
 One tool only: `check(target, error?)` with a 40-word description; no resources, no prompts. Listed in
 the official registry after pages and plugins exist (plan §21: pages and plugins before MCP).
 
+Shipped as `apifacts mcp` (`apifacts/mcp_server.py`, stdio) behind the extra `apifacts[mcp]`, so the
+plugin's users do not pull the MCP SDK: `uvx --from 'apifacts[mcp]' apifacts mcp`. The error is passed
+flat — `check(target, method?, status?, body?)` — because clients fill flat arguments more reliably
+than a nested object; `body` may arrive as a JSON object (the SDK parses JSON strings) and is
+re-serialized. Same client as the CLI (filters, 2 s timeout, 20 checks per session, `APIFACTS_DISABLE`,
+`--offline` from the packaged snapshot); every failure is a text answer starting with `error:`.
+`server.json` at the repository root is the registry entry (`io.github.illouminus/apifacts`, PyPI,
+`runtimeHint: uvx`); README.en.md carries the `mcp-name:` line the registry looks for on PyPI.
+
 ## CLI (wave 1, part of `apifacts`)
 
 `apifacts check <url-or-locator> [--status N --body file]` for humans and shell agents; prints the
