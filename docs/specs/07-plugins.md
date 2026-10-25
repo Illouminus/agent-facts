@@ -17,7 +17,7 @@ cache; opt-out `APIFACTS_DISABLE=1`; all of this covered by tests against a loca
 POST api.stripe.com/v1/payment_intents → 400 idempotency_error
 ✅ verified:server:sandbox · Reusing an Idempotency-Key with a different request body returns HTTP 400 …
    fix: Send header Idempotency-Key = new UUID per distinct request
-   https://github.com/Illouminus/apifacts/blob/main/pages/stripe/idempotency-key-reuse-different-params.md
+   https://apifacts.dev/stripe/idempotency-key-reuse-different-params
 ```
 
 - Privacy: never sends request bodies, headers, query strings or tokens; strips the secret-shaped
