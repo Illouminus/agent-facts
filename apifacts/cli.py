@@ -39,6 +39,26 @@ def version() -> None:
 
 
 @app.command()
+def mcp(
+    offline: Annotated[
+        bool, typer.Option(help="Answer from the packaged snapshot or APIFACTS_SNAPSHOT.")
+    ] = False,
+) -> None:
+    """Run the MCP server on stdio: one tool, `check` (needs the extra: apifacts[mcp])."""
+    try:
+        import mcp.server  # noqa: F401
+    except ImportError:
+        typer.echo(
+            "error: the MCP server needs the extra: uvx --from 'apifacts[mcp]' apifacts mcp",
+            err=True,
+        )
+        raise typer.Exit(EXIT_USAGE) from None
+    from apifacts.mcp_server import run
+
+    run(offline)
+
+
+@app.command()
 def validate(
     paths: Annotated[
         list[Path] | None,

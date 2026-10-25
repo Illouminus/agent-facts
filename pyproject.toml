@@ -32,8 +32,14 @@ Issues = "https://github.com/Illouminus/apifacts/issues"
 [project.scripts]
 apifacts = "apifacts.cli:app"
 
+[project.optional-dependencies]
+mcp = [
+    "mcp>=2.3",
+]
+
 [dependency-groups]
 dev = [
+    "mcp>=2.3",
     "pytest>=9.1.1",
     "pytest-httpserver>=1.2.0",
     "ruff>=0.17.1",

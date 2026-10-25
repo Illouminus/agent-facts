@@ -24,6 +24,24 @@ Both packages are on PyPI, carry the same version and ship together from one tag
 ([`skills/apifacts/SKILL.md`](skills/apifacts/SKILL.md)) tells Claude Code and other agents when to
 call `apifacts check` and how to read the answer.
 
+## MCP
+
+One tool, `check(target, method, status, body)`, over stdio; no resources, no prompts. Claude Code:
+
+```bash
+claude mcp add apifacts -- uvx --from 'apifacts[mcp]' apifacts mcp
+```
+
+Claude Desktop, Cursor and other clients (`mcpServers` in their JSON config):
+
+```json
+{"mcpServers": {"apifacts": {"command": "uvx", "args": ["--from", "apifacts[mcp]", "apifacts", "mcp"]}}}
+```
+
+`apifacts mcp --offline` answers from the snapshot packaged in the wheel and sends nothing.
+
+<!-- mcp-name: io.github.illouminus/apifacts -->
+
 ## How a fact is verified
 
 - One fact per YAML file in `facts/<service>/`, with a kind (`error_meaning`, `rate_limit`,
