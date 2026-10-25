@@ -21,7 +21,7 @@ def observe(db) -> Callable[..., None]:
         store = Store(db)
         try:
             for r in rows:
-                assert store.add_observation(r) is not None
+                assert isinstance(store.add_observation(r), int)
         finally:
             store.close()
 

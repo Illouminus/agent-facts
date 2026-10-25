@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.illouminus/apifacts",
+  "title": "apifacts",
+  "description": "Verified facts and typed fixes for failing third-party API calls (Stripe, GitHub, Google…)",
+  "version": "0.2.0",
+  "websiteUrl": "https://apifacts.dev",
+  "repository": {
+    "url": "https://github.com/Illouminus/apifacts",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "apifacts",
+      "version": "0.2.0",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [
+        {"type": "named", "name": "--from", "value": "apifacts[mcp]==0.2.0"}
+      ],
+      "packageArguments": [
+        {"type": "positional", "value": "mcp"}
+      ],
+      "transport": {"type": "stdio"}
+    }
+  ]
+}

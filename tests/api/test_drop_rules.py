@@ -89,3 +89,18 @@ def test_body_beyond_the_message_and_raw_ip_are_never_stored(client, db_path):
     data = db_path.read_bytes()
     for marker in (b"UNIQUE-MARKER", b"HEADER-MARKER", b"UA-MARKER", b"203.0.113", b"203.0.0.0"):
         assert marker not in data
+
+
+def test_template_cap_per_signal_group(make_client, rows, counters):
+    """Spec 05: many networks inventing new strings for one template cannot grow the table past
+    the cap; once every kept string repeats, a new one is dropped and counted."""
+    words = ["alpha", "bravo", "charlie", "delta"]
+    clients = [make_client(peer=(f"198.51.{i}.1", 1), template_cap=2) for i in range(6)]
+    for client in clients[:2]:  # alpha and bravo, each seen twice
+        for word in words[:2]:
+            assert report(client, f"bad {word}").json()["unknown"]["stored_as_observation"]
+    answer = report(clients[2], "bad charlie").json()
+    assert answer["unknown"]["stored_as_observation"] is False
+    assert answer["facts"] is not None  # still answered
+    assert rows() == 4
+    assert counters()["dropped_template_cap"] == 1
