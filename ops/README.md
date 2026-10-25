@@ -130,8 +130,8 @@ says `approved: true` (Edouard's tap).
 `ops/Caddyfile.facts` is appended to `/etc/caddy/Caddyfile`. Check with `caddy adapt`, not `caddy
 validate` (validate instantiates log files as root and breaks the next reload), then
 `sudo systemctl reload caddy`. `apifacts.dev` and `www` have A records to the host (OVH DNS);
-`facts.baillot.dev` resolves through the `*.baillot.dev` wildcard. Certificates come on the first
-reload: `curl -s https://apifacts.dev/healthz`.
+`facts.baillot.dev` (the `*.baillot.dev` wildcard) is a 308 redirect to it. Certificates come on the
+first reload: `curl -s https://apifacts.dev/healthz`.
 
 ## Release to PyPI
 
