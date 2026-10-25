@@ -16,10 +16,13 @@ apifacts answers "the docs are wrong about this endpoint right now, here is the 
 ```bash
 pip install apifacts-pytest   # pytest plugin: a test failing on an HTTP error prints the known facts
 uvx apifacts check https://api.stripe.com/v1/charges -X GET --status 401   # CLI (and library)
+npx skills add Illouminus/apifacts   # agent skill: on an API error, ask the registry first
 ```
 
 Both packages are on PyPI, carry the same version and ship together from one tag
-([release](ops/README.md#release-to-pypi)). The plugin sends nothing until a test fails.
+([release](ops/README.md#release-to-pypi)). The plugin sends nothing until a test fails. The skill
+([`skills/apifacts/SKILL.md`](skills/apifacts/SKILL.md)) tells Claude Code and other agents when to
+call `apifacts check` and how to read the answer.
 
 ## How a fact is verified
 
