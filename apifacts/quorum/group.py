@@ -17,6 +17,7 @@ from apifacts.api.store import salt_period
 
 MIN_NETS = 3  # spec 05: distinct reporter networks
 MIN_CLIENTS = 2  # spec 05: distinct UA classes or SDK packages
+MIN_NET_ROWS = 2  # spec 05 (D-093): a network's client counts only from its second row of the week
 PERIOD = timedelta(days=7)
 
 
@@ -81,7 +82,9 @@ class Group:
 
     @property
     def clients(self) -> int:
-        """Spec 05 "distinct UA classes or SDK packages": the larger of the two counts."""
+        """Spec 05 "distinct UA classes or SDK packages": the larger of the two counts, both
+        taken only from networks with at least two rows in the salt period. The client declares
+        its own UA and SDK; one row from a fresh network must not buy the second factor."""
         return max(len(self.ua_classes), len(self.sdk_packages))
 
     @property
@@ -101,7 +104,10 @@ def _key(row: Mapping[str, Any]) -> GroupKey:
 
 def group_observations(rows: Iterable[Mapping[str, Any]]) -> list[Group]:
     """By `(service, method, path_template, error_hash)`; rows without a string by
-    `(service, method, path_template, status)`. Sorted by key."""
+    `(service, method, path_template, status)`. Sorted by key. `rows` is the whole salt period:
+    a network's row count (for `clients`) runs across every group."""
+    rows = list(rows)
+    per_net = Counter(row["reporter_net"] for row in rows)
     groups: dict[GroupKey, Group] = {}
     for row in rows:
         key = _key(row)
@@ -114,9 +120,10 @@ def group_observations(rows: Iterable[Mapping[str, Any]]) -> list[Group]:
         if row["status"] is not None:
             group.statuses[row["status"]] += 1
         group.nets.add(row["reporter_net"])
-        group.ua_classes.add(row["reporter_ua_class"])
-        if row["sdk_package"]:
-            group.sdk_packages.add(row["sdk_package"])
+        if per_net[row["reporter_net"]] >= MIN_NET_ROWS:
+            group.ua_classes.add(row["reporter_ua_class"])
+            if row["sdk_package"]:
+                group.sdk_packages.add(row["sdk_package"])
         if row["env_guess"]:
             group.env_guesses[row["env_guess"]] += 1
         group.first_seen = min(group.first_seen, row["received_at"])

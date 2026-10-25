@@ -34,5 +34,7 @@ def row(
 
 
 def quorum_rows(**kw) -> list[dict[str, Any]]:
-    """Three networks, two UA classes: just at the threshold."""
-    return [row(1, ua="pytest-plugin", **kw), row(2, ua="sdk", **kw), row(3, ua="sdk", **kw)]
+    """Three networks, two UA classes from networks seen twice in the week: just at the
+    threshold."""
+    return [row(1, ua="pytest-plugin", **kw), row(2, ua="sdk", **kw), row(3, ua="sdk", **kw),
+            row(1, ua="pytest-plugin", **kw), row(2, ua="sdk", **kw)]

@@ -31,14 +31,16 @@ def publish(
 ) -> None:
     """Commit changed facts/ (and regenerated pages/) on bot/facts-<date>-<n>, open one PR
     labelled `facts`; auto-merge only when every fact is `verified:*` and written by the bot,
-    otherwise the label `needs-review` (D-089). New facts and status changes go out at once;
-    counter-only changes once a day, after `probe run --refresh-evidence`. GitHub access only
+    otherwise the label `needs-review` (D-089). New facts and status changes go out at once,
+    except quorum drafts: they gather into one PR a salt week (D-093); counter-only changes once
+    a day, after `probe run --refresh-evidence`. GitHub access only
     with the bot's own token (`keyput agent-facts-bot`).
 
     Exit codes: 0 done / nothing to do / waiting / killed, 1 refused (invalid or conflicting
     files, git or gh failure), 2 usage.
     """
     from apifacts.bot.collect import GitError
+    from apifacts.bot.pr import QUORUM_HOLD
     from apifacts.bot.pr import publish as run
 
     try:
@@ -61,7 +63,8 @@ def publish(
     summary = {
         "nothing": "nothing to publish",
         "killed": f"killed ({report.detail}): nothing done",
-        "holding": f"holding counter-only changes: {report.detail}",
+        "holding": f"holding: {report.detail}" if report.detail.startswith(QUORUM_HOLD)
+        else f"holding counter-only changes: {report.detail}",
         "waiting": f"waiting: {report.detail}; changes stay for the next run",
         "would-open": f"dry run: would open {report.branch}",
         "opened": f"opened {report.url} on {report.branch}"
