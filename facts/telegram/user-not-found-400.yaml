@@ -19,10 +19,10 @@ status: verified:server:prod
 evidence:
   probe: af:telegram:probe:user-photos-unknown-user
   first_seen: 2026-10-24T08:17:39Z
-  confirmations: 2
+  confirmations: 63
   stale_counter: 0
-  last_confirmed: 2026-10-24T08:20:15Z
-  vantages: [mac-dev]
+  last_confirmed: 2026-10-25T00:46:12Z
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot

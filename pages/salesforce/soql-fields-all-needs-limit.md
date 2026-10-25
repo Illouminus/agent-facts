@@ -2,7 +2,7 @@
 
 **Salesforce Platform REST API · GET /services/data/{version}/query · HTTP 400 `MALFORMED_QUERY`**
 
-Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 3 confirmations from 1 vantage
+Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-25 · 13 confirmations from 2 vantages
 
 > SELECT FIELDS(ALL) without a LIMIT returns HTTP 400 MALFORMED_QUERY "The SOQL FIELDS function must have a LIMIT of at most 200".
 

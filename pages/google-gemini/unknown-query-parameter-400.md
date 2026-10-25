@@ -2,7 +2,7 @@
 
 **Gemini API · GET /v1beta/models · HTTP 400 `INVALID_ARGUMENT`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 9 confirmations from 2 vantages
 
 > An unknown query parameter returns HTTP 400 INVALID_ARGUMENT ("Cannot bind query parameter") instead of being ignored.
 

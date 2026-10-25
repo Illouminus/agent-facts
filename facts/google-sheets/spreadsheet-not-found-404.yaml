@@ -20,10 +20,10 @@ status: verified:server:prod
 evidence:
   probe: af:google-sheets:probe:spreadsheet-not-found
   first_seen: 2026-10-24T08:32:32Z
-  confirmations: 3
+  confirmations: 7
   stale_counter: 0
-  last_confirmed: 2026-10-24T09:42:10Z
-  vantages: [mac-dev]
+  last_confirmed: 2026-10-24T22:31:20Z
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot

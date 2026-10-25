@@ -17,10 +17,10 @@ status: verified:server:sandbox
 evidence:
   probe: af:salesforce:probe:record-not-found
   first_seen: 2026-10-24T09:20:09Z
-  confirmations: 3
+  confirmations: 32
   stale_counter: 0
-  last_confirmed: 2026-10-24T09:27:53Z
-  vantages: [mac-dev]
+  last_confirmed: 2026-10-25T00:31:23Z
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot

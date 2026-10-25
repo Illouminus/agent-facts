@@ -2,7 +2,7 @@
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · HTTP 200**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 1 confirmation from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 11 confirmations from 2 vantages
 
 ## What to do
 

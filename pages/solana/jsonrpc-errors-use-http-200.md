@@ -2,7 +2,7 @@
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 200**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-23 · 33 confirmations from 2 vantages
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-25 · 57 confirmations from 2 vantages
 
 ## What to do
 

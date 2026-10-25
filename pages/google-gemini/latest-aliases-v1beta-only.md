@@ -2,7 +2,7 @@
 
 **Gemini API · GET /v1/models/{model} · HTTP 404 `NOT_FOUND`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-25 · 15 confirmations from 2 vantages
 
 > The alias gemini-flash-latest and preview models such as gemini-3-flash-preview answer on v1beta but return HTTP 404 NOT_FOUND on v1.
 

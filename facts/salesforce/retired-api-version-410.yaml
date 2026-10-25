@@ -19,10 +19,10 @@ status: verified:server:sandbox
 evidence:
   probe: af:salesforce:probe:api-version-retired-or-unknown
   first_seen: 2026-10-24T09:20:07Z
-  confirmations: 3
+  confirmations: 20
   stale_counter: 0
-  last_confirmed: 2026-10-24T09:27:51Z
-  vantages: [mac-dev]
+  last_confirmed: 2026-10-25T00:46:06Z
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot
