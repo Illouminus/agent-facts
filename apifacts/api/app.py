@@ -25,8 +25,10 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.routing import APIRoute
 from starlette.datastructures import Headers
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.routing import Match
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from apifacts.api.facts_index import (
@@ -513,9 +515,25 @@ def create_app(
     def page(path: str, **kw):
         return app.api_route(path, methods=["GET", "HEAD"], include_in_schema=False, **kw)
 
-    def api_404(service: str) -> None:
-        if service == "v0":  # the API keeps its JSON 404
-            raise _fail(404, "not_found", "Not Found")
+    def api_404(service: str, request: Request) -> None:
+        if service != "v0":
+            return
+        # The API keeps its JSON errors. A /v0 path that an API route serves under another method
+        # lands here (a full match beats a partial one), so answer the 405 that route would give.
+        allowed = sorted(
+            method
+            for route in app.router.routes
+            if isinstance(route, APIRoute) and route.path.startswith("/v0/")
+            and route.matches(request.scope)[0] is Match.PARTIAL
+            for method in route.methods
+        )
+        if allowed:
+            raise HTTPException(
+                405,
+                detail=_error_body("method_not_allowed", "Method Not Allowed")["error"],
+                headers={"Allow": ", ".join(allowed)},
+            )
+        raise _fail(404, "not_found", "Not Found")
 
     @page("/llms.txt")
     def llms(request: Request) -> Response:
@@ -535,7 +553,7 @@ def create_app(
 
     @page("/{service}")
     def service_bare(service: str, request: Request) -> Response:
-        api_404(service)
+        api_404(service, request)
         if f"/{service}/" not in _state(request).pages:
             return _site(request, None)
         # a relative Location: behind Caddy the request scheme here is http
@@ -543,12 +561,12 @@ def create_app(
 
     @page("/{service}/")
     def service_page(service: str, request: Request) -> Response:
-        api_404(service)
+        api_404(service, request)
         return _site(request, _state(request).pages.get(f"/{service}/"))
 
     @page("/{service}/{slug}")
     def fact_page(service: str, slug: str, request: Request) -> Response:
-        api_404(service)
+        api_404(service, request)
         return _site(request, _state(request).pages.get(f"/{service}/{slug}"))
 
     return app

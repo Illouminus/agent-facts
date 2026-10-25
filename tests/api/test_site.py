@@ -111,6 +111,19 @@ def test_api_paths_keep_the_json_404(site, path):
     assert r.json()["error"]["code"] in {"not_found", "unknown_service", "unknown_fact"}
 
 
+@pytest.mark.parametrize(
+    ("method", "path", "allow"),
+    [("GET", "/v0/check", "POST"), ("HEAD", "/v0/services", "GET"), ("PUT", "/v0/check", "POST")],
+)
+def test_api_paths_keep_the_json_405(site, method, path, allow):
+    """A /v0 route asked with another method answers 405, not the page catch-all's 404."""
+    r = site.request(method, path)
+    assert r.status_code == 405
+    assert r.headers["allow"] == allow
+    if method != "HEAD":
+        assert r.json()["error"]["code"] == "method_not_allowed"
+
+
 def test_api_routes_still_win(site):
     assert site.get("/healthz").json()["ok"] is True
     assert site.get("/docs").status_code == 200
