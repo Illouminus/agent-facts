@@ -8,7 +8,7 @@ illouminus and the first Monday digest has arrived.
 
 1. **One package = one session, one branch, one PR.** Branch names below. Start from `main`.
 2. **Plan first:** the session reads the spec(s) listed, then writes its own bite-sized plan with the
-   `writing-plans` skill into `docs/superpowers/plans/<date>-<package>.md` (tests first, exact files,
+   `writing-plans` skill into `docs/superpowers/plans/<date>-<package>.md` of the private repository apifacts-internal (tests first, exact files,
    exact commands). This file is the decomposition; the per-package plan is the engineer's.
 3. **TDD:** failing test → minimal code → green → commit; `uv run pytest -q` and `uv run ruff check .`
    green locally before every push.
@@ -57,11 +57,11 @@ spread over several sessions.
 **Files:** `pyproject.toml` (package `apifacts`, Python 3.12, deps: pydantic>=2, pyyaml, ruamel.yaml,
 httpx, typer, jsonschema, fastapi, uvicorn; dev: pytest, pytest-httpserver, ruff), `apifacts/__init__.py`,
 `apifacts/cli.py` (typer app with `version`), `tests/test_cli.py`, `.github/workflows/ci.yml`
-(uv sync, ruff, pytest, `apifacts validate` once W1 exists), `README.en.md` (public-facing English:
+(uv sync, ruff, pytest, `apifacts validate` once W1 exists), `README.md` (public-facing English:
 what/why/how to call `check()`/license/contributing), `CONTRIBUTING.md`, `CODEOWNERS` (`facts/` → bot +
 Edouard; `services/<x>` producers later), `.editorconfig`.
 **Done when:** `uv run apifacts version` prints the version; CI runs on a PR in < 2 min and is green;
-`README.en.md` explains the registry in ≤ 400 words with one curl example.
+`README.md` explains the registry in ≤ 400 words with one curl example.
 
 ## W1 · Schemas + validator
 
@@ -115,7 +115,7 @@ fails if `pages/` is not up to date with `facts/`.
 
 ## W7 · Seed content, wave 1
 
-**Input:** `docs/research/seed-100-2026-10-20.md` (wave-1 list, approved by Edouard `[tap]`), vendor docs,
+**Input:** `docs/research/seed-100-2026-10-20.md` (private repository apifacts-internal) (wave-1 list, approved by Edouard `[tap]`), vendor docs,
 the gotchas list (Gemini, unverified) as hints only.
 **Per service (one PR):** `services/<s>.yaml` (hosts, templates, signal_fields, dimensions, auth key
 name, tos source), `probes/<s>/*.yaml` (≥ 5 declarative probes, prod ones read-only), `facts/<s>/*.yaml`

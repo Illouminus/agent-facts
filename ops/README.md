@@ -53,7 +53,7 @@ command="/home/ubuntu/apps/agent-facts/ops/deploy.sh",restrict ssh-ed25519 AAAAâ
 ```
 
 Test the restriction over the public OpenSSH port (Tailscale SSH on `ssh illouminus` ignores
-`authorized_keys`): `ssh -F /dev/null -i <key> -p 64224 ubuntu@<public ip> <sha>`.
+`authorized_keys`): `ssh -F /dev/null -i <key> -p <port> ubuntu@<public ip> <sha>`.
 
 Over ssh only a sha ahead of the deployed one is accepted (no downgrade with a leaked key). By
 hand: `~/apps/agent-facts/ops/deploy.sh <40-hex sha on origin/main>`, any sha on main, so this is
