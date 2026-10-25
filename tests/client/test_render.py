@@ -33,8 +33,7 @@ SIGNAL = make_signal(
     "https://api.stripe.com/v1/payment_intents?x=1", method="POST", status=400, body="{}"
 )
 PAGE = (
-    "https://github.com/Illouminus/apifacts/blob/main/pages/stripe/"
-    "idempotency-key-reuse-different-params.md"
+    "https://apifacts.dev/stripe/idempotency-key-reuse-different-params"
 )
 
 
@@ -115,7 +114,7 @@ def test_more_than_five_facts_are_summarized():
     lines = render_section({**RESULT, "facts": facts}, SIGNAL).splitlines()
     assert sum(line.startswith("✅") for line in lines) == 5
     assert lines[-1] == (
-        "… 2 more facts: https://github.com/Illouminus/apifacts/blob/main/pages/stripe/index.md"
+        "… 2 more facts: https://apifacts.dev/stripe/"
     )
 
 

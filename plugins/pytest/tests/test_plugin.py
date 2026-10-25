@@ -38,8 +38,7 @@ SECTION = [
     "POST api.stripe.com/v1/payment_intents → 400 idempotency_error",
     "✅ verified:server:prod · Reusing an Idempotency-Key with a different request body *",
     "   fix: Set parameter Idempotency-Key to new UUID per distinct request",
-    "   https://github.com/Illouminus/apifacts/blob/main/pages/stripe/"
-    "idempotency-key-reuse-different-params.md",
+    "   https://apifacts.dev/stripe/idempotency-key-reuse-different-params",
 ]
 
 

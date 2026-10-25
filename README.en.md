@@ -72,8 +72,9 @@ The response is never empty: `facts`, `observed`, and an `unknown.reason` when n
 ## Status
 
 The API is live at https://apifacts.dev (`/v0/check`, `/v0/services`, `/openapi.json`, `/healthz`;
-`facts.baillot.dev`, the old address, redirects there). The registry covers the services and facts listed in
-[`pages/index.md`](pages/index.md), each fact page showing how it was established. Design contracts
+`facts.baillot.dev`, the old address, redirects there). The registry covers the services and facts listed at
+[apifacts.dev/registry](https://apifacts.dev/registry), each fact page showing how it was
+established; [`/llms.txt`](https://apifacts.dev/llms.txt) describes the API for agents. Design contracts
 live in [`docs/specs/`](docs/specs/README.md).
 
 Running your own copy: the API reads `facts/` and `services/` once, at startup, so after a `git pull`
