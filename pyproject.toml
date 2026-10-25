@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Open registry of verified facts about machine interfaces (APIs, SDKs, CLIs) for AI agents."
 readme = "README.en.md"
 license = "MIT"
-license-files = ["LICENSE"]  # the wheel ships code only; data (CC BY 4.0) stays in the repo
+license-files = ["LICENSE", "LICENSE-DATA"]  # LICENSE-DATA: the packaged snapshot (facts/, services/) is CC BY 4.0
 requires-python = ">=3.12"
 dependencies = [
     "cryptography>=50.0.2",
@@ -17,10 +17,20 @@ dependencies = [
     "typer>=0.27.3",
     "uvicorn>=0.54.0",
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.urls]
+Homepage = "https://apifacts.dev"
+Repository = "https://github.com/Illouminus/apifacts"
+Issues = "https://github.com/Illouminus/apifacts/issues"
 
 [project.scripts]
 apifacts = "apifacts.cli:app"
-agentfacts = "apifacts.cli:app"  # transition alias (rename 25.10.2026); removed with the first PyPI release
 
 [dependency-groups]
 dev = [
@@ -36,11 +46,16 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 path = "apifacts/__init__.py"
 
+[tool.hatch.build.targets.sdist]
+only-include = ["apifacts", "schema", "services", "facts"]  # what the wheel needs; no pages/, probes/, tests/
+
 [tool.hatch.build.targets.wheel]
 packages = ["apifacts"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "schema" = "apifacts/schema/json"  # load_schema() prefers this packaged copy
+"services" = "apifacts/client/snapshot/services"  # offline snapshot (spec 07): the registry as of the build
+"facts" = "apifacts/client/snapshot/facts"
 
 [tool.ruff]
 line-length = 100

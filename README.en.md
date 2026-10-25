@@ -11,6 +11,16 @@ same traps: a `200` with an empty array instead of a `429`, a rate limit reporte
 body, an SDK release that silently dropped a field. Documentation tools answer "give me the right docs";
 apifacts answers "the docs are wrong about this endpoint right now, here is the verified difference".
 
+## Install
+
+```bash
+pip install apifacts-pytest   # pytest plugin: a test failing on an HTTP error prints the known facts
+uvx apifacts check https://api.stripe.com/v1/charges -X GET --status 401   # CLI (and library)
+```
+
+Both packages are on PyPI, carry the same version and ship together from one tag
+([release](ops/README.md#release-to-pypi)). The plugin sends nothing until a test fails.
+
 ## How a fact is verified
 
 - One fact per YAML file in `facts/<service>/`, with a kind (`error_meaning`, `rate_limit`,
@@ -40,8 +50,10 @@ The response is never empty: `facts`, `observed`, and an `unknown.reason` when n
 
 ## Status
 
-Pre-release. The schemas and the validator come first; the API above is **not deployed yet**. Design
-contracts live in [`docs/specs/`](docs/specs/README.md).
+The API is live at https://apifacts.dev (`/v0/check`, `/v0/services`, `/openapi.json`, `/healthz`;
+`facts.baillot.dev` is a legacy alias). The registry covers the services and facts listed in
+[`pages/index.md`](pages/index.md), each fact page showing how it was established. Design contracts
+live in [`docs/specs/`](docs/specs/README.md).
 
 Running your own copy: the API reads `facts/` and `services/` once, at startup, so after a `git pull`
 restart it; [`ops/deploy.sh`](ops/README.md#deploy) checks out, syncs and restarts in one step.

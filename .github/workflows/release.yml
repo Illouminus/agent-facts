@@ -1,0 +1,52 @@
+# Release = publish to PyPI. A tag `vX.Y.Z` on main builds `apifacts` and `apifacts-pytest` (both carry
+# that version), checks the metadata and uploads each one with the job's GitHub OIDC token, which PyPI
+# exchanges for a short-lived upload token (trusted publishing): no PyPI token exists anywhere. PyPI
+# knows this workflow by the publisher registered on each project: owner Illouminus, repository
+# apifacts, workflow release.yml, environment pypi (ops/README.md → Release). One short job, no
+# third-party upload action (D-076: Actions minutes are paid); uv does the exchange itself and PyPI
+# ignores files it already has, so a half-done release is re-run as is.
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: pypi
+      url: https://pypi.org/project/apifacts/
+    permissions:
+      contents: read
+      id-token: write  # the OIDC token PyPI exchanges for the upload token
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # the ancestry check below needs main's history
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: tag is on main and names the version of both packages
+        run: |
+          git fetch --no-tags --quiet origin main
+          git merge-base --is-ancestor HEAD origin/main \
+            || { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
+          tag="${GITHUB_REF_NAME#v}"
+          version() { sed -n 's/^__version__ = "\(.*\)"$/\1/p' "$1"; }
+          core="$(version apifacts/__init__.py)"
+          plugin="$(version plugins/pytest/apifacts_pytest/__init__.py)"
+          [ "$tag" = "$core" ] && [ "$tag" = "$plugin" ] || {
+            echo "::error::tag v$tag, apifacts $core, apifacts-pytest $plugin: bump both __version__ first"
+            exit 1
+          }
+      - run: uv build --no-sources --out-dir dist
+      - run: uv build --no-sources --out-dir dist plugins/pytest
+      - run: uvx twine check --strict dist/*
+      - run: uv publish --trusted-publishing always dist/apifacts-*
+      - run: uv publish --trusted-publishing always dist/apifacts_pytest-*
