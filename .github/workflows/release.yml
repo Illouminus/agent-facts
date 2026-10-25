@@ -4,7 +4,8 @@
 # knows this workflow by the publisher registered on each project: owner Illouminus, repository
 # apifacts, workflow release.yml, environment pypi (ops/README.md → Release). One short job, no
 # third-party upload action (D-076: Actions minutes are paid); uv does the exchange itself and PyPI
-# ignores files it already has, so a half-done release is re-run as is.
+# ignores files it already has, so a half-done release is re-run as is. The two actions are pinned to
+# commit SHAs: a moved tag must not be able to run code in a job that can mint an upload token.
 name: Release
 
 on:
@@ -28,10 +29,10 @@ jobs:
       contents: read
       id-token: write  # the OIDC token PyPI exchanges for the upload token
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0  # the ancestry check below needs main's history
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
       - name: tag is on main and names the version of both packages
         run: |
           git fetch --no-tags --quiet origin main

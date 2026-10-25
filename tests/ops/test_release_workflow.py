@@ -38,11 +38,11 @@ def test_oidc_in_the_pypi_environment_and_no_token():
     assert "secrets." not in WORKFLOW.read_text(encoding="utf-8")
 
 
-def test_two_pinned_actions_then_build_check_publish_each_package():
+def test_two_sha_pinned_actions_then_build_check_publish_each_package():
     steps = load()["jobs"]["publish"]["steps"]
     uses = [step["uses"] for step in steps if "uses" in step]
     assert [u.split("@")[0] for u in uses] == ["actions/checkout", "astral-sh/setup-uv"]
-    assert all("@" in u for u in uses)
+    assert all(re.fullmatch(r"[^@]+@[0-9a-f]{40}", u) for u in uses)  # a moved tag cannot run here
     script = runs()
     builds = [r for r in script if r.startswith("uv build --no-sources --out-dir dist")]
     assert len(builds) == 2 and builds[1].endswith(" plugins/pytest")
