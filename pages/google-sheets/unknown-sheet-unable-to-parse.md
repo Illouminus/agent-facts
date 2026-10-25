@@ -1,4 +1,4 @@
-# `unable to parse range: agentfactsnosuchsheet!a#`
+# `unable to parse range: apifactsnosuchsheet!a#`
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -25,11 +25,11 @@ Observations: none from reporters yet.
 ```sh
 curl -s https://facts.baillot.dev/v0/check \
   -H 'content-type: application/json' \
-  -d '{"target":{"method":"GET","url":"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range}"},"error":{"status":400,"body_excerpt":"unable to parse range: agentfactsnosuchsheet!a#"}}'
+  -d '{"target":{"method":"GET","url":"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range}"},"error":{"status":400,"body_excerpt":"unable to parse range: apifactsnosuchsheet!a#"}}'
 ```
 
 YAML: [facts/google-sheets/unknown-sheet-unable-to-parse.yaml](../../facts/google-sheets/unknown-sheet-unable-to-parse.yaml)
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

@@ -2,10 +2,10 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `agentfacts probe run [--due|--all] [--max N] [--max-requests N] [--vantage NAME] [--dry-run]`
+**Goal:** `apifacts probe run [--due|--all] [--max N] [--max-requests N] [--vantage NAME] [--dry-run]`
 executes declarative probes (`probes/<service>/*.yaml`), writes one redacted JSON line per run to
 `results.jsonl`, confirms or demotes the facts that cite the probe, respects budgets and the kill switch,
-and injects keys only by name; `agentfacts probe list` shows what is due.
+and injects keys only by name; `apifacts probe list` shows what is due.
 
 **Architecture:** One tick = kill check → load + validate the registry (W1 `validate_paths`, then the
 pydantic models) → select due probes (sqlite budget state, oldest first, capped) → read the keys of the
@@ -15,7 +15,7 @@ round-trip, re-validated as `Fact` before writing) → append the redacted recor
 No LLM anywhere; no code per probe.
 
 **Tech Stack:** Python 3.12, httpx 0.28 (sync client, no redirects), pydantic models from
-`agentfacts.schema.models`, ruamel.yaml round-trip, stdlib `sqlite3`, typer; tests with
+`apifacts.schema.models`, ruamel.yaml round-trip, stdlib `sqlite3`, typer; tests with
 `pytest-httpserver` (already a dev dependency) — no real network.
 
 **Spec:** `docs/specs/04-probe-runner.md`, `docs/specs/01-fact-schema.md` (probe, service, fact, status
@@ -27,19 +27,19 @@ rules), `docs/specs/00-architecture.md` invariants 1, 4, 5, 6, `docs/specs/09-wo
 
 | File | Responsibility |
 |------|----------------|
-| `agentfacts/probe/__init__.py` | package doc; `USER_AGENT` |
-| `agentfacts/probe/loader.py` | `load_repo(root) -> Repo(services, probes, facts, problems)`: `validate_paths` gate, then `Service`/`Probe`/`Fact` models; files with problems are skipped and reported |
-| `agentfacts/probe/templating.py` | `RunContext(run_uuid, now_rfc3339, responses)`, `render(value, ctx)`, `render_path(path, ctx)`, `lookup(doc, path)`; only `{{run_uuid}}`, `{{now_rfc3339}}`, `{{step[N].json.<path>}}` |
-| `agentfacts/probe/http.py` | `PreparedRequest`, `prepare(step, ctx, service, env)` (render + re-check), `auth_for(service, key)`, `send(client, base_url, request) -> StepResponse` (timeout, UA, body cap) |
-| `agentfacts/probe/assertions.py` | `evaluate(assertion, responses) -> AssertResult`; `schema_fingerprint(body_json)` |
-| `agentfacts/probe/budget.py` | `BudgetState(path)` sqlite: last run per (probe, vantage) and per (service, method, template, vantage); `is_due`, `record` |
-| `agentfacts/probe/keys.py` | `DEFAULT_KEYS_DIR`, `has_key`, `read_key` (`<dir>/<key_name>.key`, stripped; empty = missing) |
-| `agentfacts/probe/redact.py` | `Redactor(secrets)`: exact values, `sk_[a-z]+_[A-Za-z0-9]{8,}`, `Bearer [A-Za-z0-9._-]{16,}`, hex ≥ 32, base64 ≥ 32 (with a digit and a letter); `redact_record` |
-| `agentfacts/probe/evidence.py` | `apply_outcome(fact_path, outcome, probe, vantage, now) -> change`; ruamel round-trip that keeps comments, quotes and timestamps byte-identical |
-| `agentfacts/probe/results.py` | `ResultsLog(path, redactor).append(record)`: redacted JSON line |
-| `agentfacts/probe/runner.py` | `TickOptions`, `run_tick(...) -> TickReport`; `killed(root)`; `execute(probe, ...)` |
-| `agentfacts/probe/cli.py` | typer sub-app `probe` with `run` and `list` |
-| `agentfacts/cli.py` | `app.add_typer(probe_app, name="probe")` (+ its import) |
+| `apifacts/probe/__init__.py` | package doc; `USER_AGENT` |
+| `apifacts/probe/loader.py` | `load_repo(root) -> Repo(services, probes, facts, problems)`: `validate_paths` gate, then `Service`/`Probe`/`Fact` models; files with problems are skipped and reported |
+| `apifacts/probe/templating.py` | `RunContext(run_uuid, now_rfc3339, responses)`, `render(value, ctx)`, `render_path(path, ctx)`, `lookup(doc, path)`; only `{{run_uuid}}`, `{{now_rfc3339}}`, `{{step[N].json.<path>}}` |
+| `apifacts/probe/http.py` | `PreparedRequest`, `prepare(step, ctx, service, env)` (render + re-check), `auth_for(service, key)`, `send(client, base_url, request) -> StepResponse` (timeout, UA, body cap) |
+| `apifacts/probe/assertions.py` | `evaluate(assertion, responses) -> AssertResult`; `schema_fingerprint(body_json)` |
+| `apifacts/probe/budget.py` | `BudgetState(path)` sqlite: last run per (probe, vantage) and per (service, method, template, vantage); `is_due`, `record` |
+| `apifacts/probe/keys.py` | `DEFAULT_KEYS_DIR`, `has_key`, `read_key` (`<dir>/<key_name>.key`, stripped; empty = missing) |
+| `apifacts/probe/redact.py` | `Redactor(secrets)`: exact values, `sk_[a-z]+_[A-Za-z0-9]{8,}`, `Bearer [A-Za-z0-9._-]{16,}`, hex ≥ 32, base64 ≥ 32 (with a digit and a letter); `redact_record` |
+| `apifacts/probe/evidence.py` | `apply_outcome(fact_path, outcome, probe, vantage, now) -> change`; ruamel round-trip that keeps comments, quotes and timestamps byte-identical |
+| `apifacts/probe/results.py` | `ResultsLog(path, redactor).append(record)`: redacted JSON line |
+| `apifacts/probe/runner.py` | `TickOptions`, `run_tick(...) -> TickReport`; `killed(root)`; `execute(probe, ...)` |
+| `apifacts/probe/cli.py` | typer sub-app `probe` with `run` and `list` |
+| `apifacts/cli.py` | `app.add_typer(probe_app, name="probe")` (+ its import) |
 | `.gitignore` | `var/` (default state dir: results + sqlite) |
 | `tests/probe/conftest.py` | `repo` fixture: writes a service/probes/facts tree into `tmp_path`; fake keys dir |
 | `tests/probe/test_*.py` | one file per module + `test_runner.py` (end-to-end against `httpserver`) + `test_cli.py` |
@@ -102,7 +102,7 @@ show scalars only (objects/arrays by size); fact files keep their mode on rewrit
 
 ### Task 1: Redaction + keys (TDD)
 
-**Files:** Create `agentfacts/probe/__init__.py`, `agentfacts/probe/redact.py`, `agentfacts/probe/keys.py`;
+**Files:** Create `apifacts/probe/__init__.py`, `apifacts/probe/redact.py`, `apifacts/probe/keys.py`;
 Test `tests/probe/test_redact.py`, `tests/probe/test_keys.py`.
 
 - [ ] **Step 1: failing tests**
@@ -139,7 +139,7 @@ def test_record_exempts_identifiers_but_not_exact_secrets():
 
 ### Task 2: Templating + JSON lookup (TDD)
 
-**Files:** Create `agentfacts/probe/templating.py`; Test `tests/probe/test_templating.py`.
+**Files:** Create `apifacts/probe/templating.py`; Test `tests/probe/test_templating.py`.
 
 - [ ] **Step 1: failing tests** — `{{run_uuid}}` same value in every step of a run; `{{now_rfc3339}}` =
   run start `YYYY-MM-DDTHH:MM:SSZ`; `{{step[1].json.data[0].id}}` resolves from step 1's JSON;
@@ -152,7 +152,7 @@ def test_record_exempts_identifiers_but_not_exact_secrets():
 
 ### Task 3: Assertions (TDD)
 
-**Files:** Create `agentfacts/probe/assertions.py`; Test `tests/probe/test_assertions.py`.
+**Files:** Create `apifacts/probe/assertions.py`; Test `tests/probe/test_assertions.py`.
 
 - [ ] **Step 1: failing tests** — one pass and one fail case per kind: `status`; `header` `present: true`,
   `present: false`, `equals`, `matches` (and invalid regex → fail, not crash); `json_path` `equals`
@@ -165,7 +165,7 @@ def test_record_exempts_identifiers_but_not_exact_secrets():
 
 ### Task 4: HTTP layer (TDD, `httpserver`)
 
-**Files:** Create `agentfacts/probe/http.py`; Test `tests/probe/test_http.py`.
+**Files:** Create `apifacts/probe/http.py`; Test `tests/probe/test_http.py`.
 
 - [ ] **Step 1: failing tests** against `httpserver`: GET with `query` (bools as `true`/`false`); POST
   `form`; POST `json`; probe `headers` sent; `User-Agent` equals `USER_AGENT` even if the probe sets one;
@@ -179,7 +179,7 @@ def test_record_exempts_identifiers_but_not_exact_secrets():
 
 ### Task 5: Budget state (TDD)
 
-**Files:** Create `agentfacts/probe/budget.py`; Test `tests/probe/test_budget.py`.
+**Files:** Create `apifacts/probe/budget.py`; Test `tests/probe/test_budget.py`.
 
 - [ ] **Step 1: failing tests** — never-run probe is due; after `record(probe, templates, vantage, t)` not due
   at `t + 299`, due at `t + 300`; another probe sharing a template is not due at `t + 10`; another vantage is
@@ -189,7 +189,7 @@ def test_record_exempts_identifiers_but_not_exact_secrets():
 
 ### Task 6: Loader + evidence updates (TDD)
 
-**Files:** Create `agentfacts/probe/loader.py`, `agentfacts/probe/evidence.py`; Test
+**Files:** Create `apifacts/probe/loader.py`, `apifacts/probe/evidence.py`; Test
 `tests/probe/test_loader.py`, `tests/probe/test_evidence.py`.
 
 - [ ] **Step 1: failing tests** — loader: valid repo → models; a probe file with `env: prod` + POST is not
@@ -202,7 +202,7 @@ def test_record_exempts_identifiers_but_not_exact_secrets():
 
 ### Task 7: Runner + results (TDD, end to end)
 
-**Files:** Create `agentfacts/probe/runner.py`, `agentfacts/probe/results.py`, `tests/probe/conftest.py`;
+**Files:** Create `apifacts/probe/runner.py`, `apifacts/probe/results.py`, `tests/probe/conftest.py`;
 Test `tests/probe/test_runner.py`.
 
 - [ ] **Step 1: failing tests** (each builds a repo in `tmp_path`, base URL overridden to `httpserver`):
@@ -215,17 +215,17 @@ Test `tests/probe/test_runner.py`.
   budget runs nothing, `--all` runs again; redaction: fake key in the keys dir, server echoes it in a
   whitelisted header and in the error body → key absent from every file under the state dir, facts dir
   and captured output; "different env never refutes": sandbox probe failing ×3 leaves a prod fact
-  byte-identical; no `openai|anthropic|google.genai` import in `agentfacts/probe`.
+  byte-identical; no `openai|anthropic|google.genai` import in `apifacts/probe`.
 - [ ] **Step 2:** FAIL. **Step 3:** implement `run_tick`. **Step 4:** PASS; commit `feat(w2): probe runner tick`.
 
 ### Task 8: CLI + fixture + gitignore (TDD)
 
-**Files:** Create `agentfacts/probe/cli.py`, `tests/fixtures/probe-repo/…`; Modify `agentfacts/cli.py`,
+**Files:** Create `apifacts/probe/cli.py`, `tests/fixtures/probe-repo/…`; Modify `apifacts/cli.py`,
 `.gitignore`; Test `tests/probe/test_cli.py`.
 
 - [ ] **Step 1: failing tests** — `probe run --all --dry-run --root tests/fixtures/probe-repo --state-dir
   <tmp>` exits 0, prints `would-run af:example:probe:…` and `skipped:no_key af:examplepay:probe:…`, writes
-  nothing; `probe list` prints every probe with `due`; `--vantage "Bad Name"` → exit 2; `agentfacts validate
+  nothing; `probe list` prints every probe with `due`; `--vantage "Bad Name"` → exit 2; `apifacts validate
   tests/fixtures/probe-repo` exit 0.
 - [ ] **Step 2:** FAIL. **Step 3:** implement; register `app.add_typer(probe_app, name="probe")`.
 - [ ] **Step 4:** `uv run ruff check . && uv run pytest -q` → PASS; commit `feat(w2): probe run/list CLI and dry-run fixture`.

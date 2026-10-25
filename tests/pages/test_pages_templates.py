@@ -2,7 +2,7 @@
 
 import pytest
 
-from agentfacts.pages.templates import autolink, code_span, md_text
+from apifacts.pages.templates import autolink, code_span, md_text
 
 
 @pytest.mark.parametrize(

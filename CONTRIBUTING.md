@@ -1,4 +1,4 @@
-# Contributing to agent-facts
+# Contributing to apifacts
 
 ## The contribution ladder
 
@@ -21,7 +21,7 @@ uv run ruff check .
 uv run pytest -q
 ```
 
-All three must be green before you push. CI runs the same commands (plus `agentfacts validate` once the
+All three must be green before you push. CI runs the same commands (plus `apifacts validate` once the
 schemas exist) on every pull request.
 
 ## Rules for a fact pull request

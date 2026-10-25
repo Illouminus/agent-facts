@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 from probe_builders import probe_doc
 
-from agentfacts.probe.evidence import apply_outcome, dump_text, load_fact
-from agentfacts.schema.models import Probe
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.probe.evidence import apply_outcome, dump_text, load_fact
+from apifacts.schema.models import Probe
+from apifacts.schema.yamlio import load_yaml, plain
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "valid" / (
     "fact-idempotency-key-reuse-different-params.yaml"

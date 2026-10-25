@@ -1,7 +1,7 @@
 # 03:00 Paris time, once a day (spec 04). Persistent: a night missed while the host was down runs
 # at boot. Enable: systemctl --user enable --now agentfacts-refresh.timer
 [Unit]
-Description=agent-facts daily evidence refresh, 03:00 Europe/Paris
+Description=apifacts daily evidence refresh, 03:00 Europe/Paris
 
 [Timer]
 OnCalendar=*-*-* 03:00:00 Europe/Paris

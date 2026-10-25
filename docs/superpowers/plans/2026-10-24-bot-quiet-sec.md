@@ -42,15 +42,15 @@ decisions D-088, D-089.
 
 | File | PR | Responsibility |
 |------|----|----------------|
-| `agentfacts/schema/substance.py` | 1 | `VOLATILE_EVIDENCE`, `substance(doc)` — what a fact says minus moving counters |
-| `agentfacts/probe/ledger.py` | 1 | `Pending`, `EvidenceLedger` (sqlite in the state dir) |
-| `agentfacts/probe/evidence.py` | 1 | `apply_outcome(..., ledger=None)`: write only on status change / new vantage; `refresh_from_ledger` |
-| `agentfacts/probe/runner.py` | 1 | ledger in the tick; `refresh_evidence()` + marker; 403 rate-limit → error |
-| `agentfacts/probe/cli.py` | 1 | `probe run --refresh-evidence` |
-| `agentfacts/bot/collect.py` | 1 | `FactRow.substantive` |
-| `agentfacts/bot/pr.py` | 1/2 | hold evidence-only changes until the daily refresh; daily PR title; bot state; (2) eligibility, label, token |
-| `agentfacts/bot/cli.py` | 1/2 | `--state-dir`, `holding` summary; (2) missing token message |
-| `agentfacts/bot/token.py` | 2 | read `agent-facts-bot` key, env for gh and git, redaction |
+| `apifacts/schema/substance.py` | 1 | `VOLATILE_EVIDENCE`, `substance(doc)` — what a fact says minus moving counters |
+| `apifacts/probe/ledger.py` | 1 | `Pending`, `EvidenceLedger` (sqlite in the state dir) |
+| `apifacts/probe/evidence.py` | 1 | `apply_outcome(..., ledger=None)`: write only on status change / new vantage; `refresh_from_ledger` |
+| `apifacts/probe/runner.py` | 1 | ledger in the tick; `refresh_evidence()` + marker; 403 rate-limit → error |
+| `apifacts/probe/cli.py` | 1 | `probe run --refresh-evidence` |
+| `apifacts/bot/collect.py` | 1 | `FactRow.substantive` |
+| `apifacts/bot/pr.py` | 1/2 | hold evidence-only changes until the daily refresh; daily PR title; bot state; (2) eligibility, label, token |
+| `apifacts/bot/cli.py` | 1/2 | `--state-dir`, `holding` summary; (2) missing token message |
+| `apifacts/bot/token.py` | 2 | read `agent-facts-bot` key, env for gh and git, redaction |
 | `ops/state_journal.py` | 1 | `--prev`: delta of statuses + new/changed/removed ids from git; nothing for counter-only |
 | `ops/deploy.sh` | 1/2 | pass `--prev`; link new unit files before daemon-reload; (2) fetch without the personal helper |
 | `ops/systemd/agentfacts-refresh.{service,timer}` | 1 | daily 03:00 Europe/Paris flush |
@@ -64,12 +64,12 @@ decisions D-088, D-089.
 
 ### Task 1: substance of a fact
 
-**Files:** Create `agentfacts/schema/substance.py`; Test `tests/schema/test_substance.py`
+**Files:** Create `apifacts/schema/substance.py`; Test `tests/schema/test_substance.py`
 
 - [ ] **Step 1: failing test**
 
 ```python
-from agentfacts.schema.substance import VOLATILE_EVIDENCE, substance
+from apifacts.schema.substance import VOLATILE_EVIDENCE, substance
 
 def test_counters_are_not_substance():
     a = {"id": "x", "status": "verified:server:prod",
@@ -90,7 +90,7 @@ def test_counters_are_not_substance():
 
 ### Task 2: evidence ledger
 
-**Files:** Create `agentfacts/probe/ledger.py`; Test `tests/probe/test_ledger.py`
+**Files:** Create `apifacts/probe/ledger.py`; Test `tests/probe/test_ledger.py`
 
 `Pending(confirmations: int = 0, last_confirmed: str | None = None, stale_counter: int | None = None)`;
 `EvidenceLedger(path, read_only=False)` with `get(fact_id)`, `put(fact_id, pending)`, `clear(fact_id)`,
@@ -102,7 +102,7 @@ Read-only mode never creates the file (dry runs), like `BudgetState`.
 
 ### Task 3: quiet `apply_outcome`
 
-**Files:** Modify `agentfacts/probe/evidence.py`; Test `tests/probe/test_quiet_evidence.py`
+**Files:** Modify `apifacts/probe/evidence.py`; Test `tests/probe/test_quiet_evidence.py`
 
 Rules with a ledger: overlay pending counters on the document, apply the transition, then
 - write the YAML (with the overlaid counters) and clear the ledger entry when the change is
@@ -136,7 +136,7 @@ def test_failures_below_three_stay_in_the_ledger(repo, tmp_path): ...
 
 ### Task 4: runner uses the ledger; `--refresh-evidence`; 403 rate limit
 
-**Files:** Modify `agentfacts/probe/runner.py`, `agentfacts/probe/cli.py`; Test `tests/probe/test_runner.py`, `tests/probe/test_probe_cli.py`
+**Files:** Modify `apifacts/probe/runner.py`, `apifacts/probe/cli.py`; Test `tests/probe/test_runner.py`, `tests/probe/test_probe_cli.py`
 
 - `run_tick` opens `EvidenceLedger(state_dir / LEDGER_FILE)` (not in dry runs) and passes it.
 - `refresh_evidence(root, state_dir, *, clock, environ, dry_run) -> RefreshReport` (kill switch,
@@ -144,7 +144,7 @@ def test_failures_below_three_stay_in_the_ledger(repo, tmp_path): ...
   `<state-dir>/evidence-refresh.json` `{"refreshed": rfc3339, "written": n}` unless dry run).
 - `_execute`: `403` with `X-RateLimit-Remaining: 0` on a step that neither sets
   `expect_rate_limit` nor asserts status 403 → `error` "rate limited (403, x-ratelimit-remaining: 0)".
-- CLI: `agentfacts probe run --refresh-evidence [--dry-run]` → `evidence refresh: N written, M unchanged`.
+- CLI: `apifacts probe run --refresh-evidence [--dry-run]` → `evidence refresh: N written, M unchanged`.
 
 - [ ] tests: 20 ticks against `httpserver` → fact file bytes unchanged, results.jsonl 20 lines;
       3 failing ticks → YAML stale; refresh writes and leaves the marker; 403+remaining 0 → `error`,
@@ -153,7 +153,7 @@ def test_failures_below_three_stay_in_the_ledger(repo, tmp_path): ...
 
 ### Task 5: bot holds counter-only changes for the daily PR
 
-**Files:** Modify `agentfacts/bot/collect.py`, `agentfacts/bot/pr.py`, `agentfacts/bot/cli.py`; Test `tests/bot/test_quiet_bot.py`
+**Files:** Modify `apifacts/bot/collect.py`, `apifacts/bot/pr.py`, `apifacts/bot/cli.py`; Test `tests/bot/test_quiet_bot.py`
 
 - `FactRow.substantive`: new, deleted, invalid, or `substance(local) != substance(HEAD)`.
 - `publish(..., state_dir=None)`: if no row is substantive, open a PR only when
@@ -200,7 +200,7 @@ def test_daily_refresh_opens_one_pr(world): ...      # 20 ticks, refresh, publis
 
 **Files:** Create `ops/systemd/agentfacts-refresh.service`, `ops/systemd/agentfacts-refresh.timer`; Modify `ops/deploy.sh`, `ops/README.md`; Test `tests/ops/test_units.py`, `tests/ops/test_deploy_sh.py`
 
-- service: `ExecStart=%h/apps/agent-facts/.venv/bin/agentfacts probe run --refresh-evidence --root %h/apps/agent-facts`
+- service: `ExecStart=%h/apps/agent-facts/.venv/bin/apifacts probe run --refresh-evidence --root %h/apps/agent-facts`
 - timer: `OnCalendar=*-*-* 03:00:00 Europe/Paris`, `Persistent=true`
 - deploy.sh `switch()`: when `ops/systemd` changed, `systemctl --user link` every unit file not yet in
   `~/.config/systemd/user`, then `daemon-reload` (enabling stays a deliberate step).
@@ -224,7 +224,7 @@ def test_daily_refresh_opens_one_pr(world): ...      # 20 ticks, refresh, publis
 
 ### Task 10: auto-merge only for `verified:*`
 
-**Files:** Modify `agentfacts/bot/collect.py`, `agentfacts/bot/pr.py`; Test `tests/bot/test_bot.py`
+**Files:** Modify `apifacts/bot/collect.py`, `apifacts/bot/pr.py`; Test `tests/bot/test_bot.py`
 
 - `_eligible`: `status in VERIFIED_STATUSES and author == "bot"` (reported from quorum no longer).
 - PR without auto-merge gets labels `facts` and `needs-review` (label created with `--force`).
@@ -234,7 +234,7 @@ def test_daily_refresh_opens_one_pr(world): ...      # 20 ticks, refresh, publis
 
 ### Task 11: the bot's own token
 
-**Files:** Create `agentfacts/bot/token.py`; Modify `agentfacts/bot/pr.py`, `agentfacts/bot/cli.py`, `ops/deploy.sh`; Test `tests/bot/test_bot_token.py`, `tests/ops/test_deploy_sh.py`
+**Files:** Create `apifacts/bot/token.py`; Modify `apifacts/bot/pr.py`, `apifacts/bot/cli.py`, `ops/deploy.sh`; Test `tests/bot/test_bot_token.py`, `tests/ops/test_deploy_sh.py`
 
 - `BOT_KEY = "agent-facts-bot"`; `BotAuth.load(keys_dir) -> BotAuth` (reads with `probe.keys.read_key`);
   missing → `MissingToken` ("put it with keyput agent-facts-bot; the bot never falls back to the
@@ -263,7 +263,7 @@ the follow-up (system units under a dedicated user with its own keys directory).
 
 - [ ] test: every service has the set; no service carries a mount-namespace option (they would be
       silently ignored, or fail with 226) → FAIL → implement → PASS
-- [ ] host check: `systemd-run --user` with the same properties runs `.venv/bin/agentfacts version`, `gh --version`, `git` → ok
+- [ ] host check: `systemd-run --user` with the same properties runs `.venv/bin/apifacts version`, `gh --version`, `git` → ok
 
 ### Task 13: specs 05/08, ship PR-2, enable quorum
 

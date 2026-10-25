@@ -1,4 +1,4 @@
-# facts.baillot.dev — agent-facts check() API (W8). Appended to /etc/caddy/Caddyfile by hand
+# facts.baillot.dev — apifacts check() API (W8). Appended to /etc/caddy/Caddyfile by hand
 # (ops/README.md → Caddy). DNS: facts.baillot.dev resolves through the *.baillot.dev wildcard to
 # illouminus (A only, no AAAA; checked 2026-10-20), so no record of its own is needed.
 #

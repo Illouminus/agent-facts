@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agentfacts.schema.models import Fact, Probe
-from agentfacts.schema.validate import validate_paths
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.schema.models import Fact, Probe
+from apifacts.schema.validate import validate_paths
+from apifacts.schema.yamlio import load_yaml, plain
 
 FIXTURES = Path(__file__).parents[1] / "fixtures"
 VALID = FIXTURES / "valid"

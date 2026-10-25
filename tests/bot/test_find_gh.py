@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from agentfacts.bot.pr import GitError, find_gh
+from apifacts.bot.pr import GitError, find_gh
 
 
 def _fake_gh(directory: Path) -> Path:
@@ -18,7 +18,7 @@ def _fake_gh(directory: Path) -> Path:
 
 
 def test_explicit_env_wins(tmp_path: Path) -> None:
-    assert find_gh({"AGENTFACTS_GH": "/opt/x/gh", "PATH": str(tmp_path)}) == "/opt/x/gh"
+    assert find_gh({"APIFACTS_GH": "/opt/x/gh", "PATH": str(tmp_path)}) == "/opt/x/gh"
 
 
 def test_path_lookup(tmp_path: Path) -> None:

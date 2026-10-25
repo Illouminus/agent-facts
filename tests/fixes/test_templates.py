@@ -3,9 +3,9 @@
 import pytest
 from pydantic import TypeAdapter
 
-from agentfacts.fixes.templates import render_fix
-from agentfacts.schema import load_schema, validator_for
-from agentfacts.schema.models import FIX_ACTIONS, Fix
+from apifacts.fixes.templates import render_fix
+from apifacts.schema import load_schema, validator_for
+from apifacts.schema.models import FIX_ACTIONS, Fix
 
 GOLDEN = [
     (

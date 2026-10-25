@@ -1,7 +1,7 @@
 from typer.testing import CliRunner
 
-from agentfacts import __version__
-from agentfacts.cli import app
+from apifacts import __version__
+from apifacts.cli import app
 
 runner = CliRunner()
 

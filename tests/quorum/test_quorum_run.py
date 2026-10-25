@@ -10,11 +10,11 @@ from pathlib import Path
 import pytest
 from quorum_fixtures import quorum_rows, row
 
-from agentfacts.probe.budget import BudgetState
-from agentfacts.probe.runner import TickOptions, run_tick
-from agentfacts.quorum.run import run_quorum
-from agentfacts.schema.validate import default_paths, validate_paths
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.probe.budget import BudgetState
+from apifacts.probe.runner import TickOptions, run_tick
+from apifacts.quorum.run import run_quorum
+from apifacts.schema.validate import default_paths, validate_paths
+from apifacts.schema.yamlio import load_yaml, plain
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 NOW = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)
@@ -162,7 +162,7 @@ def test_dry_run_writes_nothing(root, db, observe):
 @pytest.mark.parametrize("kill", ["file", "env"])
 def test_kill_switch_stops_the_quorum(root, db, observe, kill):
     observe(*quorum_rows())
-    environ = {"AGENTFACTS_KILL": "1"} if kill == "env" else {}
+    environ = {"APIFACTS_KILL": "1"} if kill == "env" else {}
     if kill == "file":
         (root / "ops").mkdir()
         (root / "ops" / "KILL").write_text("")
@@ -196,5 +196,5 @@ def test_probe_run_confirms_the_draft(root, db, observe, httpserver):
 
 def test_kill_switch_from_the_process_environment(root, db, observe, monkeypatch):
     observe(*quorum_rows())
-    monkeypatch.setenv("AGENTFACTS_KILL", "1")
-    assert run_quorum(root, db, root / "var", now=NOW).killed == "AGENTFACTS_KILL=1"
+    monkeypatch.setenv("APIFACTS_KILL", "1")
+    assert run_quorum(root, db, root / "var", now=NOW).killed == "APIFACTS_KILL=1"

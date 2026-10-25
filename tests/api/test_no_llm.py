@@ -3,10 +3,10 @@
 import ast
 from pathlib import Path
 
-import agentfacts.api
+import apifacts.api
 
 FORBIDDEN = ("openai", "anthropic", "google.genai", "google.generativeai", "litellm", "cohere")
-API_DIR = Path(agentfacts.api.__file__).parent
+API_DIR = Path(apifacts.api.__file__).parent
 
 
 def _imports(path: Path) -> set[str]:

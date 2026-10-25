@@ -1,4 +1,4 @@
-# agent-facts registry
+# apifacts registry
 
 Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-29 · 2 services · 6 facts.
 
@@ -13,4 +13,4 @@ Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how i
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

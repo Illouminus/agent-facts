@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-from agentfacts.schema.models import Service
+from apifacts.schema.models import Service
 
 FAKE_KEY = "sk_test_FAKEfake0123456789abcdefXYZ"
 

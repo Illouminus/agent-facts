@@ -1,11 +1,11 @@
-"""Cross-document rules of `agentfacts validate`: registry references, ids, URLs, templates."""
+"""Cross-document rules of `apifacts validate`: registry references, ids, URLs, templates."""
 
 from pathlib import Path
 
 import pytest
 
-from agentfacts.schema.registry import match_template, on_vendor_domain
-from agentfacts.schema.validate import validate_paths
+from apifacts.schema.registry import match_template, on_vendor_domain
+from apifacts.schema.validate import validate_paths
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 SERVICE = (VALID / "service-stripe.yaml").read_text(encoding="utf-8")

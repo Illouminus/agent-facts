@@ -4,9 +4,9 @@ import logging
 
 from api_fixtures import IDEMPOTENCY_BODY, IDEMPOTENCY_ID
 
-from agentfacts.api.facts_index import FactsIndex
-from agentfacts.api.match import Locator
-from agentfacts.api.normalize import extract_signal
+from apifacts.api.facts_index import FactsIndex
+from apifacts.api.match import Locator
+from apifacts.api.normalize import extract_signal
 
 
 def _ids(facts) -> list[str]:
@@ -14,7 +14,7 @@ def _ids(facts) -> list[str]:
 
 
 def test_loads_services_and_valid_facts_only(repo, caplog):
-    with caplog.at_level(logging.WARNING, logger="agentfacts.api"):
+    with caplog.at_level(logging.WARNING, logger="apifacts.api"):
         index = FactsIndex.load(repo)
     assert sorted(index.services) == ["pypi", "stripe"]
     stripe = index.services["stripe"]

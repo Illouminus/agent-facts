@@ -1,4 +1,4 @@
-"""`agentfacts pages build [--root] [--out] [--check] [--registry-version]`.
+"""`apifacts pages build [--root] [--out] [--check] [--registry-version]`.
 
 Exit codes: 0 ok / up to date, 1 out of date or unreadable registry, 2 usage error.
 """
@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from agentfacts.cli import app
-from agentfacts.pages.templates import FOOTER
+from apifacts.cli import app
+from apifacts.pages.templates import FOOTER
 
 GOLDEN = Path(__file__).parent / "golden"
 REPO = Path(__file__).parents[2]
@@ -134,4 +134,4 @@ def test_invalid_registry_exits_1_with_a_validate_hint(fixture_root, tmp_path):
     result = _pages("--root", str(fixture_root), "--out", str(tmp_path / "out"))
     assert result.exit_code == 1
     assert "broken.yaml" in result.stderr
-    assert "agentfacts validate" in result.stderr
+    assert "apifacts validate" in result.stderr

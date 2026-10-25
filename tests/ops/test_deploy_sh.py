@@ -63,7 +63,7 @@ class Host:
 
     def deploy(self, *args: str, **env: str) -> subprocess.CompletedProcess:
         environ = {"HOME": str(self.home), "PATH": os.environ["PATH"], "AF_APP": str(self.app),
-                   "AGENTFACTS_HEALTH_TRIES": "2", "AGENTFACTS_HEALTH_SLEEP": "0", **env}
+                   "APIFACTS_HEALTH_TRIES": "2", "APIFACTS_HEALTH_SLEEP": "0", **env}
         return subprocess.run(["bash", str(self.app / "ops" / "deploy.sh"), *args], env=environ,
                               capture_output=True, text=True, check=False)
 
@@ -216,7 +216,7 @@ def test_waits_for_a_running_probe_tick_then_gives_up(host):
     (host.app / "var").mkdir(exist_ok=True)
     with (host.app / "var" / "probe.lock").open("a") as fh:
         fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)  # what the runner does during a tick
-        result = host.deploy(c2, AGENTFACTS_PROBE_LOCK_WAIT="1")
+        result = host.deploy(c2, APIFACTS_PROBE_LOCK_WAIT="1")
     assert result.returncode == 75
     assert host.head() == host.c1
 

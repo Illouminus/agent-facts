@@ -10,7 +10,7 @@ Hosts: `api.stripe.com` · 26 facts
 - ✅ verified:server:sandbox · [`your card's security code is incorrect.`](card-incorrect-cvc.md) · POST /v1/payment_intents · env sandbox
 - ✅ verified:server:sandbox · [`your card has insufficient funds. use a different payment method to complete this purchase.`](card-insufficient-funds.md) · POST /v1/payment_intents · env sandbox
 - ✅ verified:server:sandbox · [`your card was declined.`](card-lost-generic-message.md) · POST /v1/payment_intents · env sandbox
-- ✅ verified:server:sandbox · [`no such customer: 'cus_agentfactsnosuch'`](customer-not-found.md) · GET /v1/customers/{id} · env sandbox
+- ✅ verified:server:sandbox · [`no such customer: 'cus_apifactsnosuch'`](customer-not-found.md) · GET /v1/customers/{id} · env sandbox
 - ✅ verified:server:sandbox · [`this property cannot be expanded (data.agent_facts).`](expand-not-expandable.md) · GET /v1/customers · env sandbox
 - ✅ verified:server:sandbox · [`keys for idempotent requests can only be used for the same endpoint they were first used for ('/v#/payment_intents' vs '/v#/customers'). try using a key other than '<id>' if you meant to execute a different request."`](idempotency-key-other-endpoint.md) · POST /v1/payment_intents · env sandbox
 - ✅ verified:server:sandbox · [`keys for idempotent requests can only be used with the same parameters they were first used with. try using a key other than '<id>' if you meant to execute a different request.`](idempotency-key-reuse-different-params.md) · POST /v1/payment_intents · env sandbox
@@ -43,7 +43,7 @@ Hosts: `api.stripe.com` · 26 facts
 ## Pagination
 
 - ✅ verified:server:sandbox · [GET /v1/customers?limit=0, outside the documented range 1-100, is not rejected: it returns a list holding one object, with has_more: true.](limit-zero-returns-one.md) · GET /v1/customers · env sandbox
-- ✅ verified:server:sandbox · [`no such customer: 'cus_agentfactsnosuch'`](starting-after-missing-object.md) · GET /v1/customers · env sandbox
+- ✅ verified:server:sandbox · [`no such customer: 'cus_apifactsnosuch'`](starting-after-missing-object.md) · GET /v1/customers · env sandbox
 
 ## Sandbox divergence
 
@@ -51,4 +51,4 @@ Hosts: `api.stripe.com` · 26 facts
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

@@ -6,10 +6,10 @@ import json
 import httpx
 import pytest
 
-from agentfacts.probe.assertions import evaluate, schema_fingerprint
-from agentfacts.probe.http import StepResponse
-from agentfacts.probe.templating import NOT_JSON
-from agentfacts.schema.models import (
+from apifacts.probe.assertions import evaluate, schema_fingerprint
+from apifacts.probe.http import StepResponse
+from apifacts.probe.templating import NOT_JSON
+from apifacts.schema.models import (
     AssertBodyContains,
     AssertHeader,
     AssertJsonPath,

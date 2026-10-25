@@ -1,11 +1,11 @@
-"""`agentfacts probe run|list` (spec 04, 09 § W2). Dry runs only: the CLI has no URL test seam."""
+"""`apifacts probe run|list` (spec 04, 09 § W2). Dry runs only: the CLI has no URL test seam."""
 
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from agentfacts.cli import app
+from apifacts.cli import app
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "probe-repo"
 runner = CliRunner()
@@ -13,7 +13,7 @@ runner = CliRunner()
 
 @pytest.fixture(autouse=True)
 def _no_kill_env(monkeypatch):
-    monkeypatch.delenv("AGENTFACTS_KILL", raising=False)
+    monkeypatch.delenv("APIFACTS_KILL", raising=False)
 
 
 def invoke(*args):
@@ -70,10 +70,10 @@ def test_usage_errors_exit_2(args, tmp_path):
 
 
 def test_kill_switch_exits_0_without_requests(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENTFACTS_KILL", "1")
+    monkeypatch.setenv("APIFACTS_KILL", "1")
     result = invoke("run", "--all", "--root", str(FIXTURE), "--state-dir", str(tmp_path))
     assert result.exit_code == 0
-    assert "kill switch on (AGENTFACTS_KILL=1): no requests" in result.stderr
+    assert "kill switch on (APIFACTS_KILL=1): no requests" in result.stderr
     assert result.stdout == "" and not any(tmp_path.iterdir())
 
 
@@ -93,9 +93,9 @@ def test_fixture_is_valid():
 
 
 def test_kill_switch_does_not_hide_invalid_files(tmp_path, monkeypatch):
-    import agentfacts.probe.cli as cli_module
-    from agentfacts.probe.runner import TickReport
-    from agentfacts.schema.validate import Problem
+    import apifacts.probe.cli as cli_module
+    from apifacts.probe.runner import TickReport
+    from apifacts.schema.validate import Problem
 
     report = TickReport(killed="ops/KILL", results_path=tmp_path / "r.jsonl",
                         problems=[Problem(Path("probes/x/y.yaml"), 1, "schema_required", "bad")])
@@ -107,8 +107,8 @@ def test_kill_switch_does_not_hide_invalid_files(tmp_path, monkeypatch):
 
 
 def test_busy_tick_exits_0(tmp_path, monkeypatch):
-    import agentfacts.probe.cli as cli_module
-    from agentfacts.probe.runner import TickReport
+    import apifacts.probe.cli as cli_module
+    from apifacts.probe.runner import TickReport
 
     monkeypatch.setattr(cli_module, "run_tick", lambda *a, **k: TickReport(busy=True))
     result = invoke("run", "--root", str(tmp_path))

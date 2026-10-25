@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from agentfacts.schema import SCHEMA_NAMES, load_schema, validator_for
-from agentfacts.schema.models import (
+from apifacts.schema import SCHEMA_NAMES, load_schema, validator_for
+from apifacts.schema.models import (
     Env,
     Fact,
     Kind,
@@ -16,7 +16,7 @@ from agentfacts.schema.models import (
     Status,
     Surface,
 )
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.schema.yamlio import load_yaml, plain
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 

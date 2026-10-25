@@ -1,6 +1,6 @@
 """Sliding-window limits: 60/min per reporter network, 600/min global (spec 03 step 5)."""
 
-from agentfacts.api.ratelimit import RateLimiter
+from apifacts.api.ratelimit import RateLimiter
 
 
 class Clock:

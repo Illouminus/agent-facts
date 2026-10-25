@@ -1,6 +1,6 @@
 # 03 · `check()` contract v0
 
-**Done when:** `POST /v0/check` and `GET /v0/facts/{service}` are served by `agentfacts.api`, the
+**Done when:** `POST /v0/check` and `GET /v0/facts/{service}` are served by `apifacts.api`, the
 OpenAPI document is committed at `docs/specs/openapi-v0.json`, the contract tests in
 `tests/api/test_check_contract.py` pass, and a request outside registered templates is answered but not
 stored (asserted by a test that counts rows).
@@ -51,7 +51,7 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 2. Extract the signal from `error`: status; vendor error code via the service's `signal_fields` whitelist
    (JSON pointer list); error string = first whitelisted message field. An error inside a list, which a
    whitelist name cannot address, is read through the probe runner's own paths
-   (`agentfacts/schema/error_paths.py`, D-090): message `[0].message` (Salesforce `[{message, errorCode}]`)
+   (`apifacts/schema/error_paths.py`, D-090): message `[0].message` (Salesforce `[{message, errorCode}]`)
    or `.errors[0].message`, code `[0].errorCode` or `.error.errors[0].reason` (Google); a whitelisted field
    wins. A body that is JSON (or truncated JSON) without either yields **no string**, only the status is
    kept (Q4); a non-JSON body falls back to its first line. Normalize: lowercase, collapse whitespace, digits → `#`, UUID/hex ≥ 16 → `<id>`,
@@ -74,7 +74,7 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 - `GET /v0/facts/{service}/{slug}` → one fact.
 - `GET /v0/services` → keys, hosts, `instance_hosts` (tenant hosts, D-090; `[]` when none), counts.
 - `GET /healthz` → `{ok, registry_version, probes_last_run}`; `probes_last_run` = `started` of the newest
-  `pass`/`fail`/`error` line in the runner's `results.jsonl` (`AGENTFACTS_RESULTS`), `null` if none.
+  `pass`/`fail`/`error` line in the runner's `results.jsonl` (`APIFACTS_RESULTS`), `null` if none.
 
 ## Design parameters
 

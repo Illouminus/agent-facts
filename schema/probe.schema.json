@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://facts.baillot.dev/schema/v0/probe.schema.json",
   "title": "Probe",
-  "description": "probes/<service>/<slug>.yaml: declarative steps and assertions (docs/specs/01-fact-schema.md, 04-probe-runner.md). No code per probe. A probe with env prod is read-only: GET/HEAD without a body, or POST of one JSON-RPC 2.0 request to the service's surfaces.http.jsonrpc endpoint with one of its read_methods; agentfacts validate also rejects method-override headers/params and credential headers (case-insensitive).",
+  "description": "probes/<service>/<slug>.yaml: declarative steps and assertions (docs/specs/01-fact-schema.md, 04-probe-runner.md). No code per probe. A probe with env prod is read-only: GET/HEAD without a body, or POST of one JSON-RPC 2.0 request to the service's surfaces.http.jsonrpc endpoint with one of its read_methods; apifacts validate also rejects method-override headers/params and credential headers (case-insensitive).",
   "type": "object",
   "required": ["id", "service", "env", "steps", "assert"],
   "additionalProperties": false,
@@ -25,7 +25,7 @@
                 "method": {"enum": ["GET", "HEAD", "POST"], "x-error-codes": {"enum": "prod_probe_not_readonly"}},
                 "form": {"not": {}, "x-error-codes": {"not": "prod_probe_not_readonly"}},
                 "json": {
-                  "description": "Only a JSON-RPC 2.0 read: one request object; agentfacts validate checks path and method against the service's surfaces.http.jsonrpc.",
+                  "description": "Only a JSON-RPC 2.0 read: one request object; apifacts validate checks path and method against the service's surfaces.http.jsonrpc.",
                   "type": "object",
                   "required": ["jsonrpc", "method"],
                   "additionalProperties": false,

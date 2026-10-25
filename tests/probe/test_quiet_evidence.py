@@ -6,11 +6,11 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from probe_builders import probe_doc
 
-from agentfacts.probe.evidence import apply_outcome, refresh_from_ledger
-from agentfacts.probe.ledger import EvidenceLedger, Pending
-from agentfacts.probe.templating import rfc3339
-from agentfacts.schema.models import Probe
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.probe.evidence import apply_outcome, refresh_from_ledger
+from apifacts.probe.ledger import EvidenceLedger, Pending
+from apifacts.probe.templating import rfc3339
+from apifacts.schema.models import Probe
+from apifacts.schema.yamlio import load_yaml, plain
 
 NOW = datetime(2026, 10, 24, 10, 0, 0, tzinfo=UTC)
 TICK = timedelta(minutes=15)

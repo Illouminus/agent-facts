@@ -1,7 +1,7 @@
 # Hourly per spec 08. Enabled 2026-10-20; disabled 2026-10-24 (62 bot PRs from counter refreshes);
 # re-enabled after the quiet bot (#85) and the bot's own token / verified-only auto-merge (D-089).
 [Unit]
-Description=agent-facts quorum + bot hourly
+Description=apifacts quorum + bot hourly
 
 [Timer]
 OnCalendar=hourly

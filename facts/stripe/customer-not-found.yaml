@@ -8,8 +8,8 @@ target:
 signal:
   status: 404
   error_code: resource_missing
-  error_string: "No such customer: 'cus_agentfactsnosuch'"
-  normalized: "no such customer: 'cus_agentfactsnosuch'"
+  error_string: "No such customer: 'cus_apifactsnosuch'"
+  normalized: "no such customer: 'cus_apifactsnosuch'"
 claim: "Retrieving a customer id that does not exist returns HTTP 404 resource_missing with error.param id and the id quoted in the message."
 dimensions:
   env: sandbox

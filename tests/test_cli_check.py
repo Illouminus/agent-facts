@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from agentfacts.cli import app
-from agentfacts.client.render import TITLE
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.cli import app
+from apifacts.client.render import TITLE
+from apifacts.schema.yamlio import load_yaml, plain
 
 runner = CliRunner()
 VALID = Path(__file__).parent / "fixtures" / "valid"
@@ -29,14 +29,14 @@ def answer():
 @pytest.fixture
 def env(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
-    for name in ("AGENTFACTS_DISABLE", "AGENTFACTS_SNAPSHOT", "AGENTFACTS_ENDPOINT"):
+    for name in ("APIFACTS_DISABLE", "APIFACTS_SNAPSHOT", "APIFACTS_ENDPOINT"):
         monkeypatch.delenv(name, raising=False)
     return monkeypatch
 
 
 @pytest.fixture
 def server(httpserver, env):
-    env.setenv("AGENTFACTS_ENDPOINT", httpserver.url_for("").rstrip("/"))
+    env.setenv("APIFACTS_ENDPOINT", httpserver.url_for("").rstrip("/"))
     return httpserver
 
 
@@ -65,7 +65,7 @@ def test_check_prints_the_section(server, tmp_path):
     }
     raw = request.get_data(as_text=True)
     assert SECRET not in raw and "expand" not in raw
-    assert request.headers["User-Agent"].startswith("agentfacts-cli/")
+    assert request.headers["User-Agent"].startswith("apifacts-cli/")
 
 
 def test_check_body_from_stdin(server):
@@ -123,7 +123,7 @@ def test_usage_errors_exit_2_and_send_nothing(server, args):
 
 
 def test_unreachable_registry_exits_1(env):
-    env.setenv("AGENTFACTS_ENDPOINT", "http://127.0.0.1:9")
+    env.setenv("APIFACTS_ENDPOINT", "http://127.0.0.1:9")
     result = runner.invoke(app, ["check", URL, "-X", "POST", "--status", "400"])
     assert result.exit_code == 1
     assert result.stderr.startswith("error: registry did not answer")
@@ -131,10 +131,10 @@ def test_unreachable_registry_exits_1(env):
 
 def test_disabled_refuses_the_network(server, env):
     server.expect_request("/v0/check").respond_with_json(answer())
-    env.setenv("AGENTFACTS_DISABLE", "1")
+    env.setenv("APIFACTS_DISABLE", "1")
     result = runner.invoke(app, ["check", URL, "-X", "POST"])
     assert result.exit_code == 1
-    assert "AGENTFACTS_DISABLE" in result.stderr
+    assert "APIFACTS_DISABLE" in result.stderr
     assert server.log == []
 
 
@@ -144,8 +144,8 @@ def test_offline_uses_the_snapshot(env, tmp_path):
     (root / "facts" / "stripe").mkdir(parents=True)
     shutil.copy(VALID / "service-stripe.yaml", root / "services" / "stripe.yaml")
     shutil.copy(VALID / FACT_FILE, root / "facts" / "stripe" / FACT_FILE)
-    env.setenv("AGENTFACTS_ENDPOINT", "http://127.0.0.1:9")
-    env.setenv("AGENTFACTS_SNAPSHOT", str(root))
+    env.setenv("APIFACTS_ENDPOINT", "http://127.0.0.1:9")
+    env.setenv("APIFACTS_SNAPSHOT", str(root))
     result = runner.invoke(app, ["check", URL, "-X", "POST", "--status", "400", "--offline"])
     assert result.exit_code == 0, result.output
     assert "fix: Set parameter Idempotency-Key to new UUID per distinct request" in result.stdout

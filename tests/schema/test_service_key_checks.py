@@ -6,9 +6,9 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from agentfacts.schema.models import Auth
-from agentfacts.schema.registry import family_key_reaches, key_bound_to_service
-from agentfacts.schema.validate import validate_paths
+from apifacts.schema.models import Auth
+from apifacts.schema.registry import family_key_reaches, key_bound_to_service
+from apifacts.schema.validate import validate_paths
 
 SERVICE = (Path(__file__).parents[1] / "fixtures" / "valid" / "service-stripe.yaml").read_text(
     encoding="utf-8"

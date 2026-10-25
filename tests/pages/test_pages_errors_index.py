@@ -4,9 +4,9 @@ import hashlib
 
 import pytest
 
-from agentfacts.pages import PagesError, errors_index
-from agentfacts.pages.build import load_registry
-from agentfacts.pages.errors_index import error_groups, error_hash
+from apifacts.pages import PagesError, errors_index
+from apifacts.pages.build import load_registry
+from apifacts.pages.errors_index import error_groups, error_hash
 
 IDEMPOTENCY = (
     "keys for idempotent requests can only be used with the same parameters"

@@ -1,4 +1,4 @@
-# `no such customer: 'cus_agentfactsnosuch'`
+# `no such customer: 'cus_apifactsnosuch'`
 
 **Stripe API · GET /v1/customers/{id} · HTTP 404 `resource_missing`**
 
@@ -25,11 +25,11 @@ Observations: none from reporters yet.
 ```sh
 curl -s https://facts.baillot.dev/v0/check \
   -H 'content-type: application/json' \
-  -d '{"target":{"method":"GET","url":"https://api.stripe.com/v1/customers/{id}"},"error":{"status":404,"body_excerpt":"no such customer: '\''cus_agentfactsnosuch'\''"}}'
+  -d '{"target":{"method":"GET","url":"https://api.stripe.com/v1/customers/{id}"},"error":{"status":404,"body_excerpt":"no such customer: '\''cus_apifactsnosuch'\''"}}'
 ```
 
 YAML: [facts/stripe/customer-not-found.yaml](../../facts/stripe/customer-not-found.yaml)
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

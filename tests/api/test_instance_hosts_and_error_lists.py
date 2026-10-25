@@ -11,13 +11,13 @@ import pytest
 from api_fixtures import write_repo
 from fastapi.testclient import TestClient
 
-from agentfacts.api.app import create_app
-from agentfacts.api.facts_index import FactsIndex
-from agentfacts.api.normalize import extract_signal, normalize
-from agentfacts.probe.http import StepResponse
-from agentfacts.probe.redact import Redactor
-from agentfacts.probe.results import error_text
-from agentfacts.schema.error_paths import CODE_PATHS, MESSAGE_PATHS
+from apifacts.api.app import create_app
+from apifacts.api.facts_index import FactsIndex
+from apifacts.api.normalize import extract_signal, normalize
+from apifacts.probe.http import StepResponse
+from apifacts.probe.redact import Redactor
+from apifacts.probe.results import error_text
+from apifacts.schema.error_paths import CODE_PATHS, MESSAGE_PATHS
 
 ROOT = Path(__file__).resolve().parents[2]
 SALESFORCE_FIELDS = ("status", "errorCode", "message", "sforce-limit-info")
@@ -157,8 +157,8 @@ def test_services_endpoint_lists_instance_hosts(client):
 
 
 def test_client_reports_an_org_host_under_its_instance_host(client):
-    from agentfacts.client.transport import hosts_of
-    from agentfacts.schema.registry import match_host
+    from apifacts.client.transport import hosts_of
+    from apifacts.schema.registry import match_host
 
     hosts = hosts_of(client.get("/v0/services").json())
     assert "login.salesforce.com" in hosts
@@ -168,7 +168,7 @@ def test_client_reports_an_org_host_under_its_instance_host(client):
 
 
 def test_offline_snapshot_matches_an_org_host(repo):
-    from agentfacts.client.offline import Snapshot
+    from apifacts.client.offline import Snapshot
 
     snapshot = Snapshot.load(repo)
     assert "my.salesforce.com" in snapshot.hosts

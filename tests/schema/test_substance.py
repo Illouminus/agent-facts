@@ -1,6 +1,6 @@
 """What a fact says, minus the counters the runner and the quorum keep moving (incident 24.10)."""
 
-from agentfacts.schema.substance import VOLATILE_EVIDENCE, substance
+from apifacts.schema.substance import VOLATILE_EVIDENCE, substance
 
 FACT = {
     "id": "af:acme:x",

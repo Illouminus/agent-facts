@@ -2,7 +2,7 @@ id: af:telegram:probe:get-file-invalid
 service: telegram
 env: prod
 steps:
-  - {do: http, method: GET, path: /getFile, query: {file_id: agentfacts}}
+  - {do: http, method: GET, path: /getFile, query: {file_id: apifacts}}
 assert:
   - {step: 1, status: 400}
   - {step: 1, json_path: $.description, equals: "Bad Request: invalid file_id"}

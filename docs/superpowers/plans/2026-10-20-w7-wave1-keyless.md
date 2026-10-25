@@ -14,10 +14,10 @@ order: github → pypi → solana. Branches `content/w7-wave1-<service>` from a 
    assertion (schema fingerprint) gets its own probe so its drift never stales unrelated facts.
 4. `facts/<s>/*.yaml` (≥ 10): `verified:server:prod` only when a probe in this PR asserts the
    signal; otherwise `official` with the vendor doc URL and the claim taken from the doc.
-   `signal.normalized` = `agentfacts.api.normalize.normalize(error_string)`. No `reported`.
-5. `uv run agentfacts probe run --all --vantage mac-dev` → every probe passes and every verified
+   `signal.normalized` = `apifacts.api.normalize.normalize(error_string)`. No `reported`.
+5. `uv run apifacts probe run --all --vantage mac-dev` → every probe passes and every verified
    fact gets `confirmations: 1`; `first_seen` = the first confirmation; log goes into the PR body.
-6. `uv run agentfacts validate`, `uv run agentfacts pages build`, `uv run pytest -q`, `ruff check`.
+6. `uv run apifacts validate`, `uv run apifacts pages build`, `uv run pytest -q`, `ruff check`.
 7. PR ready → `/code-review` → fix all findings → CI green → squash merge.
 
 ## Solana only

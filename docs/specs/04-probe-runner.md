@@ -1,6 +1,6 @@
 # 04 · Probe runner v0.1
 
-**Done when:** `agentfacts probe run --due` executes every due probe under `probes/`, writes one line per
+**Done when:** `apifacts probe run --due` executes every due probe under `probes/`, writes one line per
 step to `results.jsonl`, updates `evidence` of facts that reference the probe (confirm / stale counter),
 respects budgets and the kill switch, injects keys only by name, and a test suite with a local mock
 HTTP server covers every step kind and every assertion kind.
@@ -63,9 +63,9 @@ netns), each runner tagging its vantage; a fact's `evidence.vantages` lists wher
 
 ## Kill switch and budgets
 
-`ops/KILL` file or `AGENTFACTS_KILL=1` → the runner exits before the first request. Per-service
+`ops/KILL` file or `APIFACTS_KILL=1` → the runner exits before the first request. Per-service
 `probe_budget`; global cap `max_requests_per_tick` (default 50). Honest `User-Agent:
-agent-facts-probe/<version> (+https://github.com/Illouminus/agent-facts; opt-out: <email>)`.
+apifacts-probe/<version> (+https://github.com/Illouminus/apifacts; opt-out: <email>)`.
 
 ## Design parameters
 

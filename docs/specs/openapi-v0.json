@@ -1643,7 +1643,7 @@
   },
   "info": {
     "summary": "Verified facts about machine interfaces for AI agents (data CC BY 4.0).",
-    "title": "agent-facts",
+    "title": "apifacts",
     "version": "v0"
   },
   "openapi": "3.1.0",

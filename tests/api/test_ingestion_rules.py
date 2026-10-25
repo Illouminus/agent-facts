@@ -9,9 +9,9 @@ from datetime import UTC, date, datetime
 import pytest
 from api_fixtures import STRIPE_PI
 
-from agentfacts.api import app as app_module
-from agentfacts.api.normalize import extract_signal
-from agentfacts.api.store import Store, salt_period
+from apifacts.api import app as app_module
+from apifacts.api.normalize import extract_signal
+from apifacts.api.store import Store, salt_period
 
 PYPI_JSON = "https://pypi.org/pypi/requests/json"
 

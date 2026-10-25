@@ -2,7 +2,7 @@
 
 import pytest
 
-from agentfacts.probe.templating import (
+from apifacts.probe.templating import (
     NOT_JSON,
     RunContext,
     TemplateError,

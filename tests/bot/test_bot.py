@@ -9,9 +9,9 @@ import yaml
 from bot_repo import Checkout, FakeGh, sh
 from typer.testing import CliRunner
 
-from agentfacts.bot.collect import Change, GitError, changed_facts, fact_rows
-from agentfacts.bot.pr import branch_name, publish, render_body
-from agentfacts.cli import app
+from apifacts.bot.collect import Change, GitError, changed_facts, fact_rows
+from apifacts.bot.pr import branch_name, publish, render_body
+from apifacts.cli import app
 
 TODAY = date(2026, 10, 21)
 DRAFT = "facts/stripe/400-keys-for-idempotent-requests-can-only.yaml"
@@ -52,7 +52,7 @@ def test_collects_new_changed_and_deleted_fact_files_only(repo):
     repo.write(DRAFT, draft())
     known = repo.work / KNOWN
     known.write_text(known.read_text().replace("confirmations: 1", "confirmations: 2"))
-    repo.write("agentfacts/code.py", "x = 2\n")
+    repo.write("apifacts/code.py", "x = 2\n")
     repo.write("facts/stripe/notes.txt", "not yaml\n")
     assert changed_facts(repo.work) == [Change(DRAFT), Change(KNOWN)]
     known.unlink()
@@ -114,12 +114,12 @@ def verified(repo, slug="verified-new") -> str:
 
 def test_publish_opens_one_pr_with_facts_and_pages_only(repo):
     rel = verified(repo)
-    repo.write("agentfacts/code.py", "x = 2\n")  # a code change in the checkout never ships
+    repo.write("apifacts/code.py", "x = 2\n")  # a code change in the checkout never ships
     gh = FakeGh()
     report = run(repo, gh)
     assert report.action == "opened" and report.auto
     assert report.branch == "bot/facts-2026-10-21-1"
-    assert report.url == "https://github.com/Illouminus/agent-facts/pull/99"
+    assert report.url == "https://github.com/Illouminus/apifacts/pull/99"
     assert repo.remote_branches() == ["bot/facts-2026-10-21-1", "main"]
     files = repo.files_in("bot/facts-2026-10-21-1")
     assert rel in files and all(f.startswith(("facts/", "pages/")) for f in files)
@@ -216,7 +216,7 @@ def test_dry_run_pushes_and_calls_nothing(repo):
 @pytest.mark.parametrize("kill", ["file", "env"])
 def test_kill_switch_stops_the_bot(repo, kill):
     repo.write(DRAFT, draft())
-    environ = {"AGENTFACTS_KILL": "1"} if kill == "env" else {}
+    environ = {"APIFACTS_KILL": "1"} if kill == "env" else {}
     if kill == "file":
         repo.write("ops/KILL", "")
     gh = FakeGh()
@@ -228,7 +228,7 @@ def test_kill_switch_stops_the_bot(repo, kill):
 def test_cli_dry_run(repo):
     repo.write(DRAFT, draft())
     args = ["bot", "publish", "--root", str(repo.work), "--dry-run"]
-    r = CliRunner().invoke(app, args, env={"AGENTFACTS_KILL": "0"})
+    r = CliRunner().invoke(app, args, env={"APIFACTS_KILL": "0"})
     assert r.exit_code == 0, r.output
     row = "new      af:stripe:400-keys-for-idempotent-requests-can-only  reported  [review]"
     assert row in r.output
@@ -239,8 +239,8 @@ def test_cli_dry_run(repo):
 def test_cli_kill_switch(repo):
     repo.write(DRAFT, draft())
     r = CliRunner().invoke(app, ["bot", "publish", "--root", str(repo.work)],
-                           env={"AGENTFACTS_KILL": "1"})
-    assert r.exit_code == 0 and "killed (AGENTFACTS_KILL=1)" in r.output
+                           env={"APIFACTS_KILL": "1"})
+    assert r.exit_code == 0 and "killed (APIFACTS_KILL=1)" in r.output
 
 
 def test_changes_already_merged_on_main_are_not_republished(repo, tmp_path):
@@ -271,7 +271,7 @@ def test_cli_holds_counter_only_changes_until_the_daily_refresh(repo, tmp_path):
     known = repo.work / KNOWN
     known.write_text(known.read_text().replace("confirmations: 1", "confirmations: 2"))
     args = ["bot", "publish", "--root", str(repo.work), "--state-dir", str(tmp_path / "state")]
-    r = CliRunner().invoke(app, args, env={"AGENTFACTS_KILL": "0"})
+    r = CliRunner().invoke(app, args, env={"APIFACTS_KILL": "0"})
     assert r.exit_code == 0, r.output
     assert "holding counter-only changes: no evidence refresh yet" in r.output
     assert repo.remote_branches() == ["main"]

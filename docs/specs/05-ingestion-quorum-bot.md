@@ -1,7 +1,7 @@
 # 05 · Observations → quorum → probe → bot
 
-**Done when:** `agentfacts quorum run` turns a fixture set of observations into exactly the expected
-`reported` fact drafts, schedules probes for the ones with a probe template, and `agentfacts bot
+**Done when:** `apifacts quorum run` turns a fixture set of observations into exactly the expected
+`reported` fact drafts, schedules probes for the ones with a probe template, and `apifacts bot
 publish` opens one PR containing the new YAML files with CI green; a fixture below quorum produces
 nothing (tested).
 

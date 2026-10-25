@@ -48,27 +48,27 @@ W0 ──▶ W1 ──┬──▶ W2 ──┐
                                      keyed services wait for Edouard's keys [tap])
 ```
 
-W2, W3, W5, W6 run in parallel sessions (own worktrees, no shared files: `agentfacts/probe`,
-`agentfacts/api`, `agentfacts/pages`, `plugins/pytest`). W7 is content, one PR per service, can be
+W2, W3, W5, W6 run in parallel sessions (own worktrees, no shared files: `apifacts/probe`,
+`apifacts/api`, `apifacts/pages`, `plugins/pytest`). W7 is content, one PR per service, can be
 spread over several sessions.
 
 ## W0 · Scaffold
 
-**Files:** `pyproject.toml` (package `agentfacts`, Python 3.12, deps: pydantic>=2, pyyaml, ruamel.yaml,
-httpx, typer, jsonschema, fastapi, uvicorn; dev: pytest, pytest-httpserver, ruff), `agentfacts/__init__.py`,
-`agentfacts/cli.py` (typer app with `version`), `tests/test_cli.py`, `.github/workflows/ci.yml`
-(uv sync, ruff, pytest, `agentfacts validate` once W1 exists), `README.en.md` (public-facing English:
+**Files:** `pyproject.toml` (package `apifacts`, Python 3.12, deps: pydantic>=2, pyyaml, ruamel.yaml,
+httpx, typer, jsonschema, fastapi, uvicorn; dev: pytest, pytest-httpserver, ruff), `apifacts/__init__.py`,
+`apifacts/cli.py` (typer app with `version`), `tests/test_cli.py`, `.github/workflows/ci.yml`
+(uv sync, ruff, pytest, `apifacts validate` once W1 exists), `README.en.md` (public-facing English:
 what/why/how to call `check()`/license/contributing), `CONTRIBUTING.md`, `CODEOWNERS` (`facts/` → bot +
 Edouard; `services/<x>` producers later), `.editorconfig`.
-**Done when:** `uv run agentfacts version` prints the version; CI runs on a PR in < 2 min and is green;
+**Done when:** `uv run apifacts version` prints the version; CI runs on a PR in < 2 min and is green;
 `README.en.md` explains the registry in ≤ 400 words with one curl example.
 
 ## W1 · Schemas + validator
 
 **Files:** `schema/fact.schema.json`, `schema/service.schema.json`, `schema/probe.schema.json`,
-`schema/observation.schema.json`, `schema/fix.schema.json`; `agentfacts/schema/models.py` (pydantic
-mirrors), `agentfacts/schema/validate.py`, `agentfacts/fixes/templates.py` (render per action), CLI
-`agentfacts validate [paths]` and `agentfacts render-fix <json>`; fixtures `tests/fixtures/valid/` (one
+`schema/observation.schema.json`, `schema/fix.schema.json`; `apifacts/schema/models.py` (pydantic
+mirrors), `apifacts/schema/validate.py`, `apifacts/fixes/templates.py` (render per action), CLI
+`apifacts validate [paths]` and `apifacts render-fix <json>`; fixtures `tests/fixtures/valid/` (one
 service, one fact, one probe) and `tests/fixtures/invalid/` (free-text fix, unregistered path template,
 prod probe with POST, claim > 300 chars, unknown kind); tests per fixture and per fix action (golden
 sentence).
@@ -77,40 +77,40 @@ sentence).
 
 ## W2 · Probe runner
 
-**Files:** `agentfacts/probe/{loader,templating,http,assertions,budget,keys,redact,runner,results}.py`,
-CLI `agentfacts probe run [--due|--all] [--max N] [--vantage NAME] [--dry-run]`, `agentfacts probe
+**Files:** `apifacts/probe/{loader,templating,http,assertions,budget,keys,redact,runner,results}.py`,
+CLI `apifacts probe run [--due|--all] [--max N] [--vantage NAME] [--dry-run]`, `apifacts probe
 list`; tests with `pytest-httpserver` for every step and assertion kind, budget/kill-switch tests,
 redaction test (fake key never appears in `results.jsonl`), "different env never refutes" test.
 **Done when:** criteria in `04`.
 
 ## W3 · `check()` API
 
-**Files:** `agentfacts/api/{app,models,match,normalize,store,ratelimit,facts_index}.py`, sqlite schema
-`agentfacts/api/schema.sql`, `docs/specs/openapi-v0.json` (exported by a test, diff-checked),
+**Files:** `apifacts/api/{app,models,match,normalize,store,ratelimit,facts_index}.py`, sqlite schema
+`apifacts/api/schema.sql`, `docs/specs/openapi-v0.json` (exported by a test, diff-checked),
 `tests/api/test_check_contract.py`, `tests/api/test_normalize.py` (digits, uuids, emails, urls,
 truncation, secret-shaped), `tests/api/test_default_deny.py` (unregistered target: answer yes, row no).
-**Done when:** criteria in `03`; `uvicorn agentfacts.api.app:app` serves `/healthz`.
+**Done when:** criteria in `03`; `uvicorn apifacts.api.app:app` serves `/healthz`.
 
 ## W4 · Quorum + bot
 
-**Files:** `agentfacts/quorum/{group,rules,draft}.py`, `agentfacts/bot/{collect,pr}.py` (uses `gh`),
-CLI `agentfacts quorum run [--since 7d] [--dry-run]`, `agentfacts bot publish [--dry-run]`; fixtures of
+**Files:** `apifacts/quorum/{group,rules,draft}.py`, `apifacts/bot/{collect,pr}.py` (uses `gh`),
+CLI `apifacts quorum run [--since 7d] [--dry-run]`, `apifacts bot publish [--dry-run]`; fixtures of
 observations above/below quorum; tests for kind inference, slug generation, dedup, prompt-injection
 drop rule, PR body rendering (no network: `gh` mocked).
 **Done when:** criteria in `05`.
 
 ## W5 · Pages
 
-**Files:** `agentfacts/pages/{build,templates,errors_index}.py`, CLI `agentfacts pages build [--out
+**Files:** `apifacts/pages/{build,templates,errors_index}.py`, CLI `apifacts pages build [--out
 pages/]`, golden tests (`tests/pages/golden/*.md`), determinism test (build twice, no diff), CI step that
 fails if `pages/` is not up to date with `facts/`.
 **Done when:** criteria in `06`.
 
 ## W6 · pytest plugin + CLI check
 
-**Files:** `plugins/pytest/pyproject.toml` (package `agentfacts-pytest`, entry point `pytest11`),
-`plugins/pytest/agentfacts_pytest/{plugin,extract,client,render}.py`, tests using `pytester` and a fake
-`check()` server; `agentfacts/cli_check.py` for `agentfacts check <url> [--status N --body FILE]`.
+**Files:** `plugins/pytest/pyproject.toml` (package `apifacts-pytest`, entry point `pytest11`),
+`plugins/pytest/apifacts_pytest/{plugin,extract,client,render}.py`, tests using `pytester` and a fake
+`check()` server; `apifacts/cli_check.py` for `apifacts check <url> [--status N --body FILE]`.
 **Done when:** criteria in `07` (wave 1 part).
 
 ## W7 · Seed content, wave 1
@@ -123,7 +123,7 @@ name, tos source), `probes/<s>/*.yaml` (≥ 5 declarative probes, prod ones read
 not allowed in the seed), pages regenerated.
 **Keys:** keyless services need nothing; keyed ones wait for `~/.private_keys/<name>.key` placed by
 Edouard with `keyput` `[tap per service, ~5 min each]`. Start with the keyless ones.
-**Done when:** `agentfacts validate` green, `agentfacts probe run --all` on illouminus confirms every
+**Done when:** `apifacts validate` green, `apifacts probe run --all` on illouminus confirms every
 `verified:*` fact at least once (log attached to the PR), pages built.
 
 ## W8 · Ops

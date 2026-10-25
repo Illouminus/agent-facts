@@ -3,8 +3,8 @@ id: af:telegram:probe:invalid-token
 service: telegram
 env: prod
 steps:
-  - {do: http, method: GET, path: "/bot123456789:AAagentfactsInvalidTokenInvalidToken00/getMe", auth: none}
-  - {do: http, method: GET, path: /botagentfacts/getMe, auth: none}
+  - {do: http, method: GET, path: "/bot123456789:AAapifactsInvalidTokenInvalidToken00/getMe", auth: none}
+  - {do: http, method: GET, path: /botapifacts/getMe, auth: none}
 assert:
   - {step: 1, status: 401}
   - {step: 1, json_path: $.ok, equals: false}

@@ -30,4 +30,4 @@ YAML: [facts/pypi/release-json-has-no-releases-key.yaml](../../facts/pypi/releas
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

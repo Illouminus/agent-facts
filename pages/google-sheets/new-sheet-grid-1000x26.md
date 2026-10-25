@@ -30,4 +30,4 @@ YAML: [facts/google-sheets/new-sheet-grid-1000x26.yaml](../../facts/google-sheet
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

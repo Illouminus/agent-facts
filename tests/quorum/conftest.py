@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from agentfacts.api.store import Store
+from apifacts.api.store import Store
 
 
 @pytest.fixture

@@ -7,11 +7,11 @@ from datetime import UTC, datetime, timedelta
 from typer.testing import CliRunner
 from werkzeug import Response
 
-from agentfacts.cli import app
-from agentfacts.probe.ledger import LEDGER_FILE, EvidenceLedger, Pending
-from agentfacts.probe.runner import REFRESH_MARKER, TickOptions, refresh_evidence, run_tick
-from agentfacts.probe.templating import rfc3339
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.cli import app
+from apifacts.probe.ledger import LEDGER_FILE, EvidenceLedger, Pending
+from apifacts.probe.runner import REFRESH_MARKER, TickOptions, refresh_evidence, run_tick
+from apifacts.probe.templating import rfc3339
+from apifacts.schema.yamlio import load_yaml, plain
 
 T0 = datetime(2026, 10, 24, 1, 0, 0, tzinfo=UTC)
 FACT_ID = "af:acme:items-list-ok"
@@ -110,8 +110,8 @@ def test_refresh_respects_the_kill_switch(repo, httpserver):
     setup(repo, httpserver)
     tick(repo, httpserver, Clock())
     report = refresh_evidence(repo.root, repo.state, clock=Clock(),
-                              environ={"AGENTFACTS_KILL": "1"})
-    assert report.killed == "AGENTFACTS_KILL=1" and pending(repo) is not None
+                              environ={"APIFACTS_KILL": "1"})
+    assert report.killed == "APIFACTS_KILL=1" and pending(repo) is not None
 
 
 def test_refresh_drops_entries_of_facts_that_are_gone(repo, httpserver):
@@ -156,10 +156,10 @@ def test_cli_refresh_evidence(repo, httpserver):
     tick(repo, httpserver, Clock())
     args = ["probe", "run", "--refresh-evidence", "--root", str(repo.root),
             "--state-dir", str(repo.state)]
-    dry = CliRunner().invoke(app, [*args, "--dry-run"], env={"AGENTFACTS_KILL": "0"})
+    dry = CliRunner().invoke(app, [*args, "--dry-run"], env={"APIFACTS_KILL": "0"})
     assert dry.exit_code == 0, dry.output
     assert "dry run: 1 fact with pending evidence" in dry.stderr
-    result = CliRunner().invoke(app, args, env={"AGENTFACTS_KILL": "0"})
+    result = CliRunner().invoke(app, args, env={"APIFACTS_KILL": "0"})
     assert result.exit_code == 0, result.output
     assert "evidence refresh: 1 written, 0 unchanged, 0 dropped" in result.stderr
     assert pending(repo) is None
@@ -193,5 +193,5 @@ def test_refresh_gives_up_after_the_wait(repo, httpserver):
 
 def test_cli_refresh_refuses_all(repo):
     result = CliRunner().invoke(app, ["probe", "run", "--refresh-evidence", "--all", "--root",
-                                      str(repo.root)], env={"AGENTFACTS_KILL": "0"})
+                                      str(repo.root)], env={"APIFACTS_KILL": "0"})
     assert result.exit_code == 2 and "runs no probe" in result.stderr

@@ -9,10 +9,10 @@ import pytest
 import yaml
 from bot_repo import Checkout, FakeGh, sh
 
-from agentfacts.bot.pr import publish
-from agentfacts.pages.build import build_pages, load_registry, sync
-from agentfacts.probe.runner import TickOptions, refresh_evidence, run_tick
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.bot.pr import publish
+from apifacts.pages.build import build_pages, load_registry, sync
+from apifacts.probe.runner import TickOptions, refresh_evidence, run_tick
+from apifacts.schema.yamlio import load_yaml, plain
 
 TODAY = date(2026, 10, 21)
 T0 = datetime(2026, 10, 21, 1, 0, 0, tzinfo=UTC)
@@ -148,7 +148,7 @@ def test_substance_change_carries_the_counters_along(world):
 
 
 def test_unwritable_bot_state_still_reports_the_opened_pr(world, monkeypatch):
-    import agentfacts.bot.pr as pr
+    import apifacts.bot.pr as pr
 
     def boom(*args):
         raise OSError("read-only file system")

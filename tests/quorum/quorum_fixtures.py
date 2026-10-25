@@ -3,7 +3,7 @@
 import hashlib
 from typing import Any
 
-from agentfacts.api.normalize import error_hash, normalize
+from apifacts.api.normalize import error_hash, normalize
 
 
 def net(n: int) -> str:

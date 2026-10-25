@@ -4,7 +4,7 @@ import httpx
 import pytest
 import requests
 
-from agentfacts_pytest.extract import iter_chain, sdk_context, signal_from_exception
+from apifacts_pytest.extract import iter_chain, sdk_context, signal_from_exception
 
 URL = "https://api.stripe.com/v1/payment_intents?expand[]=customer"
 CLEAN = "https://api.stripe.com/v1/payment_intents"

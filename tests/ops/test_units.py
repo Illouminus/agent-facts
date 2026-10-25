@@ -27,7 +27,7 @@ def environment(name: str) -> dict[str, str]:
 
 def test_api_service_runs_one_quiet_local_worker():
     exec_start = unit("agentfacts-api.service")["Service"]["ExecStart"]
-    assert exec_start.startswith(f"{APP}/.venv/bin/uvicorn agentfacts.api.app:app")
+    assert exec_start.startswith(f"{APP}/.venv/bin/uvicorn apifacts.api.app:app")
     for flag in ("--workers 1", "--no-access-log", "--host 127.0.0.1", "--port 8795"):
         assert flag in exec_start
 
@@ -35,9 +35,9 @@ def test_api_service_runs_one_quiet_local_worker():
 def test_api_service_environment():
     env = environment("agentfacts-api.service")
     assert env == {
-        "AGENTFACTS_REPO": APP,
-        "AGENTFACTS_DB": f"{APP}/var/observations.sqlite",
-        "AGENTFACTS_TRUSTED_PROXIES": "127.0.0.1,::1",
+        "APIFACTS_REPO": APP,
+        "APIFACTS_DB": f"{APP}/var/observations.sqlite",
+        "APIFACTS_TRUSTED_PROXIES": "127.0.0.1,::1",
     }
 
 
@@ -57,7 +57,7 @@ def test_probe_service_runs_due_probes_from_illouminus():
     service = unit("agentfacts-probe.service")["Service"]
     assert service["Type"] == "oneshot"
     assert service["ExecStart"] == (
-        f"{APP}/.venv/bin/agentfacts probe run --due --max 50 --vantage illouminus --root {APP}"
+        f"{APP}/.venv/bin/apifacts probe run --due --max 50 --vantage illouminus --root {APP}"
     )
 
 
@@ -100,7 +100,7 @@ def test_refresh_service_flushes_the_ledger_only():
     service = unit("agentfacts-refresh.service")["Service"]
     assert service["Type"] == "oneshot"
     assert service["ExecStart"] == (
-        f"{APP}/.venv/bin/agentfacts probe run --refresh-evidence --root {APP}"
+        f"{APP}/.venv/bin/apifacts probe run --refresh-evidence --root {APP}"
     )
 
 

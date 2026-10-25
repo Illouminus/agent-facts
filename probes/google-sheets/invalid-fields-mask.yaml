@@ -4,7 +4,7 @@ service: google-sheets
 env: prod
 account_state: api_key
 steps:
-  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I", query: {fields: agentfacts}}
+  - {do: http, method: GET, path: "/v4/spreadsheets/1KQGUVQhCtk9f6Cy8vnTefNWJw_eKvtowwjA3vL0qR7I", query: {fields: apifacts}}
 assert:
   - {step: 1, status: 400}
   - {step: 1, json_path: $.error.message, equals: Request contains an invalid argument.}

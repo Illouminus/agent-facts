@@ -1,8 +1,8 @@
-"""`agentfacts render-fix <json>`: one sentence, exit 1 on an invalid fix, 2 on non-JSON."""
+"""`apifacts render-fix <json>`: one sentence, exit 1 on an invalid fix, 2 on non-JSON."""
 
 from typer.testing import CliRunner
 
-from agentfacts.cli import app
+from apifacts.cli import app
 
 runner = CliRunner()
 

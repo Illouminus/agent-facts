@@ -9,7 +9,7 @@ signal:
   status: 400
   error_code: INVALID_ARGUMENT
   error_string: "Unable to parse range: AgentFactsNoSuchSheet!A1"
-  normalized: "unable to parse range: agentfactsnosuchsheet!a#"
+  normalized: "unable to parse range: apifactsnosuchsheet!a#"
 claim: "A range naming a sheet that does not exist returns HTTP 400 INVALID_ARGUMENT \"Unable to parse range: <range>\"."
 dimensions:
   env: prod

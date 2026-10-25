@@ -3,15 +3,15 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** a failing test whose exception is an HTTP error prints a "Known facts (agent-facts, CC BY 4.0)"
-section sourced from `POST /v0/check` (spec 07, wave 1), and `agentfacts check <url-or-locator>` prints
+section sourced from `POST /v0/check` (spec 07, wave 1), and `apifacts check <url-or-locator>` prints
 the same section for humans and shell agents.
 
-**Architecture:** the client side of `check()` lives once in the main package, `agentfacts/client/`
+**Architecture:** the client side of `check()` lives once in the main package, `apifacts/client/`
 (stdlib-only at import time: `urllib`, `json`, `re`): building a privacy-safe request (URL scrub,
 secret redaction, 2 KB excerpt), the transport (services cache, one bounded POST, circuit breaker,
-offline snapshot) and the text rendering. The plugin (`plugins/pytest/`, package `agentfacts-pytest`,
-depends on `agentfacts`) adds only what is pytest-specific: walking the exception chain, configuring the
-client from env/options, attaching the section to the report. The CLI (`agentfacts/cli_check.py`) builds
+offline snapshot) and the text rendering. The plugin (`plugins/pytest/`, package `apifacts-pytest`,
+depends on `apifacts`) adds only what is pytest-specific: walking the exception chain, configuring the
+client from env/options, attaching the section to the report. The CLI (`apifacts/cli_check.py`) builds
 the same request from its arguments and prints the same section.
 
 **Tech Stack:** Python 3.12, pytest ≥ 8 (`wrapper=True` hooks, `pytester`), stdlib `urllib.request`,
@@ -25,37 +25,37 @@ typer, pytest-httpserver (fake `check()` server), requests + httpx (real excepti
 
 | Question | Decision | Why |
 |----------|----------|-----|
-| Where the shared code lives | `agentfacts/client/{request,transport,render,offline,settings}.py`; plugin depends on `agentfacts` | CLI and plugin import one implementation; the MCP server (W9) can reuse it |
+| Where the shared code lives | `apifacts/client/{request,transport,render,offline,settings}.py`; plugin depends on `apifacts` | CLI and plugin import one implementation; the MCP server (W9) can reuse it |
 | HTTP library for the client | stdlib `urllib.request`, not httpx/requests | the user's tests often mock httpx/requests (`pytest-httpx`, `respx`, `responses`); the hook runs while those mocks are still active, so a call through them would be intercepted or recorded |
 | Where the section goes | `report.longrepr.addsection(title, body, sep="─")`, fallback `report.sections` | right after the traceback, not filtered by `--show-capture`, survives xdist serialization and junitxml |
-| Fix sentences | rendered client-side from the typed `fixes` with `agentfacts.fixes.templates.render_fix`; server `fixes_rendered[i]` only when the client does not know the action | keeps the closed-vocabulary guarantee even against a misbehaving endpoint |
+| Fix sentences | rendered client-side from the typed `fixes` with `apifacts.fixes.templates.render_fix`; server `fixes_rendered[i]` only when the client does not know the action | keeps the closed-vocabulary guarantee even against a misbehaving endpoint |
 | Facts empty | plugin prints nothing; CLI prints `no known facts (<reason>)` | no noise in failure reports |
 | Tenant subdomains (`acme.my.salesforce.com`) | gate on exact-or-subdomain match, then send the registered host instead of the tenant host | the tenant name identifies the user |
 | Request bounds per session | memo of identical requests, ≤ 20 checks, ≤ 10 s spent on network, breaker on the first failure | a red suite of 500 tests must not get 500 × 2 s slower |
 | Local hosts | `localhost`, IPs, single-label and `.local/.test/.internal/.localhost/.example/.invalid` never trigger the services fetch | test servers fail a lot; no point asking the registry |
-| Offline snapshot | `agentfacts/client/snapshot/` (empty in wave 1; `services/*.yaml`, `facts/*/*.yaml` layout), override `AGENTFACTS_SNAPSHOT=<dir>` | the mechanism exists and is tested; W8 fills it at release |
-| Test env | plugin is its own uv project (`plugins/pytest/uv.lock`, `agentfacts` as editable path source) | the root suite does not load the plugin; no change to the root `pyproject.toml`/`uv.lock` (shared with W2/W3/W5) |
+| Offline snapshot | `apifacts/client/snapshot/` (empty in wave 1; `services/*.yaml`, `facts/*/*.yaml` layout), override `AGENTFACTS_SNAPSHOT=<dir>` | the mechanism exists and is tested; W8 fills it at release |
+| Test env | plugin is its own uv project (`plugins/pytest/uv.lock`, `apifacts` as editable path source) | the root suite does not load the plugin; no change to the root `pyproject.toml`/`uv.lock` (shared with W2/W3/W5) |
 
 ## File map
 
 | File | Responsibility |
 |------|----------------|
-| `agentfacts/client/__init__.py` | package docstring: "client side of check()" |
-| `agentfacts/client/request.py` | `redact(text)`, `excerpt(text)` (redact then cut to 2048 UTF-8 bytes), `scrub_url(url)`, `Signal` (url, method, status, body_excerpt, sdk) with `.host`, `.with_host(h)`, `.payload()`; `make_signal(...)` |
-| `agentfacts/client/settings.py` | `Settings(endpoint, disabled, snapshot)` from env: `AGENTFACTS_ENDPOINT`, `AGENTFACTS_DISABLE`, `AGENTFACTS_SNAPSHOT`; `DEFAULT_ENDPOINT` |
-| `agentfacts/client/transport.py` | `Client(endpoint, user_agent, *, timeout=2.0, cache_dir, offline, snapshot, ...)`: `registered_host(host)`, `check(payload)`, `last_error` |
-| `agentfacts/client/offline.py` | `Snapshot.load(root)`, `.hosts`, `.check(payload)` → same shape as the server response |
-| `agentfacts/client/snapshot/README.md` | marks the packaged (empty) snapshot directory |
-| `agentfacts/client/render.py` | `TITLE`, `render_section(result, signal, *, show_empty=False)`, `title_line(width)` |
-| `agentfacts/cli_check.py` | `check` command: `<url-or-locator> [--method/-X] [--status N] [--body FILE] [--offline] [--json]` |
-| `agentfacts/cli.py` | one import + `app.command("check")(check)` |
-| `plugins/pytest/pyproject.toml` | `agentfacts-pytest`, entry point `pytest11: agentfacts = agentfacts_pytest.plugin` |
+| `apifacts/client/__init__.py` | package docstring: "client side of check()" |
+| `apifacts/client/request.py` | `redact(text)`, `excerpt(text)` (redact then cut to 2048 UTF-8 bytes), `scrub_url(url)`, `Signal` (url, method, status, body_excerpt, sdk) with `.host`, `.with_host(h)`, `.payload()`; `make_signal(...)` |
+| `apifacts/client/settings.py` | `Settings(endpoint, disabled, snapshot)` from env: `AGENTFACTS_ENDPOINT`, `AGENTFACTS_DISABLE`, `AGENTFACTS_SNAPSHOT`; `DEFAULT_ENDPOINT` |
+| `apifacts/client/transport.py` | `Client(endpoint, user_agent, *, timeout=2.0, cache_dir, offline, snapshot, ...)`: `registered_host(host)`, `check(payload)`, `last_error` |
+| `apifacts/client/offline.py` | `Snapshot.load(root)`, `.hosts`, `.check(payload)` → same shape as the server response |
+| `apifacts/client/snapshot/README.md` | marks the packaged (empty) snapshot directory |
+| `apifacts/client/render.py` | `TITLE`, `render_section(result, signal, *, show_empty=False)`, `title_line(width)` |
+| `apifacts/cli_check.py` | `check` command: `<url-or-locator> [--method/-X] [--status N] [--body FILE] [--offline] [--json]` |
+| `apifacts/cli.py` | one import + `app.command("check")(check)` |
+| `plugins/pytest/pyproject.toml` | `apifacts-pytest`, entry point `pytest11: apifacts = apifacts_pytest.plugin` |
 | `plugins/pytest/README.md` | install, what is sent, opt-out, config |
-| `plugins/pytest/agentfacts_pytest/__init__.py` | `__version__` |
-| `plugins/pytest/agentfacts_pytest/extract.py` | `iter_chain(exc)`, `signal_from_exception(exc)`, `sdk_context(exc)` |
-| `plugins/pytest/agentfacts_pytest/client.py` | `make_client(config)`: settings + `--agentfacts-offline` + user agent `agentfacts-pytest/<v>` |
-| `plugins/pytest/agentfacts_pytest/render.py` | `attach(report, title, body)` |
-| `plugins/pytest/agentfacts_pytest/plugin.py` | `pytest_addoption`, `pytest_configure`, `pytest_runtest_makereport` |
+| `plugins/pytest/apifacts_pytest/__init__.py` | `__version__` |
+| `plugins/pytest/apifacts_pytest/extract.py` | `iter_chain(exc)`, `signal_from_exception(exc)`, `sdk_context(exc)` |
+| `plugins/pytest/apifacts_pytest/client.py` | `make_client(config)`: settings + `--agentfacts-offline` + user agent `apifacts-pytest/<v>` |
+| `plugins/pytest/apifacts_pytest/render.py` | `attach(report, title, body)` |
+| `plugins/pytest/apifacts_pytest/plugin.py` | `pytest_addoption`, `pytest_configure`, `pytest_runtest_makereport` |
 | `tests/client/test_{request,transport,render,offline}.py`, `tests/test_cli_check.py` | main package |
 | `plugins/pytest/tests/{conftest,test_extract,test_plugin}.py` | plugin (pytester + pytest-httpserver) |
 | `.github/workflows/ci.yml` | two steps in the same job: `uv sync --locked` + `uv run pytest -q` in `plugins/pytest` |
@@ -71,7 +71,7 @@ typer, pytest-httpserver (fake `check()` server), requests + httpx (real excepti
 Only these keys; `method`, `error`, `context` omitted when unknown. URL = `scheme://host/path`: query,
 fragment, userinfo and port dropped; path segments that look like secrets (a `[A-Za-z0-9_-]` run ≥ 24
 holding a letter and a digit, or a known token shape) become `<redacted>` (template slots match them).
-User-Agent `agentfacts-pytest/0.1.0 (+https://github.com/Illouminus/agent-facts)` / `agentfacts-cli/0.1.0 (…)`.
+User-Agent `apifacts-pytest/0.1.0 (+https://github.com/Illouminus/agent-facts)` / `apifacts-cli/0.1.0 (…)`.
 
 ## Redaction (client-side, before truncation)
 
@@ -100,7 +100,7 @@ POST api.stripe.com/v1/payment_intents → 400 idempotency_error
 ```
 
 Target line: method, host + matched template path (else the scrubbed path), `→ status`, the error code of
-the first fact with that status. Badges reused from `agentfacts.pages.templates.BADGES` (W5: ✅
+the first fact with that status. Badges reused from `apifacts.pages.templates.BADGES` (W5: ✅
 verified:*, 🔵 official, 🟡 reported, ⚪ stale), • for anything else; retracted facts are not shown. ≤ 5 facts, then `… N more facts`. Every server string is stripped of control characters
 and collapsed to one line; page URL only when `id` matches `af:<service>:<slug>`.
 
@@ -108,7 +108,7 @@ and collapsed to one line; page URL only when `id` matches `af:<service>:<slug>`
 
 ### Task 1: request building and redaction (TDD)
 
-**Files:** Create `agentfacts/client/__init__.py`, `agentfacts/client/request.py`; Test `tests/client/test_request.py`.
+**Files:** Create `apifacts/client/__init__.py`, `apifacts/client/request.py`; Test `tests/client/test_request.py`.
 
 - [ ] **Step 1: failing tests** — `redact`: each known shape → `<redacted>` (parametrized), `Bearer x…`,
   `"api_key": "…"` keeps the name, e-mail → `<email>`, 40-hex and UUID → `<id>`, mixed 40-char run →
@@ -124,8 +124,8 @@ and collapsed to one line; page URL only when `id` matches `af:<service>:<slug>`
 
 ### Task 2: settings, transport, offline snapshot (TDD)
 
-**Files:** Create `agentfacts/client/settings.py`, `agentfacts/client/transport.py`,
-`agentfacts/client/offline.py`, `agentfacts/client/snapshot/README.md`; Test `tests/client/test_transport.py`, `tests/client/test_offline.py`.
+**Files:** Create `apifacts/client/settings.py`, `apifacts/client/transport.py`,
+`apifacts/client/offline.py`, `apifacts/client/snapshot/README.md`; Test `tests/client/test_transport.py`, `tests/client/test_offline.py`.
 
 - [ ] **Step 1: failing tests** (pytest-httpserver, `cache_dir=tmp_path`, injected clock):
   services fetched once and cached (`services.json` with endpoint + time + hosts); cache hit → no
@@ -141,13 +141,13 @@ and collapsed to one line; page URL only when `id` matches `af:<service>:<slug>`
 - [ ] **Step 3: implement** `Client` with `urllib.request` opener without redirect handling; every
   failure sets `last_error` and the breaker; cache written atomically (`tmp` + `os.replace`), write
   errors ignored. `Snapshot` loads YAML with `yaml.safe_load`, matches host, template
-  (`agentfacts.schema.registry.match_template`), then facts by `(template, status)` else
+  (`apifacts.schema.registry.match_template`), then facts by `(template, status)` else
   `kind ∈ {rate_limit, availability}`; retracted facts never returned.
 - [ ] **Step 4:** run → PASS; commit `feat(w6): check() transport with services cache and offline snapshot`.
 
 ### Task 3: rendering (TDD)
 
-**Files:** Create `agentfacts/client/render.py`; Test `tests/client/test_render.py`.
+**Files:** Create `apifacts/client/render.py`; Test `tests/client/test_render.py`.
 
 - [ ] **Step 1: failing tests** — golden: the spec 07 example (fact with `set_header` fix) renders the
   exact four body lines; `fixes_rendered` used only for an unknown action; control characters stripped;
@@ -159,9 +159,9 @@ and collapsed to one line; page URL only when `id` matches `af:<service>:<slug>`
 
 **Files:** Create everything under `plugins/pytest/`; Test `plugins/pytest/tests/test_extract.py`, `plugins/pytest/tests/test_plugin.py`.
 
-- [ ] **Step 1: project** — `pyproject.toml` (hatchling, deps `agentfacts>=0.1.0`, `pytest>=8`; dev
-  `pytest-httpserver`, `requests`; `[tool.uv.sources] agentfacts = {path = "../..", editable = true}`;
-  pytest `addopts = ["-p", "no:agentfacts"]` so the outer run is hermetic); `cd plugins/pytest && uv lock && uv sync`.
+- [ ] **Step 1: project** — `pyproject.toml` (hatchling, deps `apifacts>=0.1.0`, `pytest>=8`; dev
+  `pytest-httpserver`, `requests`; `[tool.uv.sources] apifacts = {path = "../..", editable = true}`;
+  pytest `addopts = ["-p", "no:apifacts"]` so the outer run is hermetic); `cd plugins/pytest && uv lock && uv sync`.
 - [ ] **Step 2: failing extract tests** — `requests.HTTPError` from `raise_for_status()` on a built
   `Response` (method, scrubbed url, status, body); `httpx.HTTPStatusError`; SDK-like object with
   `status_code` + `request.url`; object with `http_status` + `request.url`; `__cause__`, `__context__`,
@@ -170,27 +170,27 @@ and collapsed to one line; page URL only when `id` matches `af:<service>:<slug>`
   class whose module belongs to an installed distribution, none for requests/httpx/test modules.
 - [ ] **Step 3: failing pytester tests** (fake `check()` on pytest-httpserver; `AGENTFACTS_ENDPOINT`,
   `XDG_CACHE_HOME` monkeypatched): section printed for a stripe 400 (fnmatch on the five lines); posted
-  JSON has no query, header, body secret, only spec keys; UA `agentfacts-pytest/`; passing test → zero
+  JSON has no query, header, body secret, only spec keys; UA `apifacts-pytest/`; passing test → zero
   requests; host not in registry → only `GET /v0/services`, no POST; `AGENTFACTS_DISABLE=1` → zero
   requests; `/v0/check` 500, garbage, closed port → `1 failed`, no `INTERNALERROR`, no section; same
   error twice → one POST; setup-phase HTTP error annotated too; `--agentfacts-offline` +
   `AGENTFACTS_SNAPSHOT` → section with zero requests; subprocess run with
-  `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 -p agentfacts` loads the entry point.
+  `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 -p apifacts` loads the entry point.
 - [ ] **Step 4:** `cd plugins/pytest && uv run pytest -q` → FAIL.
 - [ ] **Step 5: implement** `extract.py`, `client.py`, `render.py`, `plugin.py` (state in
   `config.stash`, every plugin step inside `try/except Exception`).
-- [ ] **Step 6:** PASS; commit `feat(w6): agentfacts-pytest plugin`.
+- [ ] **Step 6:** PASS; commit `feat(w6): apifacts-pytest plugin`.
 
-### Task 5: CLI `agentfacts check` (TDD)
+### Task 5: CLI `apifacts check` (TDD)
 
-**Files:** Create `agentfacts/cli_check.py`; Modify `agentfacts/cli.py` (one import, one registration); Test `tests/test_cli_check.py`.
+**Files:** Create `apifacts/cli_check.py`; Modify `apifacts/cli.py` (one import, one registration); Test `tests/test_cli_check.py`.
 
 - [ ] **Step 1: failing tests** (CliRunner + httpserver): URL + `-X POST --status 400 --body FILE` →
   section on stdout, posted body redacted; `--json` → the raw response; locator `pypi:stripe@12.1.0`
   and bare host sent verbatim; not a URL/host/locator → exit 2; missing body file → exit 2; unreachable
   → exit 1 with `error:` on stderr; no facts → `no known facts (…)`, exit 0; `--offline` with
-  `AGENTFACTS_SNAPSHOT`; `check` listed in `agentfacts --help`.
-- [ ] **Step 2:** FAIL. **Step 3:** implement. **Step 4:** PASS; commit `feat(w6): agentfacts check CLI`.
+  `AGENTFACTS_SNAPSHOT`; `check` listed in `apifacts --help`.
+- [ ] **Step 2:** FAIL. **Step 3:** implement. **Step 4:** PASS; commit `feat(w6): apifacts check CLI`.
 
 ### Task 6: CI, docs, PR
 

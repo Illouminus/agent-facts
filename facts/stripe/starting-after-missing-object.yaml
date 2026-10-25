@@ -8,8 +8,8 @@ target:
 signal:
   status: 400
   error_code: resource_missing
-  error_string: "No such customer: 'cus_agentfactsnosuch'"
-  normalized: "no such customer: 'cus_agentfactsnosuch'"
+  error_string: "No such customer: 'cus_apifactsnosuch'"
+  normalized: "no such customer: 'cus_apifactsnosuch'"
 claim: "A list cursor starting_after naming an object that does not exist returns HTTP 400 resource_missing with error.param starting_after, not an empty page."
 dimensions:
   env: sandbox

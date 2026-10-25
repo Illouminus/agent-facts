@@ -10,10 +10,10 @@ import pytest
 from bot_repo import FAKE_BOT_TOKEN, Checkout, FakeGh
 from typer.testing import CliRunner
 
-import agentfacts.bot.token as token_mod
-from agentfacts.bot.pr import gh_cli, publish
-from agentfacts.bot.token import BotAuth, MissingToken
-from agentfacts.cli import app
+import apifacts.bot.token as token_mod
+from apifacts.bot.pr import gh_cli, publish
+from apifacts.bot.token import BotAuth, MissingToken
+from apifacts.cli import app
 
 TODAY = date(2026, 10, 24)
 DRAFT_FROM = "facts/stripe/idempotency-key-reuse-different-params.yaml"
@@ -78,7 +78,7 @@ def fake_gh(tmp_path, body):
 
 def test_gh_gets_the_token_in_env_not_argv(tmp_path, monkeypatch):
     seen = tmp_path / "seen"
-    monkeypatch.setenv("AGENTFACTS_GH", str(fake_gh(
+    monkeypatch.setenv("APIFACTS_GH", str(fake_gh(
         tmp_path, f'echo "$GH_TOKEN|$GH_PROMPT_DISABLED|$*" > {seen}')))
     monkeypatch.setenv("GH_TOKEN", "PERSONAL_ENV")
     gh_cli(tmp_path, BotAuth(FAKE_BOT_TOKEN))(["pr", "list"])
@@ -86,7 +86,7 @@ def test_gh_gets_the_token_in_env_not_argv(tmp_path, monkeypatch):
 
 
 def test_gh_error_never_shows_the_token(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENTFACTS_GH", str(fake_gh(
+    monkeypatch.setenv("APIFACTS_GH", str(fake_gh(
         tmp_path, 'echo "HTTP 401: bad credentials $GH_TOKEN" >&2; exit 1')))
     with pytest.raises(token_mod.GitError) as exc:
         gh_cli(tmp_path, BotAuth(FAKE_BOT_TOKEN))(["pr", "list"])
@@ -127,7 +127,7 @@ def test_dry_run_needs_no_key(repo, bot_keys):
 def test_cli_missing_key_is_exit_1_with_the_message(repo, bot_keys):
     (bot_keys / "agent-facts-bot.key").unlink()
     r = CliRunner().invoke(app, ["bot", "publish", "--root", str(repo.work)],
-                           env={"AGENTFACTS_KILL": "0"})
+                           env={"APIFACTS_KILL": "0"})
     assert r.exit_code == 1 and "keyput agent-facts-bot" in r.output
 
 

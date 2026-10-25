@@ -11,8 +11,8 @@ import pytest
 from probe_builders import FAKE_KEY, make_service
 from werkzeug import Request, Response
 
-from agentfacts.probe import USER_AGENT
-from agentfacts.probe.http import (
+from apifacts.probe import USER_AGENT
+from apifacts.probe.http import (
     MAX_RAW_BYTES,
     NO_CREDENTIALS,
     Credentials,
@@ -24,8 +24,8 @@ from agentfacts.probe.http import (
     prepare,
     send,
 )
-from agentfacts.probe.templating import NOT_JSON, RunContext
-from agentfacts.schema.models import HttpStep
+from apifacts.probe.templating import NOT_JSON, RunContext
+from apifacts.schema.models import HttpStep
 
 SERVICE = make_service()
 
@@ -97,7 +97,7 @@ def test_probe_headers_are_sent_and_user_agent_is_ours(httpserver):
     headers = cap.requests[0].headers
     assert headers["Idempotency-Key"] == c.run_uuid
     assert headers.getlist("User-Agent") == [USER_AGENT]
-    assert USER_AGENT.startswith("agent-facts-probe/") and "opt-out: " in USER_AGENT
+    assert USER_AGENT.startswith("apifacts-probe/") and "opt-out: " in USER_AGENT
 
 
 @pytest.mark.parametrize(

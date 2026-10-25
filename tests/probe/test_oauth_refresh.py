@@ -8,9 +8,9 @@ import pytest
 from probe_builders import make_service
 from werkzeug import Request, Response
 
-from agentfacts.probe.google_sa import AuthError
-from agentfacts.probe.http import make_client
-from agentfacts.probe.oauth_refresh import (
+from apifacts.probe.google_sa import AuthError
+from apifacts.probe.http import make_client
+from apifacts.probe.oauth_refresh import (
     instance_base_url,
     parse_auth_url,
     refresh_access_token,

@@ -4,8 +4,8 @@ import sqlite3
 
 import pytest
 
-from agentfacts.api.store import Store
-from agentfacts.schema import load_schema
+from apifacts.api.store import Store
+from apifacts.schema import load_schema
 
 ROW = {
     "received_at": "2026-10-20T10:00:00Z",
