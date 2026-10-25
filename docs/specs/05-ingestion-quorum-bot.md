@@ -15,9 +15,14 @@ row carries a signal.
 | Threshold | Value |
 |-----------|-------|
 | Distinct reporter networks (IPv4 /16, IPv6 /32, salted per period) | ≥ 3 |
-| Distinct UA classes or SDK packages | ≥ 2 |
+| Distinct UA classes or SDK packages, counted only from networks with ≥ 2 observations in the period | ≥ 2 |
 | Window | the current salt period (≤ 7 days, Monday–Sunday UTC) |
 | Same group already a fact | refresh `evidence.observations`, no new draft |
+
+The UA class and the SDK package are declared by the client itself, so they are the weaker factor:
+a network's client counts toward it only from that network's second observation in the salt period
+(in any group). One row from each of several fresh networks, each with its own User-Agent, buys no
+second factor (D-093, 2026-10-25).
 
 A group that meets quorum → `facts/<service>/<slug>.yaml` draft with `status: reported`,
 `kind` inferred by rule (429 or rate-limit header → `rate_limit`; 2xx with empty-body fingerprint →
@@ -39,7 +44,14 @@ stays `reported` and is listed in the weekly digest under "needs a probe" (an ag
 ## Bot
 
 - Runs after quorum (hourly). Collects new/changed files under `facts/`. A PR opens at once only for
-  a new or deleted fact or a change beyond the evidence counters (status, claim, …); counter-only
+  a new or deleted fact or a change beyond the evidence counters (status, claim, …), except quorum
+  drafts (new `reported` facts from `observation_quorum`): each needs a human tap, so they gather
+  in the checkout and go out as one PR a salt period — the first run that sees one notes its period
+  in `bot-state.json` (a run that finds no draft held drops the note, so a draft that went out
+  another way does not open next week's gate at once), the first run of a later period opens one
+  PR with every draft gathered, and
+  the Monday digest counts them (D-093: many networks pushing junk strings must not become a tap per
+  string). Other new facts and status changes still go out at once. Counter-only
   changes (`last_confirmed`, `confirmations`, `stale_counter`, `vantages`, `observations`) go out as
   one PR a day, "facts: daily evidence refresh (<date>)", after `probe run --refresh-evidence`
   (incident 2026-10-24: a PR per counter refresh, 62 PRs in three days).

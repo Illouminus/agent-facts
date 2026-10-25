@@ -91,6 +91,15 @@ def test_fact_metrics_by_status_added_and_needs_probe(registry):
     assert m.confirmed == 1
     assert m.by_service == {"example": 1, "stripe": 5}
     assert m.needs_probe == ("af:stripe:reported-no-probe",)
+    assert m.quorum_drafts == 1  # reported-no-probe: from the quorum, created in the window
+
+
+def test_quorum_drafts_count_only_this_weeks_reported_quorum_facts(registry):
+    registry.fact("last-week", base=REPORTED, provenance__created="2026-10-18")
+    registry.fact("by-hand", base=REPORTED, provenance__created="2026-10-20",
+                  provenance__source="manual", provenance__author="human:edouard")
+    registry.fact("this-week", base=REPORTED, provenance__created="2026-10-20")
+    assert digest.fact_metrics(facts_of(registry), WEEK43).quorum_drafts == 1
 
 
 def test_reported_fact_with_a_probe_does_not_need_one(registry):
@@ -313,6 +322,8 @@ def test_ping_is_5_to_8_lines_with_the_report_link(week):
         in lines
     assert "пробы: 1 прогонов (1 pass) · нарушений бюджета 0 · ключей нет: stripe-test" in lines
     assert "нужна проба: 1 reported без пробы" in lines
+    assert "кворум: 1 черновиков за неделю → один PR needs-review в начале следующей (D-093)" \
+        in lines
     assert "публикации: политика утверждена, кандидатов 1 (кнопка ещё не подключена)" in lines
     assert "✅" not in text  # the publish button is not wired yet (Telegram gateway card)
 

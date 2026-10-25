@@ -50,13 +50,21 @@ def test_quorum_threshold(db, observe):
         ([row(1, ua="sdk"), row(1, ua="mcp"), row(2, ua="other")], False),  # same net twice
         ([row(1), row(2), row(3)], False),  # one client class, no SDK
         ([row(1, sdk="stripe"), row(2, sdk="stripe"), row(3, sdk="stripe")], False),
-        ([row(1, sdk="stripe"), row(2, sdk="stripe-node"), row(3)], True),  # 2 SDK packages
-        ([row(1, ua="mcp"), row(2, ua="sdk"), row(3, ua="other"), row(4)], True),
+        ([row(1, sdk="stripe"), row(2, sdk="stripe-node"), row(3)], False),  # each net once
+        ([row(1, sdk="stripe"), row(2, sdk="stripe-node"), row(3),
+          row(1, sdk="stripe"), row(2, sdk="stripe-node")], True),  # 2 SDK packages, nets twice
+        ([row(1, ua="mcp"), row(2, ua="sdk"), row(3, ua="other"), row(4)], False),  # each once
+        ([row(1, ua="mcp"), row(2, ua="sdk"), row(3), row(1, ua="mcp"), row(2, ua="sdk")], True),
+        # D-093: four fresh networks, each with one row and its own UA, buy no second factor
+        ([row(1, ua="mcp"), row(2, ua="sdk"), row(3, ua="other"), row(1, ua="mcp")], False),
+        # a network's second row may sit in another group: the count is per salt period
+        ([row(1, ua="mcp"), row(2, ua="sdk"), row(3), row(1, ua="mcp", message="Other"),
+          row(2, ua="sdk", message="Other")], True),
     ],
 )
 def test_thresholds(db, observe, rows, met):
     observe(*rows)
-    (g,) = groups(db)
+    (g,) = (x for x in groups(db) if x.normalized != "other")
     assert g.meets_quorum is met
 
 

@@ -113,6 +113,7 @@ class FactMetrics:
     confirmed: int  # evidence.last_confirmed inside the window
     by_service: dict[str, int]
     needs_probe: tuple[str, ...]  # reported facts without evidence.probe
+    quorum_drafts: int = 0  # reported quorum facts created inside the window: the weekly PR (D-093)
 
 
 def fact_metrics(facts: Sequence[Fact], window: Window) -> FactMetrics:
@@ -130,6 +131,11 @@ def fact_metrics(facts: Sequence[Fact], window: Window) -> FactMetrics:
         needs_probe=tuple(sorted(
             f.id for f in facts if f.status.value == "reported" and f.evidence.probe is None
         )),
+        quorum_drafts=sum(
+            1 for f in facts
+            if f.status.value == "reported" and f.provenance.source.value == "observation_quorum"
+            and window.contains_date(date.fromisoformat(f.provenance.created))
+        ),
     )
 
 
@@ -455,6 +461,11 @@ def _needs_probe_line(d: Digest) -> str:
     return line
 
 
+def _quorum_line(d: Digest) -> str:
+    return (f"кворум: {d.facts.quorum_drafts} черновиков за неделю → один PR needs-review "
+            "в начале следующей (D-093)")
+
+
 def render_ping(d: Digest, reports_url: str) -> str:
     title = f"agent-facts · неделя {d.window.week}"
     if not d.window.complete:
@@ -466,6 +477,7 @@ def render_ping(d: Digest, reports_url: str) -> str:
         _check_line(d),
         _probes_line(d),
         _needs_probe_line(d),
+        _quorum_line(d),
         _publications_line(d),
         f"{reports_url.rstrip('/')}/{d.report_id}",
     ]
@@ -490,6 +502,7 @@ def render_report(d: Digest) -> str:
         "",
         f"- всего {f.total} (+{f.added} за неделю): {_counts_line(d)}",
         f"- подтверждено пробами за неделю: {f.confirmed}",
+        f"- {_quorum_line(d)}",
         "- по сервисам: " + (" · ".join(f"{s} {n}" for s, n in f.by_service.items()) or "—"),
         "",
         "## check()",
