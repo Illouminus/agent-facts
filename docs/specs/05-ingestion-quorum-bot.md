@@ -58,6 +58,12 @@ stays `reported` and is listed in the weekly digest under "needs a probe" (an ag
 ## Abuse controls
 
 - Observations from a single reporter net never exceed 1,000 / day (silently dropped beyond).
+- One signal group — (service, method, path template, status) — holds at most 200 distinct normalized
+  error strings per salt period (Monday 00:00 UTC week), so many networks inventing strings inside
+  their rate limits cannot grow the table without bound. A string already in the group always gets
+  in; a new one past the cap evicts the least recent string seen only once (`evicted_template_cap`),
+  and when every kept string has repeated it is dropped and counted (`dropped_template_cap`). The
+  most frequent strings — the only ones that can reach a quorum — stay.
 - A normalized error string that contains a URL outside the service's `hosts` + `doc_hosts`, or carries
   a prompt-injection marker (list in `03` step 7) → dropped and counted, never stored (the strings land
   on pages and in `check()` answers).
