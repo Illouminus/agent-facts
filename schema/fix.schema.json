@@ -125,7 +125,7 @@
       }
     },
     "use_endpoint": {
-      "description": "path_template must also be a registered template of the fact's service (checked by agentfacts validate).",
+      "description": "path_template must also be a registered template of the fact's service (checked by apifacts validate).",
       "type": "object",
       "required": ["action", "method", "path_template"],
       "additionalProperties": false,
@@ -179,7 +179,7 @@
       }
     },
     "request_scope": {
-      "description": "A scope that is a URL must be on the vendor's domain (checked by agentfacts validate).",
+      "description": "A scope that is a URL must be on the vendor's domain (checked by apifacts validate).",
       "type": "object",
       "required": ["action", "scope"],
       "additionalProperties": false,
@@ -199,7 +199,7 @@
       }
     },
     "enable_in_dashboard": {
-      "description": "vendor_doc_url must be on the vendor's domain (checked by agentfacts validate).",
+      "description": "vendor_doc_url must be on the vendor's domain (checked by apifacts validate).",
       "type": "object",
       "required": ["action", "setting_key", "vendor_doc_url"],
       "additionalProperties": false,

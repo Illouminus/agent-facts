@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from agentfacts.api import health
-from agentfacts.api.health import last_probe_run
+from apifacts.api import health
+from apifacts.api.health import last_probe_run
 
 
 def _write(path: Path, records: list[dict | str]) -> Path:
@@ -59,7 +59,7 @@ def test_healthz_shows_the_last_run_without_a_restart(repo, make_client):
 
 def test_results_path_from_the_environment(tmp_path, monkeypatch, make_client):
     path = _write(tmp_path / "elsewhere.jsonl", [_run("2026-10-21T08:00:00Z")])
-    monkeypatch.setenv("AGENTFACTS_RESULTS", str(path))
+    monkeypatch.setenv("APIFACTS_RESULTS", str(path))
     assert make_client().get("/healthz").json()["probes_last_run"] == "2026-10-21T08:00:00Z"
 
 

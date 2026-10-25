@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from agentfacts.fixes.templates import render_fix
-from agentfacts.pages import PagesError
-from agentfacts.pages.build import build_pages, load_registry, published, registry_version, sync
-from agentfacts.pages.templates import FOOTER
+from apifacts.fixes.templates import render_fix
+from apifacts.pages import PagesError
+from apifacts.pages.build import build_pages, load_registry, published, registry_version, sync
+from apifacts.pages.templates import FOOTER
 
 GOLDEN = Path(__file__).parent / "golden"
 IDEMPOTENCY = (

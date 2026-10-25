@@ -68,7 +68,7 @@ def test_naive_now_is_refused():
 
 
 def facts_of(registry):
-    from agentfacts.pages.build import load_registry
+    from apifacts.pages.build import load_registry
 
     return load_registry(registry.root)[1]
 
@@ -102,7 +102,7 @@ def test_reported_fact_with_a_probe_does_not_need_one(registry):
 
 
 def services_of(registry):
-    from agentfacts.pages.build import load_registry
+    from apifacts.pages.build import load_registry
 
     return load_registry(registry.root)[0]
 

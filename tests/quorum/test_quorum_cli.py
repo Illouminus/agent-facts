@@ -1,4 +1,4 @@
-"""`agentfacts quorum run` on the command line."""
+"""`apifacts quorum run` on the command line."""
 
 import shutil
 from pathlib import Path
@@ -7,7 +7,7 @@ import pytest
 from quorum_fixtures import quorum_rows
 from typer.testing import CliRunner
 
-from agentfacts.cli import app
+from apifacts.cli import app
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 runner = CliRunner()
@@ -22,7 +22,7 @@ def root(tmp_path) -> Path:
 
 
 def invoke(*args, env=None):
-    return runner.invoke(app, ["quorum", "run", *args], env=env or {"AGENTFACTS_KILL": "0"})
+    return runner.invoke(app, ["quorum", "run", *args], env=env or {"APIFACTS_KILL": "0"})
 
 
 def test_dry_run_prints_the_draft_and_writes_nothing(root, db, observe, monkeypatch):
@@ -44,14 +44,14 @@ def test_real_run_writes_the_draft(root, db, observe):
 
 
 def test_db_from_the_environment_and_empty_period(root, tmp_path):
-    r = invoke("--root", str(root), env={"AGENTFACTS_DB": str(tmp_path / "none.sqlite")})
+    r = invoke("--root", str(root), env={"APIFACTS_DB": str(tmp_path / "none.sqlite")})
     assert r.exit_code == 0 and "0 groups in" in r.output
 
 
 def test_kill_switch(root, db, observe):
     observe(*quorum_rows(at=_this_week()))
-    r = invoke("--root", str(root), "--db", str(db), env={"AGENTFACTS_KILL": "1"})
-    assert r.exit_code == 0 and "killed (AGENTFACTS_KILL=1)" in r.output
+    r = invoke("--root", str(root), "--db", str(db), env={"APIFACTS_KILL": "1"})
+    assert r.exit_code == 0 and "killed (APIFACTS_KILL=1)" in r.output
     assert not (root / "facts").exists()
 
 

@@ -6,4 +6,4 @@ Normalized error string · sha256 `9c20fffdf1f6348c579e57d800637c05b8703e246fe27
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

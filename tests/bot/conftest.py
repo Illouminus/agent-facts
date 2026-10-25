@@ -9,6 +9,6 @@ from bot_repo import FAKE_BOT_TOKEN
 def bot_keys(tmp_path_factory, monkeypatch):
     keys = tmp_path_factory.mktemp("keys")
     (keys / "agent-facts-bot.key").write_text(FAKE_BOT_TOKEN + "\n", encoding="utf-8")
-    monkeypatch.setattr("agentfacts.bot.token.DEFAULT_KEYS_DIR", keys)
+    monkeypatch.setattr("apifacts.bot.token.DEFAULT_KEYS_DIR", keys)
     monkeypatch.delenv("GH_TOKEN", raising=False)
     return keys

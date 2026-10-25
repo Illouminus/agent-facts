@@ -93,7 +93,7 @@
         "surface": {"enum": ["http", "sdk", "cli"]},
         "method": {"$ref": "fix.schema.json#/$defs/http_method"},
         "path_template": {
-          "description": "Must be one of the service's registered templates (checked by agentfacts validate).",
+          "description": "Must be one of the service's registered templates (checked by apifacts validate).",
           "$ref": "fix.schema.json#/$defs/path_template"
         },
         "sdk": {
@@ -133,7 +133,7 @@
         "plan": {"$ref": "#/$defs/dimension_value", "default": "any"},
         "region": {"$ref": "#/$defs/dimension_value", "default": "any"},
         "account_state": {
-          "description": "`any` or one of the service's dimensions.account_state (checked by agentfacts validate).",
+          "description": "`any` or one of the service's dimensions.account_state (checked by apifacts validate).",
           "$ref": "#/$defs/dimension_value",
           "default": "any"
         }

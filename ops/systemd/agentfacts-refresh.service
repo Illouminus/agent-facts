@@ -2,14 +2,14 @@
 # var/evidence-pending.sqlite into facts/, then leave var/evidence-refresh.json so the bot opens
 # one "facts: daily evidence refresh" PR. A tick writes a fact file only on a status change or a
 # new vantage (incident 2026-10-20..24: 62 bot PRs in three days). Dry run by hand:
-#   .venv/bin/agentfacts probe run --refresh-evidence --dry-run --root .
+#   .venv/bin/apifacts probe run --refresh-evidence --dry-run --root .
 [Unit]
-Description=agent-facts daily evidence refresh (ledger → facts/)
+Description=apifacts daily evidence refresh (ledger → facts/)
 
 [Service]
 Type=oneshot
 WorkingDirectory=%h/apps/agent-facts
-ExecStart=%h/apps/agent-facts/.venv/bin/agentfacts probe run --refresh-evidence --root %h/apps/agent-facts
+ExecStart=%h/apps/agent-facts/.venv/bin/apifacts probe run --refresh-evidence --root %h/apps/agent-facts
 Nice=10
 TimeoutStartSec=1200
 # Hardening (sec card 2026-10-23, D-089): seccomp and prctl only. Mount-namespace options

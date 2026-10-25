@@ -4,7 +4,7 @@ import hashlib
 
 import pytest
 
-from agentfacts.api.normalize import (
+from apifacts.api.normalize import (
     MAX_NORMALIZED,
     error_hash,
     extract_signal,

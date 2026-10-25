@@ -8,10 +8,10 @@ from pathlib import Path
 from probe_builders import FAKE_KEY
 from werkzeug import Response
 
-from agentfacts.probe import USER_AGENT
-from agentfacts.probe.ledger import LEDGER_FILE, EvidenceLedger, Pending
-from agentfacts.probe.runner import TickOptions, kill_reason, run_tick
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.probe import USER_AGENT
+from apifacts.probe.ledger import LEDGER_FILE, EvidenceLedger, Pending
+from apifacts.probe.runner import TickOptions, kill_reason, run_tick
+from apifacts.schema.yamlio import load_yaml, plain
 
 T0 = datetime(2026, 10, 20, 10, 0, 0, tzinfo=UTC)
 
@@ -208,10 +208,10 @@ def test_kill_switch_env_stops_before_any_request(repo, httpserver):
     repo.service()
     repo.key()
     repo.probe()
-    report = tick(repo, httpserver, environ={"AGENTFACTS_KILL": "1"})
-    assert report.killed == "AGENTFACTS_KILL=1"
+    report = tick(repo, httpserver, environ={"APIFACTS_KILL": "1"})
+    assert report.killed == "APIFACTS_KILL=1"
     assert httpserver.log == [] and not repo.state.exists()
-    assert kill_reason(repo.root, {"AGENTFACTS_KILL": "0"}) is None
+    assert kill_reason(repo.root, {"APIFACTS_KILL": "0"}) is None
 
 
 def test_kill_switch_mid_tick_stops_the_remaining_probes(repo, httpserver):
@@ -372,10 +372,10 @@ def unvalidated(monkeypatch, service_overrides, probe_overrides=None):
     """Bypass the loader's validator gate to reach the runner's own run-time refusals."""
     from probe_builders import make_service, probe_doc
 
-    import agentfacts.probe.runner as runner_module
-    from agentfacts.probe.loader import LoadedProbe
-    from agentfacts.probe.loader import Repo as LoadedRepo
-    from agentfacts.schema.models import Probe
+    import apifacts.probe.runner as runner_module
+    from apifacts.probe.loader import LoadedProbe
+    from apifacts.probe.loader import Repo as LoadedRepo
+    from apifacts.schema.models import Probe
 
     service = make_service(**service_overrides)
     probe = Probe.model_validate(probe_doc(**(probe_overrides or {})))
@@ -454,7 +454,7 @@ def test_vantage_is_recorded_and_budgeted_separately(repo, httpserver):
 
 def test_no_llm_client_is_imported_by_the_runner():
     banned = ("openai", "anthropic", "google.genai", "google.generativeai")
-    package = Path(__file__).parents[2] / "agentfacts" / "probe"
+    package = Path(__file__).parents[2] / "apifacts" / "probe"
     for source in package.glob("*.py"):
         tree = ast.parse(source.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -569,7 +569,7 @@ def test_a_second_tick_waits_for_the_running_one(repo, httpserver):
 
 
 def test_dry_run_never_reads_a_key(repo, httpserver, monkeypatch):
-    import agentfacts.probe.runner as runner_module
+    import apifacts.probe.runner as runner_module
 
     repo.service()
     repo.key()
@@ -578,7 +578,7 @@ def test_dry_run_never_reads_a_key(repo, httpserver, monkeypatch):
     def no_read(*args):
         raise AssertionError("dry run read a key")
 
-    import agentfacts.probe.keys as keys_module
+    import apifacts.probe.keys as keys_module
 
     monkeypatch.setattr(runner_module, "read_key", no_read)
     monkeypatch.setattr(keys_module, "read_key", no_read)
@@ -636,7 +636,7 @@ def test_a_family_key_runs_for_a_family_service_on_family_hosts(repo, httpserver
 
 
 def test_probe_status_reports_family_keys_by_hosts_and_scopes(repo, monkeypatch):
-    from agentfacts.probe.runner import probe_status
+    from apifacts.probe.runner import probe_status
 
     host = "https://sheets.googleapis.com"
     common = dict(key="google-acme", surfaces={"http": {"base_url": host, "templates": [
@@ -662,7 +662,7 @@ def test_probe_status_reports_family_keys_by_hosts_and_scopes(repo, monkeypatch)
 
 def test_a_family_key_is_never_read_for_a_service_off_the_family_hosts(repo, httpserver,
                                                                          monkeypatch):
-    import agentfacts.probe.runner as runner_module
+    import apifacts.probe.runner as runner_module
 
     # Service "google": the bare name rule alone would bind google-api-key to it.
     unvalidated(monkeypatch, {"key": "google", "hosts": ["collector.example.org"],
@@ -686,7 +686,7 @@ def test_a_family_key_is_never_read_for_a_service_off_the_family_hosts(repo, htt
 
 def test_a_family_key_is_refused_off_the_family_paths_of_a_shared_host(repo, httpserver,
                                                                        monkeypatch):
-    import agentfacts.probe.runner as runner_module
+    import apifacts.probe.runner as runner_module
 
     host = "https://www.googleapis.com"
     repo.service(key="google-acme", hosts=["www.googleapis.com"],

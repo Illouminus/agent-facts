@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from werkzeug import Request, Response
 
-from agentfacts.probe.google_sa import (
+from apifacts.probe.google_sa import (
     GOOGLE_TOKEN_URL,
     JWT_BEARER,
     AuthError,
@@ -19,7 +19,7 @@ from agentfacts.probe.google_sa import (
     secrets_of,
     signed_assertion,
 )
-from agentfacts.probe.http import make_client
+from apifacts.probe.http import make_client
 
 NOW = datetime(2026, 10, 24, 10, 0, 0, tzinfo=UTC)
 SCOPES = ("https://www.googleapis.com/auth/datastore",)
@@ -142,7 +142,7 @@ def test_mint_trades_the_assertion_for_an_access_token(rsa_key, httpserver):
     with make_client() as client:
         token = mint_access_token(client, sa, SCOPES, NOW, httpserver.url_for("/token"))
     assert token == (ACCESS, 3599)
-    assert seen[0].headers["User-Agent"].startswith("agent-facts-probe/")
+    assert seen[0].headers["User-Agent"].startswith("apifacts-probe/")
 
 
 @pytest.mark.parametrize(

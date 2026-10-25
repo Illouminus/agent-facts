@@ -2,8 +2,8 @@
 
 import pytest
 
-from agentfacts.quorum.rules import MAX_CLAIM, claim_for, infer_kind, slug_base, unique_slug
-from agentfacts.schema.models import Kind
+from apifacts.quorum.rules import MAX_CLAIM, claim_for, infer_kind, slug_base, unique_slug
+from apifacts.schema.models import Kind
 
 
 @pytest.mark.parametrize(

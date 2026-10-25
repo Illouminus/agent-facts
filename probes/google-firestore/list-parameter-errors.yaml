@@ -3,7 +3,7 @@ service: google-firestore
 env: prod
 account_state: service_account
 steps:
-  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {pageToken: agentfacts}}
+  - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {pageToken: apifacts}}
   - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {pageSize: -1}}
   - {do: http, method: GET, path: "/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts", query: {"mask.fieldPaths": "a b"}}
 assert:

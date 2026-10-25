@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 import pytest
 from quorum_fixtures import quorum_rows, row
 
-from agentfacts.quorum.group import group_observations, load_observations, period_window
+from apifacts.quorum.group import group_observations, load_observations, period_window
 
 NOW = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)  # a Wednesday
 

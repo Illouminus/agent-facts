@@ -1,4 +1,4 @@
-# ops — agent-facts on illouminus (W8)
+# ops — apifacts on illouminus (W8)
 
 Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 `~/apps/agent-facts`, detached at the deployed sha, with its own `.venv` (`uv sync --frozen
@@ -27,14 +27,14 @@ Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 ## First install (once)
 
 ```bash
-gh repo clone Illouminus/agent-facts ~/apps/agent-facts      # gh keyring: the repo is private
+gh repo clone Illouminus/apifacts ~/apps/agent-facts      # gh keyring: the repo is private
 cd ~/apps/agent-facts && git checkout --detach origin/main
 ~/.local/bin/uv sync --frozen --no-dev && mkdir -p var
 export XDG_RUNTIME_DIR=/run/user/$(id -u)                     # over non-interactive ssh
 for u in ops/systemd/agentfacts-*; do systemctl --user link "$PWD/$u"; done
 systemctl --user enable --now agentfacts-api.service
 curl -s 127.0.0.1:8795/healthz
-.venv/bin/agentfacts probe run --all --vantage illouminus --root .   # first run, before the timer
+.venv/bin/apifacts probe run --all --vantage illouminus --root .   # first run, before the timer
 systemctl --user enable --now agentfacts-probe.timer          # one call per unit
 systemctl --user enable --now agentfacts-digest.timer
 ```
@@ -73,7 +73,7 @@ registry says (new, removed or re-statused facts, claims), never for counters or
 
 ## Bot token
 
-The bot (`agentfacts bot publish`) talks to GitHub only with its own fine-grained PAT, Contents +
+The bot (`apifacts bot publish`) talks to GitHub only with its own fine-grained PAT, Contents +
 Pull requests on this repository: `keyput agent-facts-bot` → `~/.private_keys/agent-facts-bot.key`
 (D-089). `gh` gets it as `GH_TOKEN`; git push/fetch/ls-remote get it through an env-only credential
 helper that first resets `~/.gitconfig`'s `gh auth git-credential` (the owner's login, every
@@ -97,8 +97,8 @@ Impossible in user units on illouminus (Ubuntu 24.04, systemd 255,
 `PrivateDevices`, `TemporaryFileSystem`, `BindReadOnlyPaths`, `ProtectClock` make the unit fail with
 `226/NAMESPACE` ("Failed to set up mount namespacing: Operation not supported"). Hence no read-only
 filesystem and no per-unit key access: every unit runs as `ubuntu` and could read all of
-`~/.private_keys`. Way out (root, Edouard's call): system units with `User=agentfacts`, a dedicated
-user whose own keys directory holds only the agent-facts keys (mount namespaces work for system
+`~/.private_keys`. Way out (root, Edouard's call): system units with `User=apifacts`, a dedicated
+user whose own keys directory holds only the apifacts keys (mount namespaces work for system
 units); lifting the AppArmor restriction would weaken the whole host and is not proposed.
 
 Check a property before adding it: `systemd-run --user --pipe --wait -p <Property>=… /bin/sh -c 'grep -E "NoNewPrivs|Seccomp" /proc/self/status'`.
@@ -110,7 +110,7 @@ touch ~/apps/agent-facts/ops/KILL     # next probe tick exits before its first r
 rm ~/apps/agent-facts/ops/KILL
 ```
 
-`AGENTFACTS_KILL=1` in a unit's environment does the same. The API keeps answering.
+`APIFACTS_KILL=1` in a unit's environment does the same. The API keeps answering.
 
 ## Digest
 

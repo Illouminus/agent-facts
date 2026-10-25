@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.schema.yamlio import load_yaml, plain
 
 REPO = Path(__file__).resolve().parents[2]
 VALID = REPO / "tests" / "fixtures" / "valid"
@@ -26,8 +26,8 @@ OFFICIAL = plain(load_yaml(VALID / "fact-example-sdk-v2-legacy-endpoint.yaml"))
 STRIPE = plain(load_yaml(VALID / "service-stripe.yaml"))
 
 JOURNAL = """---
-name: agent-facts
-title: agent-facts
+name: apifacts
+title: apifacts
 stage: mvp
 status: active
 next: что-то одно
@@ -106,10 +106,10 @@ def run_record(
 
 
 def make_db(path: Path, observations: list[dict[str, Any]], counters: list[tuple[str, str, int]]):
-    """observations.sqlite with the W3 schema (agentfacts/api/schema.sql)."""
+    """observations.sqlite with the W3 schema (apifacts/api/schema.sql)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(path)
-    con.executescript((REPO / "agentfacts" / "api" / "schema.sql").read_text(encoding="utf-8"))
+    con.executescript((REPO / "apifacts" / "api" / "schema.sql").read_text(encoding="utf-8"))
     for i, row in enumerate(observations, start=1):
         full = {"id": i, "service": "stripe", "method": "GET",
                 "path_template": "/v1/customers/{id}", "status": 429, "error_hash": None,

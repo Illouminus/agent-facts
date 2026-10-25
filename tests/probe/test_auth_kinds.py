@@ -9,8 +9,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from probe_builders import Repo
 from werkzeug import Response
 
-from agentfacts.probe.runner import TickOptions, run_tick
-from agentfacts.schema.yamlio import load_yaml
+from apifacts.probe.runner import TickOptions, run_tick
+from apifacts.schema.yamlio import load_yaml
 
 TELEGRAM_KEY = "123456789:AAFakeFakeFakeFakeFakeFakeFakeFake_x"
 PATH_AUTH = {"kind": "path_prefix", "key_name": "acme-test", "env": "sandbox",

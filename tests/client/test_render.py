@@ -1,7 +1,7 @@
 import copy
 
-from agentfacts.client.render import TITLE, render_section, title_line
-from agentfacts.client.request import make_signal
+from apifacts.client.render import TITLE, render_section, title_line
+from apifacts.client.request import make_signal
 
 CLAIM = (
     "Reusing an Idempotency-Key with a different request body returns HTTP 400 idempotency_error "
@@ -33,7 +33,7 @@ SIGNAL = make_signal(
     "https://api.stripe.com/v1/payment_intents?x=1", method="POST", status=400, body="{}"
 )
 PAGE = (
-    "https://github.com/Illouminus/agent-facts/blob/main/pages/stripe/"
+    "https://github.com/Illouminus/apifacts/blob/main/pages/stripe/"
     "idempotency-key-reuse-different-params.md"
 )
 
@@ -45,7 +45,7 @@ def fact(**changes):
 
 
 def test_title():
-    assert TITLE == "Known facts (agent-facts, CC BY 4.0)"
+    assert TITLE == "Known facts (apifacts, CC BY 4.0)"
 
 
 def test_spec_07_example_golden():
@@ -115,7 +115,7 @@ def test_more_than_five_facts_are_summarized():
     lines = render_section({**RESULT, "facts": facts}, SIGNAL).splitlines()
     assert sum(line.startswith("✅") for line in lines) == 5
     assert lines[-1] == (
-        "… 2 more facts: https://github.com/Illouminus/agent-facts/blob/main/pages/stripe/index.md"
+        "… 2 more facts: https://github.com/Illouminus/apifacts/blob/main/pages/stripe/index.md"
     )
 
 
@@ -147,8 +147,15 @@ def test_locator_target_line():
 
 
 def test_title_line_width_like_pytest_sep():
-    assert title_line(64) == f"{'─' * 13} {TITLE} {'─' * 13}"
-    assert title_line(65) == f"{'─' * 13} {TITLE} {'─' * 14}"
+    # Fill derived from the title's length (the title changed with the apifacts rename, 25.10.2026):
+    # an odd remainder goes to the right, like pytest's separator.
+    fill = (64 - len(TITLE) - 2) // 2
+    pad = "─" if 2 * fill + len(TITLE) + 2 < 64 else ""
+    assert title_line(64) == f"{'─' * fill} {TITLE} {'─' * fill}{pad}"
+    fill65 = (65 - len(TITLE) - 2) // 2
+    pad65 = "─" if 2 * fill65 + len(TITLE) + 2 < 65 else ""
+    assert title_line(65) == f"{'─' * fill65} {TITLE} {'─' * fill65}{pad65}"
+    assert len(title_line(64)) == 64 and len(title_line(65)) == 65
     assert title_line(10) == f"─ {TITLE} ─"
 
 

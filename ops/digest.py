@@ -43,8 +43,8 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import state_journal  # noqa: E402  (ops/ is a script directory, not a package)
 
-from agentfacts.pages.build import load_registry  # noqa: E402
-from agentfacts.schema.models import Fact, Service  # noqa: E402
+from apifacts.pages.build import load_registry  # noqa: E402
+from apifacts.schema.models import Fact, Service  # noqa: E402
 
 PARIS = ZoneInfo("Europe/Paris")
 ROUTINE = "agent-facts-digest"
@@ -582,13 +582,13 @@ updated: {day}
 ## Что сделать
 1. Для каждого факта из «Детали» написать декларативную пробу в probes/<service>/ (спека 04;
    prod — только чтение), сослаться на неё в evidence.probe.
-2. Прогнать её в scratch-корне (`agentfacts probe run --all --root <копия>`), не трогая чужие факты.
-3. PR в Illouminus/agent-facts по процессу спеки 09; факт, который декларативно не пробуется,
+2. Прогнать её в scratch-корне (`apifacts probe run --all --root <копия>`), не трогая чужие факты.
+3. PR в Illouminus/apifacts по процессу спеки 09; факт, который декларативно не пробуется,
    остаётся reported с пометкой в PR.
 
 ## Готово когда
 - у каждого факта из списка есть evidence.probe и статус verified:*, либо PR объясняет, почему нет
-- `uv run agentfacts validate` и CI зелёные
+- `uv run apifacts validate` и CI зелёные
 
 ## Детали
 """ + "".join(f"- {fact_id}\n" for fact_id in ids)

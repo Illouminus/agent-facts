@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from agentfacts.probe.keys import DEFAULT_KEYS_DIR, has_key, read_key
+from apifacts.probe.keys import DEFAULT_KEYS_DIR, has_key, read_key
 
 
 def test_default_dir_is_private_keys_in_home():

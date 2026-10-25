@@ -1,6 +1,6 @@
 import pytest
 
-from agentfacts.client.request import (
+from apifacts.client.request import (
     EXCERPT_BYTES,
     Signal,
     excerpt,

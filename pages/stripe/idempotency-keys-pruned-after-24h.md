@@ -30,4 +30,4 @@ YAML: [facts/stripe/idempotency-keys-pruned-after-24h.yaml](../../facts/stripe/i
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

@@ -1,4 +1,4 @@
-# agent-facts
+# apifacts
 
 **A verified changelog of reality for AI agents.** An open registry of typed, dated facts about what
 third-party machine interfaces (HTTP APIs, SDK packages, CLIs) actually do today, as opposed to what
@@ -9,7 +9,7 @@ their docs say.
 Interfaces change, docs lag, and nobody tells the agent. Every session pays tokens to rediscover the
 same traps: a `200` with an empty array instead of a `429`, a rate limit reported as `status: 0` in the
 body, an SDK release that silently dropped a field. Documentation tools answer "give me the right docs";
-agent-facts answers "the docs are wrong about this endpoint right now, here is the verified difference".
+apifacts answers "the docs are wrong about this endpoint right now, here is the verified difference".
 
 ## How a fact is verified
 

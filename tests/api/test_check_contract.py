@@ -6,7 +6,7 @@ import sqlite3
 import pytest
 from api_fixtures import IDEMPOTENCY_BODY, IDEMPOTENCY_ID, STRIPE_PI
 
-from agentfacts.api.normalize import error_hash
+from apifacts.api.normalize import error_hash
 
 KEYS = {"service", "matched_template", "facts", "observed", "unknown", "registry"}
 OBSERVED_EMPTY = {
@@ -57,7 +57,7 @@ def test_exact_match_full_response(client, rows):
 
 
 def test_stored_row_is_normalized_and_anonymous(client, db_path):
-    check(client, IDEMPOTENCY_REQUEST, headers={"User-Agent": "agentfacts-pytest/0.1.0"})
+    check(client, IDEMPOTENCY_REQUEST, headers={"User-Agent": "apifacts-pytest/0.1.0"})
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         row = dict(conn.execute("SELECT * FROM observations").fetchone())
@@ -186,7 +186,7 @@ def test_method_is_case_insensitive(client):
 
 
 def test_registry_version_override(make_client, monkeypatch):
-    monkeypatch.setenv("AGENTFACTS_REGISTRY_VERSION", "2026-11-01")
+    monkeypatch.setenv("APIFACTS_REGISTRY_VERSION", "2026-11-01")
     body = check(make_client(), IDEMPOTENCY_REQUEST).json()
     assert body["registry"]["version"] == "2026-11-01"
 

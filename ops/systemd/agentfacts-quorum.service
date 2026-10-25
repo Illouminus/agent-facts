@@ -1,20 +1,20 @@
 # See agentfacts-quorum.timer for when it runs. To switch it on anywhere, run a dry run first:
-#   .venv/bin/agentfacts quorum run --root . --db var/observations.sqlite --dry-run
-#   .venv/bin/agentfacts bot publish --root . --dry-run
+#   .venv/bin/apifacts quorum run --root . --db var/observations.sqlite --dry-run
+#   .venv/bin/apifacts bot publish --root . --dry-run
 #   systemctl --user enable --now agentfacts-quorum.timer
 # The bot needs gh on the host, its own token (keyput agent-facts-bot: a fine-grained PAT on
 # this repo only, D-089; never the owner's gh login) and "Allow auto-merge" on the repo.
 [Unit]
-Description=agent-facts quorum + bot (spec 05)
+Description=apifacts quorum + bot (spec 05)
 After=network-online.target
 
 [Service]
 Type=oneshot
 WorkingDirectory=%h/apps/agent-facts
-Environment=AGENTFACTS_DB=%h/apps/agent-facts/var/observations.sqlite
+Environment=APIFACTS_DB=%h/apps/agent-facts/var/observations.sqlite
 # gh lives in ~/.local/bin on illouminus; user units get a minimal PATH without it (2026-10-20)
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/bin/sh -c '%h/apps/agent-facts/.venv/bin/agentfacts quorum run --root %h/apps/agent-facts --db %h/apps/agent-facts/var/observations.sqlite && %h/apps/agent-facts/.venv/bin/agentfacts bot publish --root %h/apps/agent-facts'
+ExecStart=/bin/sh -c '%h/apps/agent-facts/.venv/bin/apifacts quorum run --root %h/apps/agent-facts --db %h/apps/agent-facts/var/observations.sqlite && %h/apps/agent-facts/.venv/bin/apifacts bot publish --root %h/apps/agent-facts'
 Nice=10
 TimeoutStartSec=1800
 # Hardening (sec card 2026-10-23, D-089): seccomp and prctl only. Mount-namespace options

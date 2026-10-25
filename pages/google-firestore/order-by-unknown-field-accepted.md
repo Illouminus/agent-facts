@@ -30,4 +30,4 @@ YAML: [facts/google-firestore/order-by-unknown-field-accepted.yaml](../../facts/
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

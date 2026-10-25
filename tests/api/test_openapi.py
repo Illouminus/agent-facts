@@ -1,14 +1,14 @@
 """The published contract: docs/specs/openapi-v0.json is exactly what the app serves.
 
 Regenerate after an intended API change with:
-    AGENTFACTS_WRITE_OPENAPI=1 uv run pytest -q tests/api/test_openapi.py
+    APIFACTS_WRITE_OPENAPI=1 uv run pytest -q tests/api/test_openapi.py
 """
 
 import json
 import os
 from pathlib import Path
 
-from agentfacts.api.app import create_app
+from apifacts.api.app import create_app
 
 OPENAPI = Path(__file__).parents[2] / "docs" / "specs" / "openapi-v0.json"
 
@@ -19,7 +19,7 @@ def _render() -> str:
 
 def test_openapi_document_is_committed_and_current():
     rendered = _render()
-    if os.environ.get("AGENTFACTS_WRITE_OPENAPI") == "1":
+    if os.environ.get("APIFACTS_WRITE_OPENAPI") == "1":
         OPENAPI.write_text(rendered, encoding="utf-8")
     assert OPENAPI.is_file(), "missing docs/specs/openapi-v0.json; see this module's docstring"
     assert OPENAPI.read_text(encoding="utf-8") == rendered, (

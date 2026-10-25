@@ -5,11 +5,11 @@ from pathlib import Path
 import pytest
 from quorum_fixtures import quorum_rows
 
-from agentfacts.probe.loader import LoadedFact, LoadedProbe
-from agentfacts.quorum.draft import covering_fact, matching_probe
-from agentfacts.quorum.group import group_observations
-from agentfacts.schema.models import Fact, Probe, Service
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.probe.loader import LoadedFact, LoadedProbe
+from apifacts.quorum.draft import covering_fact, matching_probe
+from apifacts.quorum.group import group_observations
+from apifacts.schema.models import Fact, Probe, Service
+from apifacts.schema.yamlio import load_yaml, plain
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 SERVICE = Service.model_validate(plain(load_yaml(VALID / "service-stripe.yaml")))

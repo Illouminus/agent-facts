@@ -4,8 +4,8 @@ import time
 import pytest
 from werkzeug import Response
 
-from agentfacts.client.settings import DEFAULT_ENDPOINT, Settings
-from agentfacts.client.transport import CACHE_TTL_S, Client
+from apifacts.client.settings import DEFAULT_ENDPOINT, Settings
+from apifacts.client.transport import CACHE_TTL_S, Client
 
 SERVICES = {
     "services": [
@@ -236,15 +236,15 @@ def test_settings_from_env(tmp_path):
     assert Settings.from_env({}) == Settings(DEFAULT_ENDPOINT, False, None)
     assert DEFAULT_ENDPOINT == "https://facts.baillot.dev"
     env = {
-        "AGENTFACTS_ENDPOINT": "http://localhost:8000/",
-        "AGENTFACTS_DISABLE": "1",
-        "AGENTFACTS_SNAPSHOT": str(tmp_path),
+        "APIFACTS_ENDPOINT": "http://localhost:8000/",
+        "APIFACTS_DISABLE": "1",
+        "APIFACTS_SNAPSHOT": str(tmp_path),
     }
     assert Settings.from_env(env) == Settings("http://localhost:8000", True, tmp_path)
     for value in ("true", "YES", "on"):
-        assert Settings.from_env({"AGENTFACTS_DISABLE": value}).disabled
+        assert Settings.from_env({"APIFACTS_DISABLE": value}).disabled
     for value in ("0", "", "no", "false"):
-        assert not Settings.from_env({"AGENTFACTS_DISABLE": value}).disabled
+        assert not Settings.from_env({"APIFACTS_DISABLE": value}).disabled
 
 
 def test_a_dripping_server_hits_the_total_deadline(httpserver, make):

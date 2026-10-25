@@ -32,4 +32,4 @@ YAML: [facts/solana/signatures-for-address-limit-1000.yaml](../../facts/solana/s
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

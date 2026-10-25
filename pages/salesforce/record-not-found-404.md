@@ -32,4 +32,4 @@ YAML: [facts/salesforce/record-not-found-404.yaml](../../facts/salesforce/record
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

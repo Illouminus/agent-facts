@@ -2,7 +2,7 @@
 
 import pytest
 
-from agentfacts.api.match import (
+from apifacts.api.match import (
     HostTarget,
     Locator,
     UrlTarget,
@@ -94,16 +94,16 @@ def test_unsafe_or_trailing_paths_do_not_match(path):
 @pytest.mark.parametrize(
     "ua, cls",
     [
-        ("agentfacts-pytest/0.1.0 python/3.12", "pytest-plugin"),
+        ("apifacts-pytest/0.1.0 python/3.12", "pytest-plugin"),
         ("pytest/8.3", "pytest-plugin"),
-        ("@agent-facts/jest 0.1", "jest-plugin"),
+        ("@apifacts/jest 0.1", "jest-plugin"),
         ("vitest-reporter/1", "jest-plugin"),
         ("agentfacts-mcp/0.1", "mcp"),
         ("claude-code-mcp-client", "mcp"),
         ("python-httpx/0.28.1", "sdk"),
         ("python-requests/2.32", "sdk"),
         ("axios/1.7.2", "sdk"),
-        ("agentfacts-sdk/0.1", "sdk"),
+        ("apifacts-sdk/0.1", "sdk"),
         ("curl/8.7.1", "other"),
         ("", "other"),
         (None, "other"),

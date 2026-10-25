@@ -23,7 +23,7 @@ def db_path(tmp_path) -> Path:
 def make_client(repo, db_path):
     clients = []
 
-    from agentfacts.api.app import create_app
+    from apifacts.api.app import create_app
 
     def make(peer: tuple[str, int] = PEER, **kwargs) -> TestClient:
         client = TestClient(create_app(repo=repo, db_path=db_path, **kwargs), client=peer)

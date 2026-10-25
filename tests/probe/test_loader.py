@@ -1,7 +1,7 @@
 """Loader: the W1 validator gates every file; only clean files become models."""
 
-from agentfacts.probe.loader import load_repo
-from agentfacts.schema.models import Fact, Probe, Service
+from apifacts.probe.loader import load_repo
+from apifacts.schema.models import Fact, Probe, Service
 
 
 def test_valid_repo_loads_models(repo):

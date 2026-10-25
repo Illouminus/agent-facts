@@ -3,9 +3,9 @@ id: af:stripe:probe:starting-after-missing
 service: stripe
 env: sandbox
 steps:
-  - {do: http, method: GET, path: /v1/customers, query: {starting_after: cus_agentfactsnosuch}}
+  - {do: http, method: GET, path: /v1/customers, query: {starting_after: cus_apifactsnosuch}}
 assert:
   - {step: 1, status: 400}
   - {step: 1, json_path: $.error.code, equals: resource_missing}
   - {step: 1, json_path: $.error.param, equals: starting_after}
-  - {step: 1, json_path: $.error.message, equals: "No such customer: 'cus_agentfactsnosuch'"}
+  - {step: 1, json_path: $.error.message, equals: "No such customer: 'cus_apifactsnosuch'"}

@@ -8,7 +8,7 @@ After a successful deploy `ops/deploy.sh` calls
 
 which puts one entry at the top of `## Журнал` in `<state>/projects/agent-facts.md` — only when
 the registry says something new between `--prev` and `--sha` (a fact added, removed, or changed in
-anything but its evidence counters; `agentfacts.schema.substance`). A code-only or counter-only
+anything but its evidence counters; `apifacts.schema.substance`). A code-only or counter-only
 deploy writes nothing (incident 2026-10-20..24: ~40 lines «деплой X» for counter refreshes):
 
     ### 2026-10-24 — деплой a1b2c3d на illouminus
@@ -39,10 +39,10 @@ from zoneinfo import ZoneInfo
 
 from ruamel.yaml.error import YAMLError
 
-from agentfacts.pages.build import load_registry
-from agentfacts.schema.models import VERIFIED_STATUSES, Fact
-from agentfacts.schema.substance import substance
-from agentfacts.schema.yamlio import load_yaml_text, plain
+from apifacts.pages.build import load_registry
+from apifacts.schema.models import VERIFIED_STATUSES, Fact
+from apifacts.schema.substance import substance
+from apifacts.schema.yamlio import load_yaml_text, plain
 
 ACTOR = "agent-facts"
 PROJECT_FILE = "projects/agent-facts.md"

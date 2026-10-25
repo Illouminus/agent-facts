@@ -1,6 +1,6 @@
 # 06 · Fact pages
 
-**Done when:** `agentfacts pages build` regenerates `pages/` deterministically (second run = no diff),
+**Done when:** `apifacts pages build` regenerates `pages/` deterministically (second run = no diff),
 every fact has a page whose H1 is the exact normalized error string (or the claim for kinds without a
 string), every service has an index, `pages/index.md` lists services, and a test checks that a page
 contains the fix sentences, the status badge, the first-seen/last-confirmed dates and the CC BY 4.0 line.
@@ -45,7 +45,7 @@ Observations: 12 distinct networks in the last 30 days.
 `POST https://facts.baillot.dev/v0/check` with `{"target":{"method":"POST","url":"https://api.stripe.com/v1/payment_intents"},"error":{"status":400,"body_excerpt":"…"}}` · YAML: [facts/stripe/idempotency-key-reuse-different-params.yaml](../../facts/stripe/…)
 
 ---
-Data: CC BY 4.0 · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: CC BY 4.0 · apifacts registry · This page is generated; edit the YAML, not the page.
 ```
 
 Rules: normalized strings only, inside code spans; no vendor opinions; no security vulnerabilities (plan

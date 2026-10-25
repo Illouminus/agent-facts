@@ -56,7 +56,7 @@ templates:
       - first seen {first_seen}, last confirmed {last_confirmed}, {confirmations} confirmations from {vantages}
       - probe definition: {probe_url}
 
-      Source: agent-facts registry, {fact_url} (data CC BY 4.0). This report states what the API
+      Source: apifacts registry, {fact_url} (data CC BY 4.0). This report states what the API
       returns; it does not judge whether the behaviour is intended.
   so_answer:
     body: |
@@ -64,7 +64,7 @@ templates:
 
       This is reproduced by a read-only probe (`{method} {path_template}` → HTTP {status}
       `{error_string}`), last confirmed {last_confirmed}. Details and the probe: {fact_url}
-      (agent-facts registry, CC BY 4.0).
+      (apifacts registry, CC BY 4.0).
 
 # Published items, one JSON line each ({"fact": <id>, "where": <url>, "date": <YYYY-MM-DD>}),
 # so a fact is proposed once. Lives on the host, outside git.

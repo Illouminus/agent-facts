@@ -3,8 +3,8 @@
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from agentfacts.schema import validator_for
-from agentfacts.schema.models import Fix
+from apifacts.schema import validator_for
+from apifacts.schema.models import Fix
 
 FIX = TypeAdapter(Fix)
 

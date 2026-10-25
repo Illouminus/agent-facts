@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from agentfacts.schema.yamlio import load_yaml
+from apifacts.schema.yamlio import load_yaml
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 GOLDEN = Path(__file__).parent / "golden"

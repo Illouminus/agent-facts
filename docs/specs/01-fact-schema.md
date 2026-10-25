@@ -1,7 +1,7 @@
 # 01 · Fact schema v0.1
 
 **Done when:** `schema/fact.schema.json`, `schema/service.schema.json`, `schema/probe.schema.json`,
-`schema/observation.schema.json` exist, `agentfacts validate` passes on every file under `services/`,
+`schema/observation.schema.json` exist, `apifacts validate` passes on every file under `services/`,
 `facts/`, `probes/`, and rejects the fixtures in `tests/fixtures/invalid/` with the expected error codes.
 
 ## Fact (one per file, `facts/<service>/<slug>.yaml`)

@@ -1,11 +1,11 @@
-"""`agentfacts validate [paths]`: exit 0 ok, 1 invalid (`file:line: code message`), 2 usage."""
+"""`apifacts validate [paths]`: exit 0 ok, 1 invalid (`file:line: code message`), 2 usage."""
 
 import re
 from pathlib import Path
 
 from typer.testing import CliRunner
 
-from agentfacts.cli import app
+from apifacts.cli import app
 
 FIXTURES = Path(__file__).parents[1] / "fixtures"
 PROBLEM_LINE = re.compile(r"^.+:\d+: [a-z_]+ .+$")

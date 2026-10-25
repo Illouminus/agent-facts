@@ -26,24 +26,24 @@ end-to-end on illouminus for the wave-1 services, and no component calls an LLM.
 
 | Component | Package / path | Runs where | Wave |
 |-----------|----------------|------------|------|
-| Schemas + validator | `agentfacts/schema`, `schema/*.json`, CLI `agentfacts validate` | CI, dev | W1 |
-| Probe runner | `agentfacts/probe`, `probes/<service>/*.yaml` | illouminus timer (later prod-VPS, Freebox) | W2 |
-| check() service | `agentfacts/api` (FastAPI + uvicorn) | illouminus, behind Caddy | W3 |
-| Quorum + bot | `agentfacts/quorum`, `agentfacts/bot` | illouminus timer | W4 |
-| Pages generator | `agentfacts/pages` → `pages/` | CI on merge | W5 |
-| pytest plugin | `plugins/pytest/` (package `agentfacts-pytest`) | user's test run | W6 |
+| Schemas + validator | `apifacts/schema`, `schema/*.json`, CLI `apifacts validate` | CI, dev | W1 |
+| Probe runner | `apifacts/probe`, `probes/<service>/*.yaml` | illouminus timer (later prod-VPS, Freebox) | W2 |
+| check() service | `apifacts/api` (FastAPI + uvicorn) | illouminus, behind Caddy | W3 |
+| Quorum + bot | `apifacts/quorum`, `apifacts/bot` | illouminus timer | W4 |
+| Pages generator | `apifacts/pages` → `pages/` | CI on merge | W5 |
+| pytest plugin | `plugins/pytest/` (package `apifacts-pytest`) | user's test run | W6 |
 | Seed content | `services/*.yaml`, `facts/*/*.yaml`, `probes/*/*.yaml` | git | W7 |
 | Ops | `ops/systemd/*`, `ops/digest.py`, `ops/deploy.sh` | illouminus | W8 |
-| jest plugin, MCP server | `plugins/jest/`, `agentfacts/mcp` | user's test run / agent host | W9 |
+| jest plugin, MCP server | `plugins/jest/`, `apifacts/mcp` | user's test run / agent host | W9 |
 
 ## Repository layout
 
 ```
-agent-facts/
+apifacts/
   README.md            # Russian idea doc now; English public README is W0
   LICENSE (MIT) · LICENSE-DATA (CC BY 4.0)
-  pyproject.toml       # package agentfacts, uv-managed, Python 3.12
-  agentfacts/          # library + CLI (typer)
+  pyproject.toml       # package apifacts, uv-managed, Python 3.12
+  apifacts/          # library + CLI (typer)
   schema/              # JSON Schema 2020-12: fact, service, probe, observation, fix
   services/<service>.yaml
   facts/<service>/<slug>.yaml
@@ -80,7 +80,7 @@ agent-facts/
    filter before any write.
 5. A probe in a different `env` or `account_state` never refutes a fact; it adds a dimension row.
 6. Budgets: ≤ 1 request / 5 min per (service, endpoint template, vantage); global kill switch
-   `ops/KILL` file or `AGENTFACTS_KILL=1` stops the runner and the bot within one tick.
+   `ops/KILL` file or `APIFACTS_KILL=1` stops the runner and the bot within one tick.
 7. Published aggregates only at k ≥ 3 distinct reporter networks (/16) per observation key.
 
 ## Data flow in one paragraph

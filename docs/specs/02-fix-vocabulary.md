@@ -1,7 +1,7 @@
 # 02 · Fix vocabulary v0.1
 
 **Done when:** `schema/fix.schema.json` encodes exactly this table as a discriminated union on `action`,
-every `fixes[]` entry in `facts/` validates, and `agentfacts render-fix` turns any entry into one
+every `fixes[]` entry in `facts/` validates, and `apifacts render-fix` turns any entry into one
 English sentence from a template (tested per action).
 
 Fixes are **data, not advice**: closed enumeration, typed parameters, rendered to prose by us. Agents can
@@ -29,4 +29,4 @@ command, or free text.
 
 Rules: every fact has ≥ 1 fix (`none_known` counts); max 3 fixes per fact; `vendor_doc_url` and
 `path_template` are validated against the service registration; rendering templates live in
-`agentfacts/fixes/templates.py` and have one test per action with a golden sentence.
+`apifacts/fixes/templates.py` and have one test per action with a golden sentence.

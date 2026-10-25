@@ -3,11 +3,11 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Two PRs into `main`: PR-1 brings the W3 ingestion code in line with the seven rules Edouard
-decided on 2026-10-20 (D-085, spec 03 steps 1–7); PR-2 adds `agentfacts quorum run` (observations →
-`reported` fact drafts, probe scheduling, evidence refresh) and `agentfacts bot publish` (one PR of
+decided on 2026-10-20 (D-085, spec 03 steps 1–7); PR-2 adds `apifacts quorum run` (observations →
+`reported` fact drafts, probe scheduling, evidence refresh) and `apifacts bot publish` (one PR of
 fact/page changes, auto-merge when eligible) per spec 05.
 
-**Architecture:** PR-1 only edits `agentfacts/api/` (signal extraction, store salt period, ingest gate,
+**Architecture:** PR-1 only edits `apifacts/api/` (signal extraction, store salt period, ingest gate,
 unregistered-target metric) plus one data module of seed hosts. PR-2 adds two packages: `quorum`
 (pure grouping/threshold → pure rules → YAML writer) reading `observations.sqlite` read-only, and
 `bot` (git plumbing in a temporary worktree, `gh` behind an injectable runner). The probe runner
@@ -41,27 +41,27 @@ verified:server:<env>` on a passing run. No LLM anywhere; claims come from per-k
 
 | File | PR | Responsibility |
 |------|----|----------------|
-| `agentfacts/api/normalize.py` | 1 | `extract_signal`: JSON-shaped excerpt without whitelisted message → no string; `disregard … previous` |
-| `agentfacts/api/store.py` | 1 | `salt_period(day) -> date` (Monday), `Store.period_salt(period)` (replaces `daily_salt`) |
-| `agentfacts/api/schema.sql` | 1 | comments: salts are per period |
-| `agentfacts/api/seed_hosts.py` | 1 | `SEED_HOSTS` (candidate → API hosts), `metric_host(host) -> str` |
-| `agentfacts/api/app.py` | 1 | ingest gate (error + signal), period salt, labelled unregistered metric |
+| `apifacts/api/normalize.py` | 1 | `extract_signal`: JSON-shaped excerpt without whitelisted message → no string; `disregard … previous` |
+| `apifacts/api/store.py` | 1 | `salt_period(day) -> date` (Monday), `Store.period_salt(period)` (replaces `daily_salt`) |
+| `apifacts/api/schema.sql` | 1 | comments: salts are per period |
+| `apifacts/api/seed_hosts.py` | 1 | `SEED_HOSTS` (candidate → API hosts), `metric_host(host) -> str` |
+| `apifacts/api/app.py` | 1 | ingest gate (error + signal), period salt, labelled unregistered metric |
 | `tests/api/test_ingestion_rules.py` | 1 | one test group per rule (1)–(7) + cap |
 | `tests/api/test_seed_hosts.py` | 1 | keys ⊆ candidates.py, hostnames valid, registered services covered |
 | `tests/api/*` (existing) | 1 | update tests that pinned old behaviour |
-| `agentfacts/quorum/group.py` | 2 | `period_window`, `load_observations` (ro sqlite), `Group`, `group_observations`, `meets_quorum` |
-| `agentfacts/quorum/rules.py` | 2 | `infer_kind`, `claim_for`, `slug_base`, `unique_slug` |
-| `agentfacts/quorum/draft.py` | 2 | `draft_fact`, `matching_probe`, `covering_fact`, `refresh_fact` |
-| `agentfacts/quorum/run.py` | 2 | `run_quorum(...) -> QuorumReport` (orchestration, kill switch, dry run) |
-| `agentfacts/quorum/cli.py` | 2 | `agentfacts quorum run [--since-period DATE] [--dry-run] [--db] [--root] [--state-dir]` |
-| `agentfacts/bot/collect.py` | 2 | changed fact files vs HEAD, drift guard vs origin/main, eligibility |
-| `agentfacts/bot/pr.py` | 2 | branch name, PR body table, temp worktree commit/push, `gh` calls |
-| `agentfacts/bot/cli.py` | 2 | `agentfacts bot publish [--dry-run]` |
-| `agentfacts/probe/budget.py` | 2 | `request_due`, `requested`; `record` clears the request |
-| `agentfacts/probe/runner.py` | 2 | requested probes sort first (budget still applies) |
-| `agentfacts/probe/evidence.py` | 2 | pass on `reported` → `verified:server:<env>`; public `save_fact` |
-| `agentfacts/api/facts_index.py` | 2 | `_hashes` → public `fact_hashes` (quorum reuses check()'s matching) |
-| `agentfacts/cli.py` | 2 | `add_typer` for quorum and bot |
+| `apifacts/quorum/group.py` | 2 | `period_window`, `load_observations` (ro sqlite), `Group`, `group_observations`, `meets_quorum` |
+| `apifacts/quorum/rules.py` | 2 | `infer_kind`, `claim_for`, `slug_base`, `unique_slug` |
+| `apifacts/quorum/draft.py` | 2 | `draft_fact`, `matching_probe`, `covering_fact`, `refresh_fact` |
+| `apifacts/quorum/run.py` | 2 | `run_quorum(...) -> QuorumReport` (orchestration, kill switch, dry run) |
+| `apifacts/quorum/cli.py` | 2 | `apifacts quorum run [--since-period DATE] [--dry-run] [--db] [--root] [--state-dir]` |
+| `apifacts/bot/collect.py` | 2 | changed fact files vs HEAD, drift guard vs origin/main, eligibility |
+| `apifacts/bot/pr.py` | 2 | branch name, PR body table, temp worktree commit/push, `gh` calls |
+| `apifacts/bot/cli.py` | 2 | `apifacts bot publish [--dry-run]` |
+| `apifacts/probe/budget.py` | 2 | `request_due`, `requested`; `record` clears the request |
+| `apifacts/probe/runner.py` | 2 | requested probes sort first (budget still applies) |
+| `apifacts/probe/evidence.py` | 2 | pass on `reported` → `verified:server:<env>`; public `save_fact` |
+| `apifacts/api/facts_index.py` | 2 | `_hashes` → public `fact_hashes` (quorum reuses check()'s matching) |
+| `apifacts/cli.py` | 2 | `add_typer` for quorum and bot |
 | `tests/quorum/*`, `tests/bot/*`, `tests/probe/test_due_requests.py` | 2 | below |
 
 ---
@@ -70,7 +70,7 @@ verified:server:<env>` on a passing run. No LLM anywhere; claims come from per-k
 
 ### Task 1: rule (4) — JSON body without a whitelisted message keeps only the status
 
-**Files:** Modify `agentfacts/api/normalize.py` (`extract_signal`); Test `tests/api/test_ingestion_rules.py`, `tests/api/test_normalize.py::test_non_whitelisted_fields_are_ignored`
+**Files:** Modify `apifacts/api/normalize.py` (`extract_signal`); Test `tests/api/test_ingestion_rules.py`, `tests/api/test_normalize.py::test_non_whitelisted_fields_are_ignored`
 
 - [ ] **Step 1: failing tests**
 
@@ -100,7 +100,7 @@ def test_json_body_stored_as_status_only(client, db_path):   # API level: row ha
 
 ### Task 2: rule (5) — pre-flight calls and empty signals are never stored
 
-**Files:** Modify `agentfacts/api/app.py` (`_check`); Test `tests/api/test_ingestion_rules.py`; update
+**Files:** Modify `apifacts/api/app.py` (`_check`); Test `tests/api/test_ingestion_rules.py`; update
 `test_check_contract.py::test_preflight_url_lists_template_and_service_facts` (stored False, 0 rows),
 `test_signal_not_extractable` (0 rows), `test_default_deny.py::test_query_string…` (send an error).
 
@@ -124,7 +124,7 @@ def test_error_without_any_signal_is_not_stored(client, rows):
 
 ### Task 3: rule (6) — salt per week, Monday 00:00 UTC
 
-**Files:** Modify `agentfacts/api/store.py`, `agentfacts/api/app.py`, `agentfacts/api/schema.sql`
+**Files:** Modify `apifacts/api/store.py`, `apifacts/api/app.py`, `apifacts/api/schema.sql`
 (comments); Test `tests/api/test_store.py` (replace daily-salt tests), `tests/api/test_ingestion_rules.py`.
 
 - [ ] **Step 1: failing tests**
@@ -147,7 +147,7 @@ def test_same_network_keeps_its_id_all_week_and_changes_next_monday(make_client,
 
 ### Task 4: rule (7) — unregistered-target metric keeps only seed-candidate hosts
 
-**Files:** Create `agentfacts/api/seed_hosts.py`; Modify `agentfacts/api/app.py` (default-deny branch);
+**Files:** Create `apifacts/api/seed_hosts.py`; Modify `apifacts/api/app.py` (default-deny branch);
 Test `tests/api/test_seed_hosts.py`, `tests/api/test_ingestion_rules.py`, update
 `tests/api/test_default_deny.py` counters expectation.
 
@@ -174,7 +174,7 @@ def test_registered_services_hosts_are_seed_hosts():  # services/*.yaml ⊆ SEED
 
 ### Task 5: rules (1)(2)(3) and the daily cap — prove them at API level
 
-**Files:** Modify `agentfacts/api/normalize.py` (`_PROMPT_MARKERS`: `disregard(?:\s+\S+){0,3}?\s+(?:previous|prior|above)`),
+**Files:** Modify `apifacts/api/normalize.py` (`_PROMPT_MARKERS`: `disregard(?:\s+\S+){0,3}?\s+(?:previous|prior|above)`),
 `tests/api/api_fixtures.py` (pypi gets `doc_hosts: [docs.pypi.org]`); Test `tests/api/test_ingestion_rules.py`.
 
 - [ ] **Step 1: tests** — URL on `doc_hosts` kept / subdomain of host kept / foreign dropped; every
@@ -187,7 +187,7 @@ def test_registered_services_hosts_are_seed_hosts():  # services/*.yaml ⊆ SEED
 ### Task 6: PR-1 wrap-up
 
 - [ ] `uv run pytest -q tests/api/test_openapi.py` (contract unchanged → `openapi-v0.json` untouched).
-- [ ] Docstrings: `app.py` module/`_ingest`, `store.py` (no "daily salt" left): `grep -rn "daily salt\|daily_salt" agentfacts tests`.
+- [ ] Docstrings: `app.py` module/`_ingest`, `store.py` (no "daily salt" left): `grep -rn "daily salt\|daily_salt" apifacts tests`.
 - [ ] `uv run ruff check . && uv run pytest -q` green → push → PR ready → `/code-review` → fix all → CI → squash merge.
 
 ---
@@ -196,8 +196,8 @@ def test_registered_services_hosts_are_seed_hosts():  # services/*.yaml ⊆ SEED
 
 ### Task 7: probe hooks — due requests and reported → verified
 
-**Files:** Modify `agentfacts/probe/budget.py`, `agentfacts/probe/runner.py` (`_select` sort key),
-`agentfacts/probe/evidence.py` (`_confirm`, `save_fact`); Test `tests/probe/test_due_requests.py`,
+**Files:** Modify `apifacts/probe/budget.py`, `apifacts/probe/runner.py` (`_select` sort key),
+`apifacts/probe/evidence.py` (`_confirm`, `save_fact`); Test `tests/probe/test_due_requests.py`,
 `tests/probe/test_evidence.py` (new case).
 
 - [ ] **Step 1: failing tests**
@@ -253,7 +253,7 @@ def test_unique_slug_dedups_with_suffix():  # taken {a, a-2} → a-3; "index" ne
 ### Task 10: drafts, coverage, refresh, probe match (`quorum/draft.py`)
 
 - [ ] **Step 1: failing tests** (`tests/quorum/test_draft.py`, tmp repo from W1 fixtures + a probe)
-  - draft document validates with `agentfacts validate` (via `validate_paths`), status reported,
+  - draft document validates with `apifacts validate` (via `validate_paths`), status reported,
     provenance `observation_quorum`, `fixes: [{action: none_known, reason_kind: investigating}]`;
   - a group whose hash matches a fact (error_string or normalized) is covered; status-only group
     covered by a fact with the same template + status; retracted facts cover but are not refreshed;
@@ -294,9 +294,9 @@ def test_unique_slug_dedups_with_suffix():  # taken {a, a-2} → a-3; "index" ne
 
 ### Task 13: PR-2 wrap-up
 
-- [ ] Demo: `agentfacts quorum run --dry-run` on a fixture DB and `agentfacts bot publish --dry-run`
+- [ ] Demo: `apifacts quorum run --dry-run` on a fixture DB and `apifacts bot publish --dry-run`
   (outputs go to the PR body and the report).
-- [ ] `uv run ruff check . && uv run pytest -q && uv run agentfacts validate && uv run agentfacts pages build --check`.
+- [ ] `uv run ruff check . && uv run pytest -q && uv run apifacts validate && uv run apifacts pages build --check`.
 - [ ] push → PR ready → `/code-review` → fix all → CI → squash merge → hand-over note for W8
   (`side-session-notes/af-w4-handover.md`) → worktree removed → state journal.
 

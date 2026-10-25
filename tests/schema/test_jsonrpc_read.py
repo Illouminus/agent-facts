@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agentfacts.schema.models import Probe, http_step_violations
-from agentfacts.schema.registry import JsonRpcRead
-from agentfacts.schema.validate import validate_paths
+from apifacts.schema.models import Probe, http_step_violations
+from apifacts.schema.registry import JsonRpcRead
+from apifacts.schema.validate import validate_paths
 
 SERVICE = """\
 key: rpcco

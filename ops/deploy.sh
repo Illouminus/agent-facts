@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ops/deploy.sh — host side of "merge = deployed" for agent-facts on illouminus (spec 08, W8).
+# ops/deploy.sh — host side of "merge = deployed" for apifacts on illouminus (spec 08, W8).
 #
 # Reached from GitHub Actions ONLY through a forced command (ops/README.md):
 #   command="/home/ubuntu/apps/agent-facts/ops/deploy.sh",restrict ssh-ed25519 AAAA… gha-deploy-agent-facts
@@ -30,9 +30,9 @@ main() {
   local app deploy_dir sha prev
   app="$(cd "$(dirname "$0")/.." && pwd -P)"
   deploy_dir="$app/var/deploy"
-  HEALTH_URL="${AGENTFACTS_HEALTH_URL:-http://127.0.0.1:8795/healthz}"
-  HEALTH_TRIES="${AGENTFACTS_HEALTH_TRIES:-20}"
-  HEALTH_SLEEP="${AGENTFACTS_HEALTH_SLEEP:-1}"
+  HEALTH_URL="${APIFACTS_HEALTH_URL:-http://127.0.0.1:8795/healthz}"
+  HEALTH_TRIES="${APIFACTS_HEALTH_TRIES:-20}"
+  HEALTH_SLEEP="${APIFACTS_HEALTH_SLEEP:-1}"
   STATE_DIR="$HOME/claude-hub/state"
   mkdir -p "$deploy_dir" || { echo "deploy: cannot create $deploy_dir" >&2; return 1; }
   LOG="$deploy_dir/deploy.log"
@@ -52,7 +52,7 @@ main() {
   # to finish so the checkout neither loses its edits nor swaps code under a running tick. A tick
   # that starts meanwhile sees the lock busy and exits quietly.
   exec 8>>"$app/var/probe.lock"
-  if command -v flock >/dev/null 2>&1 && ! flock -w "${AGENTFACTS_PROBE_LOCK_WAIT:-900}" 8; then
+  if command -v flock >/dev/null 2>&1 && ! flock -w "${APIFACTS_PROBE_LOCK_WAIT:-900}" 8; then
     log "busy: a probe tick still holds var/probe.lock; nothing changed"
     return 75
   fi

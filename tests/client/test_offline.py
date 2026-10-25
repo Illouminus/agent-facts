@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from agentfacts.client.offline import PACKAGED, Snapshot
+from apifacts.client.offline import PACKAGED, Snapshot
 
 VALID = Path(__file__).parent.parent / "fixtures" / "valid"
 FACT_ID = "af:stripe:idempotency-key-reuse-different-params"

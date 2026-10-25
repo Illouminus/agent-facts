@@ -8,7 +8,7 @@ import subprocess
 from collections.abc import Sequence
 from pathlib import Path
 
-from agentfacts.pages.build import build_pages, load_registry, sync
+from apifacts.pages.build import build_pages, load_registry, sync
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 GIT_ENV_USER = ("-c", "user.name=Test", "-c", "user.email=test@example.invalid")
@@ -36,8 +36,8 @@ class Checkout:
         ]:
             (self.work / dst).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(VALID / src, self.work / dst)
-        (self.work / "agentfacts").mkdir()
-        (self.work / "agentfacts" / "code.py").write_text("x = 1\n")
+        (self.work / "apifacts").mkdir()
+        (self.work / "apifacts" / "code.py").write_text("x = 1\n")
         sync(self.work / "pages", build_pages(*load_registry(self.work)))
         sh(self.work, "add", "-A")
         sh(self.work, "commit", "--quiet", "-m", "seed")
@@ -82,7 +82,7 @@ class FakeGh:
         if args[:2] == ["pr", "list"]:
             return json.dumps(self.open_prs)
         if args[:2] == ["pr", "create"]:
-            return "https://github.com/Illouminus/agent-facts/pull/99\n"
+            return "https://github.com/Illouminus/apifacts/pull/99\n"
         return ""
 
     def verbs(self) -> list[str]:

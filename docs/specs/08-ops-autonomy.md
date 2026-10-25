@@ -9,9 +9,9 @@ receives the weekly journal line automatically, the Monday digest arrives in Tel
 
 | Unit | Schedule | Does |
 |------|----------|------|
-| `agentfacts-probe.timer` | every 15 min | `agentfacts probe run --due --max 50` |
-| `agentfacts-quorum.timer` | hourly | `agentfacts quorum run && agentfacts bot publish` |
-| `agentfacts-refresh.timer` | daily 03:00 Europe/Paris | `agentfacts probe run --refresh-evidence` (counters → facts/, added 24.10.2026) |
+| `agentfacts-probe.timer` | every 15 min | `apifacts probe run --due --max 50` |
+| `agentfacts-quorum.timer` | hourly | `apifacts quorum run && apifacts bot publish` |
+| `agentfacts-refresh.timer` | daily 03:00 Europe/Paris | `apifacts probe run --refresh-evidence` (counters → facts/, added 24.10.2026) |
 | `agentfacts-pages.timer` | on merge (CI) | pages build in CI, not on the host |
 | `agentfacts-digest.timer` | Mon 08:00 Europe/Paris | `ops/digest.py` → Telegram (question class, D-062) |
 
@@ -26,7 +26,7 @@ API behind Caddy at `facts.baillot.dev` `[tap: DNS record once]`.
 ## Weekly digest (one message, one tap)
 
 ```
-agent-facts · week 44
+apifacts · week 44
 facts: 112 (+9) · verified 71 · reported 31 · stale 4 · retracted 0
 check(): 143 calls from 27 networks · 11 unregistered targets (top: api.notion.com; hosts known only for seed candidates, the rest is "other")
 probes: 1 840 runs · 0 budget violations · keys missing: [hubspot-test]

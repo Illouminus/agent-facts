@@ -1,6 +1,6 @@
 # Monday 08:00 Paris time (spec 08). Persistent: a Monday missed while the host was down runs at boot.
 [Unit]
-Description=agent-facts weekly digest, Monday 08:00 Europe/Paris
+Description=apifacts weekly digest, Monday 08:00 Europe/Paris
 
 [Timer]
 OnCalendar=Mon *-*-* 08:00:00 Europe/Paris

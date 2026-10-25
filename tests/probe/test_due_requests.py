@@ -6,11 +6,11 @@ from datetime import UTC, datetime, timedelta
 
 from probe_builders import probe_doc
 
-from agentfacts.probe.budget import BudgetState
-from agentfacts.probe.evidence import apply_outcome
-from agentfacts.probe.runner import TickOptions, run_tick
-from agentfacts.schema.models import Probe
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.probe.budget import BudgetState
+from apifacts.probe.evidence import apply_outcome
+from apifacts.probe.runner import TickOptions, run_tick
+from apifacts.schema.models import Probe
+from apifacts.schema.yamlio import load_yaml, plain
 
 T0 = datetime(2026, 10, 20, 10, 0, 0, tzinfo=UTC)
 ITEMS = [("acme", "GET", "/v1/items")]

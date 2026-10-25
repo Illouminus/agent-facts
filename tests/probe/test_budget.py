@@ -1,6 +1,6 @@
 """Budget state: per (probe, vantage) and per (service, method, template, vantage) — invariant 6."""
 
-from agentfacts.probe.budget import BudgetState
+from apifacts.probe.budget import BudgetState
 
 T = 1_800_000_000.0
 ITEMS = [("acme", "GET", "/v1/items")]

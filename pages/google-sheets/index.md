@@ -4,12 +4,12 @@ Hosts: `sheets.googleapis.com` · 20 facts
 
 ## Error meanings
 
-- ✅ verified:server:prod · [`unable to parse range: agentfactsnosuchsheet!a#`](batch-get-fails-whole.md) · GET /v4/spreadsheets/{spreadsheet_id}/values:batchGet · env prod
+- ✅ verified:server:prod · [`unable to parse range: apifactsnosuchsheet!a#`](batch-get-fails-whole.md) · GET /v4/spreadsheets/{spreadsheet_id}/values:batchGet · env prod
 - ✅ verified:server:prod · [`unable to parse range: sheet#!a#`](default-sheet-name-follows-locale.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 - ✅ verified:server:prod · [`request contains an invalid argument.`](invalid-fields-mask-generic-400.md) · GET /v4/spreadsheets/{spreadsheet_id} · env prod
 - ✅ verified:server:prod · [`invalid value at 'value_render_option' (type.googleapis.com/google.apps.sheets.v#.valuerenderoption), "pretty"`](invalid-value-render-option-400.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 - ✅ verified:server:prod · [`requested entity was not found.`](spreadsheet-not-found-404.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
-- ✅ verified:server:prod · [`unable to parse range: agentfactsnosuchsheet!a#`](unknown-sheet-unable-to-parse.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [`unable to parse range: apifactsnosuchsheet!a#`](unknown-sheet-unable-to-parse.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 
 ## Rate limits
 
@@ -39,4 +39,4 @@ Hosts: `sheets.googleapis.com` · 20 facts
 
 ---
 
-Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · agent-facts registry · This page is generated; edit the YAML, not the page.
+Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · This page is generated; edit the YAML, not the page.

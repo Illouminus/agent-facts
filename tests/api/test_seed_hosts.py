@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter
 
-from agentfacts.api.seed_hosts import OTHER, SEED_HOSTS, metric_host
-from agentfacts.schema.models import Hostname, Service
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.api.seed_hosts import OTHER, SEED_HOSTS, metric_host
+from apifacts.schema.models import Hostname, Service
+from apifacts.schema.yamlio import load_yaml, plain
 
 ROOT = Path(__file__).parents[2]
 CANDIDATES = ROOT / "docs" / "research" / "seed-100" / "candidates.py"

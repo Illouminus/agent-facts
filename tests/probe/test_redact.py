@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 import pytest
 
-from agentfacts.probe.redact import REDACTED, Redactor, secret_forms
+from apifacts.probe.redact import REDACTED, Redactor, secret_forms
 
 
 def test_exact_secret_and_patterns_are_redacted():

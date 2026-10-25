@@ -2,8 +2,8 @@ import shutil
 from pathlib import Path
 
 import pytest
-from agentfacts.client.offline import Snapshot
-from agentfacts.schema.yamlio import load_yaml, plain
+from apifacts.client.offline import Snapshot
+from apifacts.schema.yamlio import load_yaml, plain
 
 FIXTURES = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "valid"
 FACT_FILE = "fact-idempotency-key-reuse-different-params.yaml"
@@ -24,9 +24,9 @@ def answer() -> dict:
 
 @pytest.fixture
 def plugin_env(monkeypatch, tmp_path):
-    """Isolate every run: own cache dir, no inherited agent-facts settings."""
+    """Isolate every run: own cache dir, no inherited apifacts settings."""
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg-cache"))
-    for name in ("AGENTFACTS_DISABLE", "AGENTFACTS_SNAPSHOT", "AGENTFACTS_ENDPOINT"):
+    for name in ("APIFACTS_DISABLE", "APIFACTS_SNAPSHOT", "APIFACTS_ENDPOINT"):
         monkeypatch.delenv(name, raising=False)
     return monkeypatch
 
@@ -34,7 +34,7 @@ def plugin_env(monkeypatch, tmp_path):
 @pytest.fixture
 def registry(httpserver, plugin_env):
     """A fake check() server: services list + one stripe fact."""
-    plugin_env.setenv("AGENTFACTS_ENDPOINT", httpserver.url_for("").rstrip("/"))
+    plugin_env.setenv("APIFACTS_ENDPOINT", httpserver.url_for("").rstrip("/"))
     httpserver.expect_request("/v0/services", method="GET").respond_with_json(SERVICES)
     return httpserver
 
