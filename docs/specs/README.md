@@ -18,4 +18,4 @@ agents and contributors worldwide; the internal history (plan, decisions, panels
 
 Conventions: every spec states **Done when** up front; numbers that are design parameters are listed in
 one table per spec so they can be tuned without rewriting prose; anything a human must do is marked
-`[tap]`. Decisions these specs implement: `../decisions.md` (2026-10-17 … 2026-10-20).
+`[tap]`. Decisions these specs implement: `docs/decisions.md` in the private repository apifacts-internal (2026-10-17 … 2026-10-20).

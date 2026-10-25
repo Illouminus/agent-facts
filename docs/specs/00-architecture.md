@@ -40,7 +40,7 @@ end-to-end on illouminus for the wave-1 services, and no component calls an LLM.
 
 ```
 apifacts/
-  README.md            # Russian idea doc now; English public README is W0
+  README.md            # public English README (the Russian idea doc lives in apifacts-internal)
   LICENSE (MIT) · LICENSE-DATA (CC BY 4.0)
   pyproject.toml       # package apifacts, uv-managed, Python 3.12
   apifacts/          # library + CLI (typer)

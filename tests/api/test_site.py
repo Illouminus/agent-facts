@@ -30,7 +30,7 @@ YAML: [facts/stripe/missing-api-key-401.yaml](../../facts/stripe/missing-api-key
 @pytest.fixture
 def site(repo, make_client):
     files = {
-        "README.en.md": README,
+        "README.md": README,
         "pages/index.md": INDEX,
         "pages/stripe/index.md": SERVICE,
         "pages/stripe/missing-api-key-401.md": FACT,

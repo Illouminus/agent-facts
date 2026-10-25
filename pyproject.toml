@@ -2,7 +2,7 @@
 name = "apifacts"
 dynamic = ["version"]
 description = "Open registry of verified facts about machine interfaces (APIs, SDKs, CLIs) for AI agents."
-readme = "README.en.md"
+readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE", "LICENSE-DATA"]  # LICENSE-DATA: the packaged snapshot (facts/, services/) is CC BY 4.0
 requires-python = ">=3.12"

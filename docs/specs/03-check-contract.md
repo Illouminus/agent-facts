@@ -46,7 +46,7 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
    for `my.salesforce.com` (decision 2026-10-24, D-090); no other subdomain matches. Path against
    `templates` (path parameters `{id}` match one segment). No match → respond with
    `unregistered_target`, store nothing, count one anonymous daily metric; the hostname is kept in that
-   metric only when it belongs to the seed candidate list (`docs/research/seed-100/candidates.py`),
+   metric only when it belongs to the seed candidate list (`apifacts/api/seed_hosts.py`),
    every other host counts as `other` (decision 2026-10-20, Q7).
 2. Extract the signal from `error`: status; vendor error code via the service's `signal_fields` whitelist
    (JSON pointer list); error string = first whitelisted message field. An error inside a list, which a

@@ -1,7 +1,6 @@
-"""The seed-host list behind the unregistered-target metric stays tied to its sources: candidate
-names from docs/research/seed-100/candidates.py, hosts of the registered services."""
+"""The seed-host list behind the unregistered-target metric lists every registered service's hosts,
+so the metric never drops a host the registry probes."""
 
-import runpy
 from pathlib import Path
 
 import pytest
@@ -12,15 +11,6 @@ from apifacts.schema.models import Hostname, Service
 from apifacts.schema.yamlio import load_yaml, plain
 
 ROOT = Path(__file__).parents[2]
-CANDIDATES = ROOT / "docs" / "research" / "seed-100" / "candidates.py"
-
-
-def _candidate_names() -> set[str]:
-    return {row["service"] for row in runpy.run_path(str(CANDIDATES))["rows"]()}
-
-
-def test_every_entry_is_a_seed_candidate():
-    assert set(SEED_HOSTS) <= _candidate_names()
 
 
 def test_every_host_is_a_lowercase_hostname():
@@ -32,10 +22,10 @@ def test_every_host_is_a_lowercase_hostname():
 
 
 def test_registered_services_hosts_are_listed():
+    listed = {host for hosts in SEED_HOSTS.values() for host in hosts}
     for path in sorted((ROOT / "services").glob("*.yaml")):
         service = Service.model_validate(plain(load_yaml(path)))
-        if service.key in _candidate_names():
-            assert set(service.hosts) <= set(SEED_HOSTS.get(service.key, ())), service.key
+        assert set(service.hosts) <= listed, service.key  # keyed by candidate name, e.g. firebase
 
 
 @pytest.mark.parametrize(

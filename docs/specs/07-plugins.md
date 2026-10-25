@@ -45,7 +45,7 @@ than a nested object; `body` may arrive as a JSON object (the SDK parses JSON st
 re-serialized. Same client as the CLI (filters, 2 s timeout, 20 checks per session, `APIFACTS_DISABLE`,
 `--offline` from the packaged snapshot); every failure is a text answer starting with `error:`.
 `server.json` at the repository root is the registry entry (`io.github.illouminus/apifacts`, PyPI,
-`runtimeHint: uvx`); README.en.md carries the `mcp-name:` line the registry looks for on PyPI.
+`runtimeHint: uvx`); README.md carries the `mcp-name:` line the registry looks for on PyPI.
 
 ## CLI (wave 1, part of `apifacts`)
 

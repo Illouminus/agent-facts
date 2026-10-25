@@ -1,9 +1,9 @@
 """API hosts of the seed candidates (spec 03 step 1, decision 2026-10-20 Q7).
 
 The unregistered-target metric keeps a hostname only when it is listed here; every other host
-counts as `other`. Keys are service names of `docs/research/seed-100/candidates.py` (a test keeps
-them in sync; `docs/` is not part of the package, so the hosts live here). Values are the vendors'
-public API hosts, matched exactly: a tenant subdomain (`acme.my.salesforce.com`,
+counts as `other`. Keys are the service names of the seed candidate list (kept outside this
+repository); a test checks that every registered service's hosts are listed here. Values are the
+vendors' public API hosts, matched exactly: a tenant subdomain (`acme.my.salesforce.com`,
 `<bucket>.s3.amazonaws.com`) is `other`, so no customer name ever reaches the metric. Candidates
 that run locally (libraries, self-hosted tools) or only have per-tenant hosts have no entry.
 """

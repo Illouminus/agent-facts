@@ -3,7 +3,7 @@
 # templates (/getMe …) and the runner puts /bot<token> in front (auth kind path_prefix). Agents
 # report the full URL, which the /{bot_token}/… templates match; check() stores templates only,
 # never the token segment. Probes are read-only GETs of methods that change nothing (getUpdates
-# without offset confirms no update). The probe bot @facstIllouminusBot has no webhook.
+# without offset confirms no update). The probe bot has no webhook.
 key: telegram
 name: Telegram Bot API
 hosts: [api.telegram.org]

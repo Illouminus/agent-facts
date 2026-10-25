@@ -1,4 +1,4 @@
-"""The front door (spec 06, "HTML on the domain"): `/` from README.en.md, the generated `pages/` as
+"""The front door (spec 06, "HTML on the domain"): `/` from README.md, the generated `pages/` as
 HTML at the same paths, `/llms.txt` and `/robots.txt`. No scripts, fonts, forms or analytics.
 
 Rendered once, at startup, like the facts index: a new registry needs a restart. Markdown goes
@@ -20,7 +20,7 @@ from markdown_it.token import Token
 REPO_URL = "https://github.com/Illouminus/apifacts"
 BLOB = f"{REPO_URL}/blob/main"
 SITE = "https://apifacts.dev"
-README = "README.en.md"
+README = "README.md"
 PAGES_DIR = "pages"
 
 CSS = (
@@ -170,7 +170,7 @@ def llms_txt(services: list[tuple[str, str, int]], version: str, opt_out: str) -
 
 
 def load_pages(root: Path) -> dict[str, Page]:
-    """Domain path → rendered page, for README.en.md and every page file."""
+    """Domain path → rendered page, for README.md and every page file."""
     pages: dict[str, Page] = {}
     readme = root / README
     if readme.is_file():

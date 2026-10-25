@@ -64,7 +64,7 @@ page, no marketing, no analytics, forms, scripts or web fonts: one inline styles
 
 | Path | Source |
 | --- | --- |
-| `/` | `README.en.md` |
+| `/` | `README.md` |
 | `/registry` | `pages/index.md` |
 | `/<service>/` (`/<service>` → 308) | `pages/<service>/index.md` |
 | `/<service>/<slug>` | `pages/<service>/<slug>.md` (also `pages/errors/<hash>.md`) |

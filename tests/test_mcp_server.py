@@ -144,7 +144,7 @@ def test_server_json_matches_the_package():
 
     root = Path(__file__).parent.parent
     entry = json.loads((root / "server.json").read_text(encoding="utf-8"))
-    readme = (root / "README.en.md").read_text(encoding="utf-8")
+    readme = (root / "README.md").read_text(encoding="utf-8")
     assert f"<!-- mcp-name: {entry['name']} -->" in readme
     assert len(entry["description"]) <= 100  # registry schema maxLength
     (package,) = entry["packages"]
