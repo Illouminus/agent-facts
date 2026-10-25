@@ -129,5 +129,5 @@ says `approved: true` (Edouard's tap).
 
 `ops/Caddyfile.facts` is appended to `/etc/caddy/Caddyfile`. Check with `caddy adapt`, not `caddy
 validate` (validate instantiates log files as root and breaks the next reload), then
-`sudo systemctl reload caddy`. `facts.baillot.dev` resolves through the `*.baillot.dev` wildcard,
-so the certificate comes on the first reload: `curl -s https://facts.baillot.dev/healthz`.
+`sudo systemctl reload caddy`. `apifacts.dev` resolves through the `*.baillot.dev` wildcard,
+so the certificate comes on the first reload: `curl -s https://apifacts.dev/healthz`.

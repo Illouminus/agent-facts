@@ -48,7 +48,7 @@ from apifacts.probe.runner import (
 )
 
 BOT_NAME = "agent-facts-bot"
-DEFAULT_BOT_EMAIL = "bot@facts.baillot.dev"
+DEFAULT_BOT_EMAIL = "bot@apifacts.dev"
 LABEL = "facts"
 REVIEW_LABEL = "needs-review"  # a PR without auto-merge: some fact needs a human tap (D-089)
 BRANCH_PREFIX = "bot/facts-"

@@ -95,7 +95,7 @@ def test_verified_fact_page_content(registry, pages):
         "official doc: <https://docs.stripe.com/api/idempotent_requests>"
     ) in page
     assert "Observations: none from reporters yet." in page
-    assert "curl -s https://facts.baillot.dev/v0/check" in page
+    assert "curl -s https://apifacts.dev/v0/check" in page
     assert '"target":{"method":"POST","url":"https://api.stripe.com/v1/payment_intents"}' in page
     assert f'"error":{{"status":400,"body_excerpt":"{IDEMPOTENCY}"}}' in page
     assert (

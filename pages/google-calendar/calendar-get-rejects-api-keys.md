@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"GET","url":"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}"},"error":{"status":401,"body_excerpt":"api keys are not supported by this api. expected oauth# access token or other authentication credentials that assert a principal. see <url>"}}'
 ```

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://facts.baillot.dev/schema/v0/observation.schema.json",
+  "$id": "https://apifacts.dev/schema/v0/observation.schema.json",
   "title": "Observation",
   "description": "One row of observations.sqlite (never in git). Normalized fields only: no bodies, headers, query strings or raw IPs (docs/specs/01-fact-schema.md, 03-check-contract.md).",
   "type": "object",

@@ -22,7 +22,7 @@ POST api.stripe.com/v1/payment_intents → 400 idempotency_error
 
 - Privacy: never sends request bodies, headers, query strings or tokens; strips the secret-shaped
   patterns from `body_excerpt` client-side; one request per failure, none on pass.
-- Config: `APIFACTS_ENDPOINT` (default `https://facts.baillot.dev`), `APIFACTS_DISABLE`,
+- Config: `APIFACTS_ENDPOINT` (default `https://apifacts.dev`), `APIFACTS_DISABLE`,
   `--apifacts-offline` (use the cached YAML snapshot shipped in the wheel, no network).
 - Cache: `GET /v0/services` hosts list (`hosts` + `instance_hosts`) cached 24 h in `~/.cache/apifacts/`.
   A tenant host such as `<org>.my.salesforce.com` is sent under its registry host (`my.salesforce.com`):

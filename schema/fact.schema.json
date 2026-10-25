@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://facts.baillot.dev/schema/v0/fact.schema.json",
+  "$id": "https://apifacts.dev/schema/v0/fact.schema.json",
   "title": "Fact",
   "description": "facts/<service>/<slug>.yaml: one verified fact about a machine interface (docs/specs/01-fact-schema.md).",
   "type": "object",

@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"GET","url":"https://api.stripe.com/v1/customers"},"error":{"status":401,"body_excerpt":"you did not provide an api key. you need to provide your api key in the authorization header, using bearer auth (e.g. '\''authorization: <redacted>'\''). see <url> for details, or we can help at <url>"}}'
 ```

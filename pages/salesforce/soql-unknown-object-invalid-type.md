@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"GET","url":"https://login.salesforce.com/services/data/{version}/query"},"error":{"status":400,"body_excerpt":"select id from nosuchobject__c ^ error at row:#:column:## sobject type '\''nosuchobject__c'\'' is not supported. if you are attempting to use a custom object, be sure to append the '\''__c'\'' after the entity name. please reference your wsdl or the describe call for the appropriate names."}}'
 ```

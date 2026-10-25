@@ -1,11 +1,31 @@
-# facts.baillot.dev — apifacts check() API (W8). Appended to /etc/caddy/Caddyfile by hand
-# (ops/README.md → Caddy). DNS: facts.baillot.dev resolves through the *.baillot.dev wildcard to
-# illouminus (A only, no AAAA; checked 2026-10-20), so no record of its own is needed.
+# apifacts.dev — the apifacts check() API (D-091, 25.10.2026). Appended to /etc/caddy/Caddyfile by
+# hand (ops/README.md → Caddy). DNS: A records apifacts.dev and www → illouminus (OVH zone, set by
+# Edouard 25.10); facts.baillot.dev (the W8 address, *.baillot.dev wildcard) stays as a legacy alias
+# until the first plugin release points everything at apifacts.dev, then becomes a redirect.
 #
-# No `log` directive on purpose: Caddy keeps no access log for this site, so caller IPs never reach
+# No `log` directive on purpose: Caddy keeps no access log for these sites, so caller IPs never reach
 # a disk (spec 03: never store or log raw IPs; uvicorn runs with --no-access-log for the same
 # reason). Caddy does not trust an incoming X-Forwarded-For (no trusted_proxies here) and sends the
 # caller's address itself; the API believes X-Forwarded-For only from 127.0.0.1/::1.
+apifacts.dev {
+	encode zstd gzip
+	request_body {
+		max_size 16KB
+	}
+	reverse_proxy 127.0.0.1:8795
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+}
+
+www.apifacts.dev {
+	redir https://apifacts.dev{uri} permanent
+}
+
+# Legacy alias (W8, 20.10.2026): same upstream, same headers; to become `redir https://apifacts.dev{uri}`.
 facts.baillot.dev {
 	encode zstd gzip
 	request_body {

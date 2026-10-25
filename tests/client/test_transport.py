@@ -234,7 +234,7 @@ def test_cache_write_failure_is_ignored(httpserver, tmp_path, clock):
 
 def test_settings_from_env(tmp_path):
     assert Settings.from_env({}) == Settings(DEFAULT_ENDPOINT, False, None)
-    assert DEFAULT_ENDPOINT == "https://facts.baillot.dev"
+    assert DEFAULT_ENDPOINT == "https://apifacts.dev"
     env = {
         "APIFACTS_ENDPOINT": "http://localhost:8000/",
         "APIFACTS_DISABLE": "1",

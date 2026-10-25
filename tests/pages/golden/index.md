@@ -9,7 +9,7 @@ Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how i
 
 ## Machine access
 
-`POST https://facts.baillot.dev/v0/check` with the failing request's method, URL and error returns the matching facts and their typed fixes. Every fact page is titled with its normalized error string.
+`POST https://apifacts.dev/v0/check` with the failing request's method, URL and error returns the matching facts and their typed fixes. Every fact page is titled with its normalized error string.
 
 ---
 
