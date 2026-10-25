@@ -42,7 +42,7 @@ Probe `af:stripe:probe:idempotency-key-reuse` (declarative, [source](../../probe
 Observations: 12 distinct networks in the last 30 days.
 
 ## Machine access
-`POST https://facts.baillot.dev/v0/check` with `{"target":{"method":"POST","url":"https://api.stripe.com/v1/payment_intents"},"error":{"status":400,"body_excerpt":"…"}}` · YAML: [facts/stripe/idempotency-key-reuse-different-params.yaml](../../facts/stripe/…)
+`POST https://apifacts.dev/v0/check` with `{"target":{"method":"POST","url":"https://api.stripe.com/v1/payment_intents"},"error":{"status":400,"body_excerpt":"…"}}` · YAML: [facts/stripe/idempotency-key-reuse-different-params.yaml](../../facts/stripe/…)
 
 ---
 Data: CC BY 4.0 · apifacts registry · This page is generated; edit the YAML, not the page.

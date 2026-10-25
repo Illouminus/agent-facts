@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"GET","url":"https://api.github.com/repos/{owner}/{repo}"},"error":{"status":400,"body_excerpt":"the version you specified in the \"x-github-api-version\" request header, \"####-##-##\", is not a supported version. the following versions are currently supported: \"####-##-##\" (most recent) and \"####-##-##\"."}}'
 ```

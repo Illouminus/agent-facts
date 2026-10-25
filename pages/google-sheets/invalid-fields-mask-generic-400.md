@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"GET","url":"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}"},"error":{"status":400,"body_excerpt":"request contains an invalid argument."}}'
 ```

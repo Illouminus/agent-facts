@@ -23,7 +23,7 @@ Observations: 5 distinct reporter networks.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"GET","url":"https://api.stripe.com/v1/customers/{id}"},"error":{"status":429,"body_excerpt":"too many requests hit the api too quickly. we recommend an exponential backoff of your requests."}}'
 ```

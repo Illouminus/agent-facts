@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://facts.baillot.dev/schema/v0/service.schema.json",
+  "$id": "https://apifacts.dev/schema/v0/service.schema.json",
   "title": "Service registration",
   "description": "services/<service>.yaml (docs/specs/01-fact-schema.md). Registered templates are the only paths check() stores observations for and probes may call.",
   "type": "object",

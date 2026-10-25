@@ -131,7 +131,7 @@ Edouard with `keyput` `[tap per service, ~5 min each]`. Start with the keyless o
 **Files:** `ops/systemd/agentfacts-{probe,quorum,digest}.{service,timer}`, `ops/deploy.sh`
 (vps-auto-deploy pattern), `ops/digest.py` (+ `send_telegram` question class with one tap),
 `ops/publish-policy.yaml` (templates for issue/SO answer, vendor allowlist — approved by Edouard
-`[tap once]`), `ops/KILL` handling, `Caddyfile` snippet for `facts.baillot.dev`, state journal hook.
+`[tap once]`), `ops/KILL` handling, `Caddyfile` snippet for `apifacts.dev`, state journal hook.
 **Done when:** criteria in `08`; `systemctl --user list-timers` shows the three timers; `/healthz` over
 HTTPS; a dry-run digest delivered.
 
@@ -145,7 +145,7 @@ the week-8 gauge (`README` → Замеры и пороги).
 
 1. Approve the wave-1 list (one message).
 2. Place keys for the keyed wave-1 services with `keyput` as W7 reaches them (~5 min each).
-3. DNS record `facts.baillot.dev` → illouminus (W8).
+3. DNS record `apifacts.dev` → illouminus (W8).
 4. Approve `ops/publish-policy.yaml` once (W8).
 5. Make the repo public when W7 is in (one click).
 Everything else is agent work.

@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_ENDPOINT = "https://facts.baillot.dev"
+DEFAULT_ENDPOINT = "https://apifacts.dev"
 _TRUE = frozenset({"1", "true", "yes", "on"})
 
 

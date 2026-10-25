@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"GET","url":"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range}"},"error":{"status":403,"body_excerpt":"method doesn'\''t allow unregistered callers (callers without established identity). please use api key or other form of api consumer identity to call this api."}}'
 ```

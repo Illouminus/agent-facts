@@ -66,7 +66,7 @@ apifacts/
   results, budgets); losing it loses nothing verified.
 - **GitHub Actions for CI only** (lint, tests, schema validation, pages build). Repo goes public at the
   end of W7 `[tap]`: public repos have free minutes; until then CI stays under ~2 min per run (D-076).
-- **Deploy to illouminus** with the portfolio's `vps-auto-deploy` pattern minus the image (W8): git checkout at the merged sha + `uv sync --frozen`, forced-command SSH → `ops/deploy.sh` with health check and rollback. API behind Caddy at `facts.baillot.dev` (domain `[tap]`).
+- **Deploy to illouminus** with the portfolio's `vps-auto-deploy` pattern minus the image (W8): git checkout at the merged sha + `uv sync --frozen`, forced-command SSH → `ops/deploy.sh` with health check and rollback. API behind Caddy at `apifacts.dev` (domain `[tap]`).
 
 ## Invariants (enforced in code, tested)
 

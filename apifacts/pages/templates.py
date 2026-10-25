@@ -51,7 +51,7 @@ def autolink(url: str) -> str:
 
 # ── page data ────────────────────────────────────────────────────────────────────────────────────
 
-CHECK_URL = "https://facts.baillot.dev/v0/check"
+CHECK_URL = "https://apifacts.dev/v0/check"
 GENERATED_MARK = "This page is generated; edit the YAML, not the page."
 FOOTER = (
     "Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · apifacts registry · "

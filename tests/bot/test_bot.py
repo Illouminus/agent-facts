@@ -125,8 +125,8 @@ def test_publish_opens_one_pr_with_facts_and_pages_only(repo):
     assert rel in files and all(f.startswith(("facts/", "pages/")) for f in files)
     assert "pages/stripe/verified-new.md" in files
     log = sh(repo.origin, "log", "-1", "--format=%an <%ae>%n%B", "bot/facts-2026-10-21-1")
-    assert log.startswith("agent-facts-bot <bot@facts.baillot.dev>\nfacts: 1 fact file from")
-    assert "Signed-off-by: agent-facts-bot@illouminus <bot@facts.baillot.dev>" in log
+    assert log.startswith("agent-facts-bot <bot@apifacts.dev>\nfacts: 1 fact file from")
+    assert "Signed-off-by: agent-facts-bot@illouminus <bot@apifacts.dev>" in log
     assert "Co-Authored-By" not in log
     assert gh.verbs() == ["pr list", "label create", "pr create", "pr merge"]
     create = gh.calls[2]

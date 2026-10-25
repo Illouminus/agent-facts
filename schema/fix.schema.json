@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://facts.baillot.dev/schema/v0/fix.schema.json",
+  "$id": "https://apifacts.dev/schema/v0/fix.schema.json",
   "title": "Fix",
   "description": "One typed fix from the closed vocabulary (docs/specs/02-fix-vocabulary.md). A discriminated union on `action`: each action has its own parameters and nothing else; no free text, no shell, no foreign URLs.",
   "type": "object",

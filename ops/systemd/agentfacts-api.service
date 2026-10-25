@@ -1,4 +1,4 @@
-# check() API (spec 03) on illouminus, behind Caddy at facts.baillot.dev (ops/Caddyfile.facts).
+# check() API (spec 03) on illouminus, behind Caddy at apifacts.dev (ops/Caddyfile.facts).
 # One worker: rate limits live in this process's memory and the store is one sqlite connection.
 # --no-access-log: uvicorn's access log prints client IPs; spec 03 never stores or logs raw IPs.
 # Install: systemctl --user link %h/apps/agent-facts/ops/systemd/agentfacts-api.service (ops/README.md)

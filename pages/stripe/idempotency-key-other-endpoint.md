@@ -23,7 +23,7 @@ Observations: none from reporters yet.
 ## Machine access
 
 ```sh
-curl -s https://facts.baillot.dev/v0/check \
+curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \
   -d '{"target":{"method":"POST","url":"https://api.stripe.com/v1/payment_intents"},"error":{"status":400,"body_excerpt":"keys for idempotent requests can only be used for the same endpoint they were first used for ('\''/v#/payment_intents'\'' vs '\''/v#/customers'\''). try using a key other than '\''<id>'\'' if you meant to execute a different request.\""}}'
 ```

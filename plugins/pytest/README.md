@@ -35,7 +35,7 @@ POST api.stripe.com/v1/payment_intents → 400 idempotency_error
 | Setting | Effect |
 |---------|--------|
 | `APIFACTS_DISABLE=1` or `-p no:apifacts` | off |
-| `APIFACTS_ENDPOINT` | registry URL (default `https://facts.baillot.dev`) |
+| `APIFACTS_ENDPOINT` | registry URL (default `https://apifacts.dev`) |
 | `--apifacts-offline` | no network: answer from the snapshot shipped in the package |
 | `APIFACTS_SNAPSHOT=<dir>` | snapshot directory (`services/*.yaml`, `facts/*/*.yaml`) for offline mode |
 

@@ -21,7 +21,7 @@ GitHub access on the host: the bot uses only its own token `agent-facts-bot` (re
 `deploy.sh` fetches the public repo anonymously. Units carry the seccomp/prctl hardening that works for
 user units; mount-namespace confinement (read-only system, per-unit key access) is impossible in user
 units on illouminus and needs system units under a dedicated user (`ops/README.md` → Hardening).
-API behind Caddy at `facts.baillot.dev` `[tap: DNS record once]`.
+API behind Caddy at `apifacts.dev` `[tap: DNS record once]`.
 
 ## Weekly digest (one message, one tap)
 
