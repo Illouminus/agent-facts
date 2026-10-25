@@ -13,7 +13,7 @@ pip install apifacts-pytest      # loads automatically; or: pytest -p apifacts
 POST api.stripe.com/v1/payment_intents → 400 idempotency_error
 ✅ verified:server:prod · Reusing an Idempotency-Key with a different request body returns HTTP 400 …
    fix: Send header Idempotency-Key = new UUID per distinct request
-   https://github.com/Illouminus/apifacts/blob/main/pages/stripe/idempotency-key-reuse-different-params.md
+   https://apifacts.dev/stripe/idempotency-key-reuse-different-params
 ```
 
 ## What it reads and sends
