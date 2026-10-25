@@ -129,5 +129,33 @@ says `approved: true` (Edouard's tap).
 
 `ops/Caddyfile.facts` is appended to `/etc/caddy/Caddyfile`. Check with `caddy adapt`, not `caddy
 validate` (validate instantiates log files as root and breaks the next reload), then
-`sudo systemctl reload caddy`. `apifacts.dev` resolves through the `*.baillot.dev` wildcard,
-so the certificate comes on the first reload: `curl -s https://apifacts.dev/healthz`.
+`sudo systemctl reload caddy`. `apifacts.dev` and `www` have A records to the host (OVH DNS);
+`facts.baillot.dev` resolves through the `*.baillot.dev` wildcard. Certificates come on the first
+reload: `curl -s https://apifacts.dev/healthz`.
+
+## Release to PyPI
+
+`apifacts` (this repository's root) and `apifacts-pytest` (`plugins/pytest`) carry the same version
+and ship together from one tag. No PyPI token exists anywhere: `.github/workflows/release.yml`
+exchanges the job's GitHub OIDC token for a short-lived upload token at PyPI (trusted publishing).
+Each project on PyPI needs that publisher registered once, by the account owner, with exactly these
+values (for a project that does not exist yet: "Add a pending publisher"):
+
+| Field | Value |
+|-------|-------|
+| PyPI project name | `apifacts`, then once more `apifacts-pytest` |
+| Owner | `Illouminus` |
+| Repository name | `apifacts` |
+| Workflow name | `release.yml` |
+| Environment name | `pypi` |
+
+Cutting a release:
+
+1. Set the same `__version__` in `apifacts/__init__.py` and `plugins/pytest/apifacts_pytest/__init__.py`
+   (`tests/ops/test_release_workflow.py` keeps them equal), PR, merge.
+2. `git tag vX.Y.Z <merge commit> && git push origin vX.Y.Z`. The workflow refuses a tag whose commit is
+   not on `main` or whose version differs from either package, builds both (the `apifacts` wheel
+   carries the offline snapshot: `services/` and `facts/` as of that commit), runs `twine check` and
+   uploads; re-running a half-done release is safe (PyPI ignores files it already has).
+3. Check https://pypi.org/project/apifacts/ and https://pypi.org/project/apifacts-pytest/;
+   `uvx apifacts version` prints the new version.

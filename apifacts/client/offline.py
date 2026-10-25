@@ -1,7 +1,7 @@
 """`--apifacts-offline` / `apifacts check --offline`: answer from a YAML snapshot, no network.
 
 A snapshot has the repository layout (`services/*.yaml`, `facts/<service>/*.yaml`). The packaged one
-(`snapshot/` next to this file) is empty in wave 1; release builds fill it. `APIFACTS_SNAPSHOT`
+(`snapshot/` next to this file) is empty in git; the wheel build fills it. `APIFACTS_SNAPSHOT`
 points at another directory, e.g. a checkout of the registry. The lookup mirrors the server's
 cascade (spec 03, step 3) without the normalized-string hash: `(template, status)`, then
 `kind ∈ {rate_limit, availability}`.

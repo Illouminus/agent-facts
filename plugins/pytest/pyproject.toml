@@ -9,10 +9,17 @@ dependencies = [
     "apifacts>=0.1.0",
     "pytest>=8.0",
 ]
-classifiers = ["Framework :: Pytest"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3 :: Only",
+]
 
 [project.urls]
+Homepage = "https://apifacts.dev"
 Repository = "https://github.com/Illouminus/apifacts"
+Issues = "https://github.com/Illouminus/apifacts/issues"
 
 [project.entry-points.pytest11]
 apifacts = "apifacts_pytest.plugin"  # name used by `-p apifacts` / `-p no:apifacts`
