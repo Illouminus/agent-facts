@@ -13,7 +13,7 @@ from pathlib import Path
 from pydantic import ValidationError
 from ruamel.yaml.error import YAMLError
 
-from apifacts.schema.models import VERIFIED_STATUSES, Fact, Source
+from apifacts.schema.models import VERIFIED_STATUSES, Fact, Source, Status
 from apifacts.schema.substance import substance
 from apifacts.schema.yamlio import load_yaml, load_yaml_text, plain
 
@@ -91,6 +91,7 @@ class FactRow:
     evidence: str
     eligible: bool  # may merge without a human (spec 05)
     substantive: bool = True  # False: only evidence counters moved (daily refresh PR)
+    quorum_draft: bool = False  # a new `reported` fact from the quorum: the weekly PR (D-093)
 
 
 def _evidence(fact: Fact) -> str:
@@ -137,8 +138,11 @@ def fact_rows(root: Path, changes: Sequence[Change]) -> list[FactRow]:
             rows.append(FactRow(change.path, kind, stem, "-", "invalid", "-", False))
             continue
         counters = kind == "changed" and _counters_only(root, change.path, data)
+        draft = (kind == "new" and fact.status is Status.reported
+                 and fact.provenance.source is Source.observation_quorum)
         rows.append(FactRow(change.path, kind, fact.id, fact.kind.value, fact.status.value,
-                            _evidence(fact), _eligible(fact), substantive=not counters))
+                            _evidence(fact), _eligible(fact), substantive=not counters,
+                            quorum_draft=draft))
     return rows
 
 

@@ -38,8 +38,7 @@ SECTION = [
     "POST api.stripe.com/v1/payment_intents → 400 idempotency_error",
     "✅ verified:server:prod · Reusing an Idempotency-Key with a different request body *",
     "   fix: Set parameter Idempotency-Key to new UUID per distinct request",
-    "   https://github.com/Illouminus/apifacts/blob/main/pages/stripe/"
-    "idempotency-key-reuse-different-params.md",
+    "   https://apifacts.dev/stripe/idempotency-key-reuse-different-params",
 ]
 
 
@@ -95,7 +94,7 @@ def test_only_safe_fields_are_sent(pytester, serve_check):
         "q1w2e3r4",
     ):
         assert leaked not in raw, leaked
-    assert request.headers["User-Agent"].startswith("apifacts-pytest/0.1.0 ")
+    assert request.headers["User-Agent"].startswith("apifacts-pytest/0.2.0 ")
     assert "Authorization" not in request.headers and "Cookie" not in request.headers
 
 

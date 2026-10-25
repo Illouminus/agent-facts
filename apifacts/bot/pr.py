@@ -12,7 +12,9 @@ through an env-only credential helper; a missing token is a refusal, never the p
 When to open (incident 2026-10-20..24, 62 PRs in three days): a new, deleted or substantively
 changed fact goes out at once (with any counter-only changes riding along); counter-only changes
 go out as one "daily evidence refresh" PR, on the first run after `probe run --refresh-evidence`
-left its marker, at most one a day (`<state-dir>/bot-state.json` remembers it).
+left its marker, at most one a day (`<state-dir>/bot-state.json` remembers it). New `reported`
+drafts from the quorum need a human tap each, so they gather into one PR a salt period (D-093): the
+first run that sees them notes the period, the first run of a later period takes them all.
 """
 
 import json
@@ -26,6 +28,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from apifacts.api.store import salt_period
 from apifacts.bot.collect import (
     BASE,
     Change,
@@ -55,6 +58,7 @@ BRANCH_PREFIX = "bot/facts-"
 PUBLISHED_DIRS = ("facts/", "pages/")
 BOT_STATE = "bot-state.json"
 DAILY_TITLE = "facts: daily evidence refresh ({day})"
+QUORUM_HOLD = "quorum drafts wait for the weekly PR"
 
 Gh = Callable[[Sequence[str]], str]
 
@@ -118,6 +122,9 @@ def render_body(
 ) -> str:
     """The PR description: one table row per fact, then what decides the merge."""
     lines = [f"Fact files changed by the quorum and the probe runner on `{vantage}`.", ""]
+    if drafts := sum(r.quorum_draft for r in rows):
+        lines += [f"Quorum drafts gathered over the salt period: {drafts}. They go out as one PR "
+                  "a week, one review for all of them (D-093).", ""]
     if daily:
         lines += ["Daily evidence refresh: only the counters moved (confirmations, last_confirmed, "
                   "stale_counter, vantages, observations). New facts and status changes open "
@@ -161,6 +168,28 @@ def evidence_gate(state_dir: Path, today: date) -> tuple[str | None, str | None]
     if refreshed <= str(state.get("evidence_refresh") or ""):
         return "waiting for the next daily evidence refresh", refreshed
     return None, refreshed
+
+
+def quorum_gate(state_dir: Path, today: date) -> str | None:
+    """Why quorum drafts must wait for the weekly PR, or None when it may open now (D-093)."""
+    week = salt_period(today).isoformat()
+    pending = _read_json(state_dir / BOT_STATE).get("quorum_pending")
+    if isinstance(pending, str) and pending < week:
+        return None
+    since = pending if isinstance(pending, str) else week
+    return f"{QUORUM_HOLD} (gathering since the salt period of {since})"
+
+
+def _remember_quorum(state_dir: Path, **fields: str | None) -> None:
+    write_json_atomic(state_dir / BOT_STATE, {**_read_json(state_dir / BOT_STATE), **fields})
+
+
+def _forget_quorum(state_dir: Path, held: bool, dry_run: bool) -> None:
+    """Drop a pending week no draft is held for: a draft that went out another way (a probe
+    confirmed it, it reached main) must not open the next week's gate at once (D-093)."""
+    if not held and not dry_run and isinstance(
+            _read_json(state_dir / BOT_STATE).get("quorum_pending"), str):
+        _remember_quorum(state_dir, quorum_pending=None)
 
 
 def _remember_evidence_pr(state_dir: Path, today: date, refreshed: str | None) -> None:
@@ -246,9 +275,10 @@ def publish(
     if reason := kill_reason(root, environ):
         return PublishReport("killed", detail=reason)
     changes = changed_facts(root)
+    by_path = {row.path: row for row in fact_rows(root, changes)}  # against HEAD: fetch-proof
+    _forget_quorum(state_dir, any(row.quorum_draft for row in by_path.values()), dry_run)
     if not changes:
         return PublishReport("nothing")
-    by_path = {row.path: row for row in fact_rows(root, changes)}  # against HEAD: fetch-proof
     hold, refreshed = evidence_gate(state_dir, today)
     if hold and not any(row.substantive for row in by_path.values()):
         return PublishReport("holding", detail=hold)  # no fetch, no gh: nothing goes out
@@ -259,13 +289,22 @@ def publish(
     changes = [c for c in changes if not already_on(root, c)]
     if not changes:
         return PublishReport("nothing", detail="every change is already on main")
+    # after the fetch: drafts the weekly PR already merged are not gathered again
+    drafts = {c.path for c in changes if by_path[c.path].quorum_draft}
+    if drafts and (wait := quorum_gate(state_dir, today)):  # they stay in the checkout
+        if not dry_run and not isinstance(_read_json(state_dir / BOT_STATE).get("quorum_pending"),
+                                          str):
+            _remember_quorum(state_dir, quorum_pending=salt_period(today).isoformat())
+        changes = [c for c in changes if c.path not in drafts]
+        if not changes:
+            return PublishReport("holding", detail=wait)
     skipped = drifted(root, changes)
     changes = [c for c in changes if c.path not in skipped]
     if not changes:
         return PublishReport("refused", skipped=skipped, detail="every change conflicts with main")
     rows = [by_path[c.path] for c in changes]
     daily = not any(row.substantive for row in rows)
-    if daily and hold:  # the substantive changes were already on main or conflicted
+    if daily and hold:  # the substantive changes were on main, conflicted or wait for the week
         return PublishReport("holding", skipped=skipped, detail=hold)
     auto = auto_mergeable(rows)
     body = render_body(rows, auto, vantage, skipped, daily=daily)
@@ -316,6 +355,11 @@ def publish(
     except GitError:  # no PR: drop the branch, or the next run would push a duplicate
         auth.git(root, "push", "--quiet", "origin", "--delete", report.branch)
         raise
+    if any(row.quorum_draft for row in rows):  # the same: the drafts are on their way
+        try:
+            _remember_quorum(state_dir, quorum_pending=None)
+        except OSError as exc:
+            report.detail = f"bot state not saved: {exc}"
     if daily:  # before the merge call: a failing `gh pr merge` must not reopen it next hour
         try:
             _remember_evidence_pr(state_dir, today, refreshed)

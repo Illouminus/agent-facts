@@ -24,9 +24,11 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.routing import APIRoute
 from starlette.datastructures import Headers
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.routing import Match
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from apifacts.api.facts_index import (
@@ -62,15 +64,19 @@ from apifacts.api.models import (
 from apifacts.api.normalize import ExtractedSignal, extract_signal, find_urls, looks_like_prompt
 from apifacts.api.ratelimit import RateLimiter
 from apifacts.api.seed_hosts import metric_host
-from apifacts.api.store import Store, salt_period
+from apifacts.api.site import NOT_FOUND, ROBOTS, Page, llms_txt, load_pages, text_page
+from apifacts.api.store import Drop, Store, salt_period
+from apifacts.probe import OPT_OUT_EMAIL
 from apifacts.schema.registry import on_vendor_domain
 
 LICENSE = "CC-BY-4.0"
 MAX_BODY = 8192  # spec 03: max request body
 DAILY_CAP = 1000  # spec 05: observations per reporter net per day
+TEMPLATE_CAP = 200  # spec 05: distinct error strings per (service, method, template, status) a week
 CACHE_CONTROL = "public, max-age=300"
 DEFAULT_TRUSTED_PROXIES = ("127.0.0.1", "::1")
 CHECK_PATH = "/v0/check"
+ROBOTS_PAGE = text_page(ROBOTS)
 
 
 def _error_body(code: str, message: str, field: str | None = None) -> dict[str, Any]:
@@ -93,9 +99,12 @@ class _State:
     index: FactsIndex
     store: Store
     daily_cap: int
+    template_cap: int
     trusted_proxies: tuple[Network, ...]
     utcnow: Callable[[], datetime]
     results: Path
+    pages: dict[str, Page]
+    llms: Page
 
 
 def _state(request: Request) -> _State:
@@ -219,8 +228,11 @@ def _ingest(
         "env_guess": (context.env_hint if context else None) or entry.env_for_host(target.host),
         "vantage_country": None,
     }
-    if state.store.add_observation(row, daily_cap=state.daily_cap) is None:
-        state.store.bump("dropped_daily_cap", day)
+    stored = state.store.add_observation(
+        row, daily_cap=state.daily_cap, template_cap=state.template_cap
+    )
+    if isinstance(stored, Drop):
+        state.store.bump(stored.value, day)
         return False
     state.store.bump("stored", day)
     return True
@@ -312,12 +324,22 @@ def _cached(request: Request, payload: Any) -> Response:
     """JSON with a strong ETag and `Cache-Control: public, max-age=300` (spec 03)."""
     body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     etag = f'"{hashlib.sha256(body).hexdigest()[:32]}"'
+    return _conditional(request, body, etag, "application/json")
+
+
+def _conditional(request: Request, body: bytes, etag: str, media_type: str) -> Response:
     headers = {"ETag": etag, "Cache-Control": CACHE_CONTROL}
     wanted = request.headers.get("if-none-match", "")
     tags = {t.strip().removeprefix("W/") for t in wanted.split(",")}
     if etag in tags or "*" in tags:
         return Response(status_code=304, headers=headers)
-    return Response(body, media_type="application/json", headers=headers)
+    return Response(body, media_type=media_type, headers=headers)
+
+
+def _site(request: Request, page: Page | None, media_type: str = "text/html") -> Response:
+    if page is None:
+        return HTMLResponse(NOT_FOUND.body, status_code=404)
+    return _conditional(request, page.body, page.etag, f"{media_type}; charset=utf-8")
 
 
 # ── errors ──────────────────────────────────────────────────────────────────────────────────────
@@ -380,6 +402,7 @@ def create_app(
     per_net: int = 60,
     global_limit: int = 600,
     daily_cap: int = DAILY_CAP,
+    template_cap: int = TEMPLATE_CAP,
     trusted_proxies: tuple[str, ...] | None = None,
     clock: Callable[[], float] | None = None,
     utcnow: Callable[[], datetime] | None = None,
@@ -392,10 +415,13 @@ def create_app(
     async def lifespan(app: FastAPI):
         root = Path(repo if repo is not None else os.environ.get("APIFACTS_REPO", "."))
         store = Store(db_path or os.environ.get("APIFACTS_DB", "observations.sqlite"))
+        index = FactsIndex.load(root, os.environ.get("APIFACTS_REGISTRY_VERSION") or None)
+        listed = [(e.key, e.service.name, len(e.facts)) for e in index.services.values()]
         app.state.apifacts = _State(
-            index=FactsIndex.load(root, os.environ.get("APIFACTS_REGISTRY_VERSION") or None),
+            index=index,
             store=store,
             daily_cap=daily_cap,
+            template_cap=template_cap,
             trusted_proxies=trusted,
             utcnow=utcnow or (lambda: datetime.now(UTC)),
             results=Path(
@@ -403,6 +429,8 @@ def create_app(
                 or os.environ.get("APIFACTS_RESULTS")
                 or root / "var" / "results.jsonl"
             ),
+            pages=load_pages(root),
+            llms=text_page(llms_txt(listed, index.version, OPT_OUT_EMAIL)),
         )
         try:
             yield
@@ -480,6 +508,66 @@ def create_app(
             "registry_version": state.index.version,
             "probes_last_run": last_probe_run(state.results),
         }
+
+    # ── the front door (spec 06): registered last, so every route above wins; HEAD as well, for
+    # link checkers and crawlers ──
+
+    def page(path: str, **kw):
+        return app.api_route(path, methods=["GET", "HEAD"], include_in_schema=False, **kw)
+
+    def api_404(service: str, request: Request) -> None:
+        if service != "v0":
+            return
+        # The API keeps its JSON errors. A /v0 path that an API route serves under another method
+        # lands here (a full match beats a partial one), so answer the 405 that route would give.
+        allowed = sorted(
+            method
+            for route in app.router.routes
+            if isinstance(route, APIRoute) and route.path.startswith("/v0/")
+            and route.matches(request.scope)[0] is Match.PARTIAL
+            for method in route.methods
+        )
+        if allowed:
+            raise HTTPException(
+                405,
+                detail=_error_body("method_not_allowed", "Method Not Allowed")["error"],
+                headers={"Allow": ", ".join(allowed)},
+            )
+        raise _fail(404, "not_found", "Not Found")
+
+    @page("/llms.txt")
+    def llms(request: Request) -> Response:
+        return _site(request, _state(request).llms, "text/plain")
+
+    @page("/robots.txt")
+    def robots(request: Request) -> Response:
+        return _site(request, ROBOTS_PAGE, "text/plain")
+
+    @page("/")
+    def home(request: Request) -> Response:
+        return _site(request, _state(request).pages.get("/"))
+
+    @page("/registry")
+    def registry(request: Request) -> Response:
+        return _site(request, _state(request).pages.get("/registry"))
+
+    @page("/{service}")
+    def service_bare(service: str, request: Request) -> Response:
+        api_404(service, request)
+        if f"/{service}/" not in _state(request).pages:
+            return _site(request, None)
+        # a relative Location: behind Caddy the request scheme here is http
+        return Response(status_code=308, headers={"Location": f"/{service}/"})
+
+    @page("/{service}/")
+    def service_page(service: str, request: Request) -> Response:
+        api_404(service, request)
+        return _site(request, _state(request).pages.get(f"/{service}/"))
+
+    @page("/{service}/{slug}")
+    def fact_page(service: str, slug: str, request: Request) -> Response:
+        api_404(service, request)
+        return _site(request, _state(request).pages.get(f"/{service}/{slug}"))
 
     return app
 

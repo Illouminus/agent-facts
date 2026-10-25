@@ -55,5 +55,26 @@ the reason; `reported` facts render with a yellow badge and "not yet reproduced 
 ## Publishing
 
 Wave 1: committed to the repo, rendered by github.com (private until the repo goes public `[tap]`).
-Wave 2: GitHub Pages from `pages/` with a sitemap, `llms.txt` at the root listing services and the
-`check()` endpoint, and `robots.txt` allowing all.
+
+### HTML on the domain (decision 25.10)
+
+The API process serves the same files as HTML on `apifacts.dev` (`apifacts/api/site.py`), so a
+vendor or a developer opens a fact at the address the plugin prints, not a blob on GitHub. No landing
+page, no marketing, no analytics, forms, scripts or web fonts: one inline stylesheet.
+
+| Path | Source |
+| --- | --- |
+| `/` | `README.md` |
+| `/registry` | `pages/index.md` |
+| `/<service>/` (`/<service>` → 308) | `pages/<service>/index.md` |
+| `/<service>/<slug>` | `pages/<service>/<slug>.md` (also `pages/errors/<hash>.md`) |
+| `/llms.txt` | generated: what the registry is, the `/v0` endpoints, services, licenses, opt-out |
+| `/robots.txt` | `Allow: /` for everyone, no sitemap yet |
+
+Markdown is rendered once at startup with markdown-it-py (CommonMark + tables, raw HTML off: every
+string, error strings included, reaches the browser escaped), like the facts index — a new registry
+needs a restart. Relative links are rewritten to these paths; a link to any other file of the repo
+(probe, fact YAML, license) goes to its blob on GitHub. Responses carry a strong `ETag` and
+`Cache-Control: public, max-age=300`; an unknown page is an HTML 404, while `/v0/...` keeps the JSON
+error envelope. None of these routes is in `openapi.json`. The plugin and the CLI print
+`https://apifacts.dev/<service>/<slug>`.

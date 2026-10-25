@@ -11,6 +11,7 @@ dependencies = [
     "fastapi>=0.150.0",
     "httpx>=0.28.1",
     "jsonschema>=4.26.0",
+    "markdown-it-py>=4.2.0",
     "pydantic>=2.14.1",
     "pyyaml>=6.0.3",
     "ruamel.yaml>=0.19.1",
@@ -32,8 +33,14 @@ Issues = "https://github.com/Illouminus/apifacts/issues"
 [project.scripts]
 apifacts = "apifacts.cli:app"
 
+[project.optional-dependencies]
+mcp = [
+    "mcp>=2.3",
+]
+
 [dependency-groups]
 dev = [
+    "mcp>=2.3",
     "pytest>=9.1.1",
     "pytest-httpserver>=1.2.0",
     "ruff>=0.17.1",

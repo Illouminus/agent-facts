@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 from apifacts.client.request import Signal
 
 TITLE = "Known facts (apifacts, CC BY 4.0)"
-PAGES = "https://github.com/Illouminus/apifacts/blob/main/pages"
+PAGES = "https://apifacts.dev"  # the fact pages as HTML on the API domain (spec 06)
 MAX_FACTS = 5
 
 _FACT_ID = re.compile(r"^af:([a-z0-9][a-z0-9-]{0,63}):([a-z0-9][a-z0-9-]{0,127})$")
@@ -57,7 +57,7 @@ def _fact_lines(fact: Mapping[str, Any]) -> list[str]:
     fact_id = fact.get("id")
     match = _FACT_ID.match(fact_id) if isinstance(fact_id, str) else None
     if match:
-        lines.append(f"   {PAGES}/{match[1]}/{match[2]}.md")
+        lines.append(f"   {PAGES}/{match[1]}/{match[2]}")
     return lines
 
 
@@ -101,7 +101,7 @@ def render_section(result: Any, signal: Signal, *, show_empty: bool = False) -> 
         more = f"… {len(blocks) - MAX_FACTS} more facts"
         service = result.get("service")
         if isinstance(service, str) and _SLUG.match(service):
-            more += f": {PAGES}/{service}/index.md"
+            more += f": {PAGES}/{service}/"
         out.append(more)
     if not blocks:
         unknown = result.get("unknown")

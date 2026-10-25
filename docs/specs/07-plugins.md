@@ -17,7 +17,7 @@ cache; opt-out `APIFACTS_DISABLE=1`; all of this covered by tests against a loca
 POST api.stripe.com/v1/payment_intents → 400 idempotency_error
 ✅ verified:server:sandbox · Reusing an Idempotency-Key with a different request body returns HTTP 400 …
    fix: Send header Idempotency-Key = new UUID per distinct request
-   https://github.com/Illouminus/apifacts/blob/main/pages/stripe/idempotency-key-reuse-different-params.md
+   https://apifacts.dev/stripe/idempotency-key-reuse-different-params
 ```
 
 - Privacy: never sends request bodies, headers, query strings or tokens; strips the secret-shaped
@@ -37,6 +37,15 @@ Same behaviour via a custom reporter: on test failure inspect `error.response` (
 
 One tool only: `check(target, error?)` with a 40-word description; no resources, no prompts. Listed in
 the official registry after pages and plugins exist (plan §21: pages and plugins before MCP).
+
+Shipped as `apifacts mcp` (`apifacts/mcp_server.py`, stdio) behind the extra `apifacts[mcp]`, so the
+plugin's users do not pull the MCP SDK: `uvx --from 'apifacts[mcp]' apifacts mcp`. The error is passed
+flat — `check(target, method?, status?, body?)` — because clients fill flat arguments more reliably
+than a nested object; `body` may arrive as a JSON object (the SDK parses JSON strings) and is
+re-serialized. Same client as the CLI (filters, 2 s timeout, 20 checks per session, `APIFACTS_DISABLE`,
+`--offline` from the packaged snapshot); every failure is a text answer starting with `error:`.
+`server.json` at the repository root is the registry entry (`io.github.illouminus/apifacts`, PyPI,
+`runtimeHint: uvx`); README.md carries the `mcp-name:` line the registry looks for on PyPI.
 
 ## CLI (wave 1, part of `apifacts`)
 

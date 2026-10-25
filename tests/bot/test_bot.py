@@ -1,6 +1,7 @@
 """`bot publish` (spec 05 Bot): one branch, one PR, only facts/ and pages/, auto-merge rule,
 drift guard, one open PR at a time, dry run, kill switch. `gh` is a fake; git is real."""
 
+import json
 from dataclasses import replace
 from datetime import date
 
@@ -10,7 +11,7 @@ from bot_repo import Checkout, FakeGh, sh
 from typer.testing import CliRunner
 
 from apifacts.bot.collect import Change, GitError, changed_facts, fact_rows
-from apifacts.bot.pr import branch_name, publish, render_body
+from apifacts.bot.pr import BOT_STATE, branch_name, publish, quorum_gate, render_body
 from apifacts.cli import app
 
 TODAY = date(2026, 10, 21)
@@ -38,11 +39,25 @@ def draft(slug="400-keys-for-idempotent-requests-can-only", **over) -> str:
 
 @pytest.fixture
 def repo(tmp_path) -> Checkout:
-    return Checkout(tmp_path)
+    """The weekly quorum gate (D-093) stands open: drafts were gathered the week before."""
+    checkout = Checkout(tmp_path)
+    pending(checkout, "2026-10-12")
+    return checkout
+
+
+def pending(repo, week: str | None) -> None:
+    state = repo.work / "var" / BOT_STATE
+    state.parent.mkdir(parents=True, exist_ok=True)
+    state.write_text(json.dumps({"quorum_pending": week}))
+
+
+def bot_state(repo) -> dict:
+    return json.loads((repo.work / "var" / BOT_STATE).read_text())
 
 
 def run(repo, gh=None, **kw):
-    return publish(repo.work, today=TODAY, environ=kw.pop("environ", {}), gh=gh, **kw)
+    return publish(repo.work, today=kw.pop("today", TODAY), environ=kw.pop("environ", {}), gh=gh,
+                   **kw)
 
 
 # ── collect ─────────────────────────────────────────────────────────────────────────────────────
@@ -84,7 +99,9 @@ def test_body_table(repo):
     repo.write(DRAFT, draft())
     rows = fact_rows(repo.work, changed_facts(repo.work))
     body = render_body(rows, True, "illouminus", skipped=["facts/stripe/x.yaml"])
-    assert body.splitlines()[2:5] == [
+    assert body.splitlines()[2] == ("Quorum drafts gathered over the salt period: 1. They go out "
+                                    "as one PR a week, one review for all of them (D-093).")
+    assert body.splitlines()[4:7] == [
         "| id | kind | status | evidence | change |",
         "|----|------|--------|----------|--------|",
         "| `af:stripe:400-keys-for-idempotent-requests-can-only` | error_meaning | reported | "
@@ -168,7 +185,7 @@ def test_human_fact_disables_auto_merge(repo):
 def test_second_branch_of_the_day_gets_the_next_number(repo):
     repo.write(DRAFT, draft())
     run(repo, FakeGh())
-    repo.write("facts/stripe/second.yaml", draft("second"))
+    verified(repo, "second")
     assert run(repo, FakeGh()).branch == "bot/facts-2026-10-21-2"
 
 
@@ -275,3 +292,85 @@ def test_cli_holds_counter_only_changes_until_the_daily_refresh(repo, tmp_path):
     assert r.exit_code == 0, r.output
     assert "holding counter-only changes: no evidence refresh yet" in r.output
     assert repo.remote_branches() == ["main"]
+
+
+# ── quorum drafts: one PR a salt week (D-093) ───────────────────────────────────────────────────
+
+
+def test_quorum_gate_opens_only_in_a_later_salt_period(tmp_path):
+    assert quorum_gate(tmp_path, TODAY).startswith("quorum drafts wait")  # nothing noted yet
+    (tmp_path / BOT_STATE).write_text(json.dumps({"quorum_pending": "2026-10-19"}))
+    assert "since the salt period of 2026-10-19" in quorum_gate(tmp_path, TODAY)
+    assert quorum_gate(tmp_path, date(2026, 10, 26)) is None  # the next Monday
+
+
+def test_quorum_drafts_gather_for_the_week_then_go_out_in_one_pr(repo):
+    pending(repo, None)
+    repo.write(DRAFT, draft())
+    gh = FakeGh()
+    report = run(repo, gh)
+    assert (report.action, gh.calls) == ("holding", [])
+    assert report.detail.startswith("quorum drafts wait for the weekly PR")
+    assert bot_state(repo)["quorum_pending"] == "2026-10-19"
+    repo.write("facts/stripe/second.yaml", draft("second"))  # Saturday, same salt week
+    assert run(repo, FakeGh(), today=date(2026, 10, 24)).action == "holding"
+    assert bot_state(repo)["quorum_pending"] == "2026-10-19"  # the first sighting stays
+
+    gh = FakeGh()
+    report = run(repo, gh, today=date(2026, 10, 26))  # Monday: one PR with both drafts
+    assert report.action == "opened" and not report.auto
+    assert {r.path for r in report.rows} == {DRAFT, "facts/stripe/second.yaml"}
+    assert bot_state(repo)["quorum_pending"] is None
+    assert "Quorum drafts gathered over the salt period: 2." in report.body
+
+
+def test_a_draft_gone_out_another_way_drops_the_pending_week(repo):
+    pending(repo, None)
+    repo.write(DRAFT, draft())
+    assert run(repo, FakeGh()).action == "holding"
+    assert bot_state(repo)["quorum_pending"] == "2026-10-19"
+    (repo.work / DRAFT).unlink()  # a probe confirmed it before Monday: it goes out as verified
+    rel = verified(repo)
+    assert run(repo, FakeGh(), today=date(2026, 10, 23)).action == "opened"
+    assert bot_state(repo)["quorum_pending"] is None  # no draft is held any more
+
+    (repo.work / rel).unlink()  # merged and synced
+    repo.write("facts/stripe/second.yaml", draft("second"))  # a draft of the next salt week
+    report = run(repo, FakeGh(), today=date(2026, 10, 28))
+    assert report.action == "holding"  # gathered for its own week, not opened at once
+    assert bot_state(repo)["quorum_pending"] == "2026-10-26"
+
+
+def test_nothing_held_forgets_the_pending_week_without_a_dry_run(repo):
+    assert run(repo, FakeGh(), dry_run=True).action == "nothing"
+    assert bot_state(repo)["quorum_pending"] == "2026-10-12"
+    assert run(repo, FakeGh()).action == "nothing"
+    assert bot_state(repo)["quorum_pending"] is None
+
+
+def test_held_drafts_do_not_hold_other_new_facts(repo):
+    pending(repo, None)
+    repo.write(DRAFT, draft())
+    rel = verified(repo)
+    report = run(repo, FakeGh())
+    assert report.action == "opened" and report.auto
+    assert [r.path for r in report.rows] == [rel]
+    assert DRAFT not in repo.files_in(report.branch)
+    assert (repo.work / DRAFT).is_file()  # still in the checkout for the weekly PR
+    assert bot_state(repo)["quorum_pending"] == "2026-10-19"
+
+
+def test_dry_run_notes_no_pending_week(repo):
+    pending(repo, None)
+    repo.write(DRAFT, draft())
+    assert run(repo, FakeGh(), dry_run=True).action == "holding"
+    assert bot_state(repo)["quorum_pending"] is None
+
+
+def test_cli_names_the_quorum_hold(repo):
+    pending(repo, None)
+    repo.write(DRAFT, draft())
+    args = ["bot", "publish", "--root", str(repo.work), "--dry-run"]
+    r = CliRunner().invoke(app, args, env={"APIFACTS_KILL": "0"})
+    assert r.exit_code == 0, r.output
+    assert "holding: quorum drafts wait for the weekly PR" in r.output

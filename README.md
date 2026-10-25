@@ -16,10 +16,31 @@ apifacts answers "the docs are wrong about this endpoint right now, here is the 
 ```bash
 pip install apifacts-pytest   # pytest plugin: a test failing on an HTTP error prints the known facts
 uvx apifacts check https://api.stripe.com/v1/charges -X GET --status 401   # CLI (and library)
+npx skills add Illouminus/apifacts   # agent skill: on an API error, ask the registry first
 ```
 
 Both packages are on PyPI, carry the same version and ship together from one tag
-([release](ops/README.md#release-to-pypi)). The plugin sends nothing until a test fails.
+([release](ops/README.md#release-to-pypi)). The plugin sends nothing until a test fails. The skill
+([`skills/apifacts/SKILL.md`](skills/apifacts/SKILL.md)) tells Claude Code and other agents when to
+call `apifacts check` and how to read the answer.
+
+## MCP
+
+One tool, `check(target, method, status, body)`, over stdio; no resources, no prompts. Claude Code:
+
+```bash
+claude mcp add apifacts -- uvx --from 'apifacts[mcp]' apifacts mcp
+```
+
+Claude Desktop, Cursor and other clients (`mcpServers` in their JSON config):
+
+```json
+{"mcpServers": {"apifacts": {"command": "uvx", "args": ["--from", "apifacts[mcp]", "apifacts", "mcp"]}}}
+```
+
+`apifacts mcp --offline` answers from the snapshot packaged in the wheel and sends nothing.
+
+<!-- mcp-name: io.github.illouminus/apifacts -->
 
 ## How a fact is verified
 
@@ -51,8 +72,9 @@ The response is never empty: `facts`, `observed`, and an `unknown.reason` when n
 ## Status
 
 The API is live at https://apifacts.dev (`/v0/check`, `/v0/services`, `/openapi.json`, `/healthz`;
-`facts.baillot.dev`, the old address, redirects there). The registry covers the services and facts listed in
-[`pages/index.md`](pages/index.md), each fact page showing how it was established. Design contracts
+`facts.baillot.dev`, the old address, redirects there). The registry covers the services and facts listed at
+[apifacts.dev/registry](https://apifacts.dev/registry), each fact page showing how it was
+established; [`/llms.txt`](https://apifacts.dev/llms.txt) describes the API for agents. Design contracts
 live in [`docs/specs/`](docs/specs/README.md).
 
 Running your own copy: the API reads `facts/` and `services/` once, at startup, so after a `git pull`

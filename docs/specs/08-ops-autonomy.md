@@ -31,6 +31,7 @@ facts: 112 (+9) · verified 71 · reported 31 · stale 4 · retracted 0
 check(): 143 calls from 27 networks · 11 unregistered targets (top: api.notion.com; hosts known only for seed candidates, the rest is "other")
 probes: 1 840 runs · 0 budget violations · keys missing: [hubspot-test]
 needs a probe (agent-hours): 6 reported facts  → card created
+quorum: 3 drafts this week → one needs-review PR at the start of the next (D-093)
 publications proposed (batch #7, 4 items):
   1. stripe/stripe-python#1234 — issue: idempotency error string changed in 12.2.0 (verified prod)
   2. SO 79xxxxxx — answer: Slack "invalid_blocks" when text > 3000 (verified prod)
