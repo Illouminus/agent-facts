@@ -17,10 +17,10 @@ status: verified:server:prod
 evidence:
   probe: af:google-firestore:probe:subcollection-of-missing-document
   first_seen: 2026-10-24T08:46:02Z
-  confirmations: 3
+  confirmations: 63
   stale_counter: 0
-  last_confirmed: 2026-10-24T09:44:52Z
-  vantages: [mac-dev]
+  last_confirmed: 2026-10-25T00:46:11Z
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot

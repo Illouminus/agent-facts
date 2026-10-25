@@ -17,10 +17,10 @@ status: verified:server:prod
 evidence:
   probe: af:google-gemini:probe:models-page-size-zero
   first_seen: 2026-10-24T08:03:54Z
-  confirmations: 2
+  confirmations: 10
   stale_counter: 0
-  last_confirmed: 2026-10-24T08:07:10Z
-  vantages: [mac-dev]
+  last_confirmed: 2026-10-25T00:46:04Z
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot

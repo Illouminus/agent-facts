@@ -2,7 +2,7 @@
 
 **Stripe API · GET /v1/customers · HTTP 400**
 
-Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-24 · 4 confirmations from 2 vantages
 
 > A Stripe-Version header naming a version that does not exist returns HTTP 400 invalid_request_error without an error code, echoing the version in the message.
 

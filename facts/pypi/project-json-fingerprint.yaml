@@ -15,8 +15,8 @@ status: verified:server:prod
 evidence:
   probe: af:pypi:probe:json-project-fingerprint
   first_seen: 2026-10-20T09:06:07Z
-  confirmations: 33
-  last_confirmed: 2026-10-23T00:45:21Z
+  confirmations: 60
+  last_confirmed: 2026-10-25T00:00:20Z
   stale_counter: 0
   vantages: [mac-dev, illouminus]
 provenance:

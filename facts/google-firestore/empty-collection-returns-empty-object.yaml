@@ -17,10 +17,10 @@ status: verified:server:prod
 evidence:
   probe: af:google-firestore:probe:empty-collection-empty-object
   first_seen: 2026-10-24T08:46:01Z
-  confirmations: 3
+  confirmations: 20
   stale_counter: 0
-  last_confirmed: 2026-10-24T09:44:52Z
-  vantages: [mac-dev]
+  last_confirmed: 2026-10-25T00:31:22Z
+  vantages: [mac-dev, illouminus]
 provenance:
   source: probe
   author: bot

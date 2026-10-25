@@ -2,7 +2,7 @@
 
 **Telegram Bot API · GET /{bot_token}/getMe · HTTP 200**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-25 · 33 confirmations from 2 vantages
 
 ## What to do
 

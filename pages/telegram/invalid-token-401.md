@@ -2,7 +2,7 @@
 
 **Telegram Bot API · GET /{bot_token}/getMe · HTTP 401**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-24 · 2 confirmations from 1 vantage
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-25 · 63 confirmations from 2 vantages
 
 > A token-shaped bot token (\<digits\>:\<secret\>) that is not valid returns HTTP 401 {ok: false, description: "Unauthorized"}.
 
