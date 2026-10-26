@@ -4,6 +4,7 @@ import json
 import pytest
 from werkzeug import Response
 
+from apifacts_pytest import __version__
 from conftest import answer, requests_to
 
 STRIPE_TEST = """
@@ -94,7 +95,7 @@ def test_only_safe_fields_are_sent(pytester, serve_check):
         "q1w2e3r4",
     ):
         assert leaked not in raw, leaked
-    assert request.headers["User-Agent"].startswith("apifacts-pytest/0.2.0 ")
+    assert request.headers["User-Agent"].startswith(f"apifacts-pytest/{__version__} ")
     assert "Authorization" not in request.headers and "Cookie" not in request.headers
 
 

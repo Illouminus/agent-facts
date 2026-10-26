@@ -40,7 +40,7 @@ Claude Desktop, Cursor and other clients (`mcpServers` in their JSON config):
 
 `apifacts mcp --offline` answers from the snapshot packaged in the wheel and sends nothing.
 
-<!-- mcp-name: io.github.illouminus/apifacts -->
+<!-- mcp-name: io.github.Illouminus/apifacts -->
 
 ## How a fact is verified
 
