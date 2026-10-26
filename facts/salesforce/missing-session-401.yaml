@@ -20,9 +20,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:salesforce:probe:versions-without-session
   first_seen: 2026-10-24T09:20:11Z
-  confirmations: 19
+  confirmations: 45
   stale_counter: 0
-  last_confirmed: 2026-10-25T00:31:22Z
+  last_confirmed: 2026-10-26T01:01:22Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
