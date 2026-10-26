@@ -2,7 +2,7 @@
 
 **Salesforce Platform REST API · GET /services/data · HTTP 200**
 
-Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-25 · 19 confirmations from 2 vantages
+Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-26 · 45 confirmations from 2 vantages
 
 ## What to do
 
