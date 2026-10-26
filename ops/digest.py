@@ -4,8 +4,9 @@
     ops/digest.py [--root R] [--state-dir S] [--now ISO] [--current] [--dry-run] [--no-send]
 
 Reads only local files: `facts/` + `services/` (the registry), `var/results.jsonl` (probe runs),
-`var/observations.sqlite` (check(), opened read-only), `ops/publish-policy.yaml`. No LLM, no vendor
-API. Output:
+`var/observations.sqlite` (check() and its `traffic` adoption rows, opened read-only),
+`ops/publish-policy.yaml`; the one network read is pypistats (PyPI downloads, D-092). No LLM, no
+vendor API. Output:
 
 1. `<state>/reviews/agent-facts-<YYYY-MM-DD>.md` — the report (megabrain rule: a report lives in
    state/reviews, rendered at ops.baillot.dev/reports; Telegram only pings);
