@@ -75,3 +75,4 @@ ignore = ["B008"]  # typer.Option / fastapi.Depends in defaults are idiomatic
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["real_pypistats: ops test that runs digest.pypi_downloads against a local fake"]

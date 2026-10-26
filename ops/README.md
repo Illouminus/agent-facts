@@ -123,7 +123,33 @@ A real run writes `~/claude-hub/state/reviews/agent-facts-<date>.md`, a journal 
 reported facts lack a probe) a card, commits them with `bin/state-commit --as agent-facts`, and
 pings Telegram through the gateway (`send_telegram`, class `digest`, `X-Routine:
 agent-facts-digest`). Publications stay "policy not approved" until `ops/publish-policy.yaml`
-says `approved: true` (Edouard's tap).
+says `approved: true` (Edouard's tap). The report also carries the adoption line (below) and
+PyPI downloads without mirrors for `apifacts` and `apifacts-pytest` over the same week
+(pypistats `overall`; its newest day lags, so a Monday run may miss Sunday).
+
+## Adoption
+
+The gate number of D-092 (gate 30.11: ≥ 10 external clients in 23–29.11, or ≥ 1 external stored
+observation):
+
+```bash
+.venv/bin/apifacts stats adoption --db var/observations.sqlite   # last complete salt period
+# external_clients=N calls=M reported_external=K   (exit 1: the db has no traffic table yet)
+```
+
+- **External** = the caller's IP is not ours. Ours = loopback, private ranges, and the nets in
+  `APIFACTS_OWN_NETS` (comma-separated) or `var/own-nets.txt` (one IP/CIDR per line, `#`
+  comments; outside git, the addresses are private): the VPS public address, the home exit,
+  a dev machine. Decided **at request time**: raw IPs are never kept and last week's salt is
+  deleted on rotation, so "ours" cannot be subtracted afterwards. The file is read at startup.
+- Not by User-Agent: our skill and plugins send the same UA as everyone's. GitHub Actions is
+  not excluded either (its nets are shared with every outside CI); our CI tests never call the
+  live API.
+- **Client** = a network (/16, IPv6 /32) within one salt period; **calls** = every answered
+  `POST /v0/check`, pre-flight included (a count per network, no target — Q5 still keeps
+  pre-flight out of `observations`); **reported_external** = observations stored from them.
+- Table `traffic`, one row per network per period; rows older than the previous period go at
+  the salt rotation.
 
 ## Caddy
 

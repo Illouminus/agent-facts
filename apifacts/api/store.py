@@ -148,8 +148,22 @@ class Store:
             salt = secrets.token_bytes(SALT_BYTES)
             # only older periods: a late request for last week must not delete this week's salt
             self.connection.execute("DELETE FROM salts WHERE day < ?", (period,))
+            # adoption rows outlive their salt by one period: the Monday digest reads last week
+            previous = (date.fromisoformat(period) - timedelta(days=7)).isoformat()
+            self.connection.execute("DELETE FROM traffic WHERE period < ?", (previous,))
             self.connection.execute("INSERT INTO salts (day, salt) VALUES (?, ?)", (period, salt))
             return salt
+
+    def count_call(self, period: str, net: str, *, own: bool, stored: bool) -> None:
+        """One answered check() call for the adoption metric (D-092): a row per network per salt
+        period, its call and stored-observation counts."""
+        with self._lock, self.connection:
+            self.connection.execute(
+                "INSERT INTO traffic (period, net, own, calls, stored) VALUES (?, ?, ?, 1, ?)"
+                " ON CONFLICT (period, net) DO UPDATE SET calls = calls + 1,"
+                " stored = stored + excluded.stored",
+                (period, net, int(own), int(stored)),
+            )
 
     def bump(self, name: str, day: str) -> None:
         with self._lock, self.connection:

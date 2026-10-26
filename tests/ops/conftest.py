@@ -19,3 +19,15 @@ def state(tmp_path: Path) -> FakeState:
 @pytest.fixture(autouse=True)
 def _no_commit_rc(monkeypatch):
     monkeypatch.delenv("FAKE_STATE_COMMIT_RC", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _no_pypistats(monkeypatch, request):
+    """main() asks pypistats; the tests never leave the machine (a test that needs the parser
+    marks itself `real_pypistats` and points --pypistats at a local fake)."""
+    if "real_pypistats" in request.keywords:
+        return
+    import digest
+
+    monkeypatch.setattr(digest, "pypi_downloads",
+                        lambda packages, window, base=None: {p: 3 for p in packages})
