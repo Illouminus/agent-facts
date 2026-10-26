@@ -43,6 +43,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import state_journal  # noqa: E402  (ops/ is a script directory, not a package)
 
+from apifacts.api.adoption import Adoption, read_adoption  # noqa: E402
 from apifacts.pages.build import load_registry  # noqa: E402
 from apifacts.schema.models import Fact, Service  # noqa: E402
 
@@ -52,6 +53,8 @@ GATEWAY = "http://127.0.0.1:8787/mcp"
 REPORTS_URL = "https://ops.baillot.dev/reports"
 DEFAULT_BUDGET_S = 300  # spec 04 default per-template budget
 CARD_SUFFIX = "agent-facts-needs-a-probe"
+PYPISTATS = "https://pypistats.org/api"
+PACKAGES = ("apifacts", "apifacts-pytest")
 RUN_OUTCOMES = ("pass", "fail", "error")
 _NO_KEY = re.compile(r"no key (\S+)")
 
@@ -299,6 +302,31 @@ def check_metrics(db: Path, window: Window) -> CheckMetrics:
     )
 
 
+# ── adoption (D-092) ──────────────────────────────────────────────────────────────────────────
+
+
+def pypi_downloads(packages: Sequence[str], window: Window, base: str = PYPISTATS,
+                   timeout: float = 20.0) -> dict[str, int | None]:
+    """Downloads without mirrors per package over the window's UTC days (pypistats `overall`;
+    its last day lags, so a Monday run may miss Sunday). None = pypistats did not answer."""
+    out: dict[str, int | None] = {}
+    days = set(window.days)
+    with httpx.Client(timeout=timeout) as client:
+        for package in packages:
+            try:
+                response = client.get(f"{base.rstrip('/')}/packages/{package}/overall",
+                                      params={"mirrors": "false"})
+                response.raise_for_status()
+                rows = response.json()["data"]
+                out[package] = sum(int(r["downloads"]) for r in rows
+                                   if r.get("category") == "without_mirrors"
+                                   and r.get("date") in days)
+            except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+                print(f"digest: pypistats {package}: {exc}", file=sys.stderr)
+                out[package] = None
+    return out
+
+
 # ── publications ───────────────────────────────────────────────────────────────────────────────
 
 
@@ -382,6 +410,8 @@ class Digest:
     policy_approved: bool | None  # None: policy unreadable
     candidates: tuple[str, ...]
     open_card: str | None = None
+    adoption: Adoption | None = None
+    pypi: dict[str, int | None] = field(default_factory=dict)
 
     @property
     def report_id(self) -> str:
@@ -390,8 +420,9 @@ class Digest:
 
 def build(root: Path, now: datetime, current: bool = False, results: Path | None = None,
           db: Path | None = None, policy_path: Path | None = None,
-          open_card: str | None = None) -> Digest:
+          open_card: str | None = None, pypi: dict[str, int | None] | None = None) -> Digest:
     window = salt_window(now, current)
+    db = db or root / "var" / "observations.sqlite"
     services, facts = load_registry(root)
     policy_path = policy_path or root / "ops" / "publish-policy.yaml"
     try:
@@ -407,10 +438,12 @@ def build(root: Path, now: datetime, current: bool = False, results: Path | None
         today=now.astimezone(PARIS).date(),
         facts=fact_metrics(facts, window),
         probes=probe_metrics(results or root / "var" / "results.jsonl", services, window),
-        checks=check_metrics(db or root / "var" / "observations.sqlite", window),
+        checks=check_metrics(db, window),
         policy_approved=None if policy is None else policy.approved,
         candidates=candidates,
         open_card=open_card,
+        adoption=read_adoption(db, window.start.date()),
+        pypi=dict(pypi or {}),
     )
 
 
@@ -444,13 +477,16 @@ def _probes_line(d: Digest) -> str:
             f"{p.budget_violations}{bypassed} · ключей нет: {keys}")
 
 
-def _check_line(d: Digest) -> str:
-    c = d.checks
-    if not c.available:
-        return "check(): нет var/observations.sqlite"
-    top = f" (top: {', '.join(h for h, _ in c.top_unregistered)})" if c.top_unregistered else ""
-    return (f"check(): {c.counted} обращений · сетей {c.networks} · незарегистрированных целей "
-            f"{c.unregistered}{top}")
+def _adoption_line(d: Digest) -> str:
+    """The gate's numbers (D-092, gate 30.11): external = not one of our own hosts."""
+    a = d.adoption
+    if a is None or not a.available:
+        head = "принятие: счёта по сетям ещё нет (API без таблицы traffic)"
+    else:
+        head = (f"принятие: внешних клиентов {a.external_clients} · вызовов {a.calls} · "
+                f"внешних наблюдений {a.reported_external}")
+    pypi = " / ".join(f"{p} {'—' if n is None else n}" for p, n in d.pypi.items())
+    return f"{head} · PyPI без зеркал: {pypi or '—'}"
 
 
 def _needs_probe_line(d: Digest) -> str:
@@ -474,7 +510,7 @@ def render_ping(d: Digest, reports_url: str) -> str:
     lines = [
         title,
         f"факты: {f.total} (+{f.added}) · {_counts_line(d)}",
-        _check_line(d),
+        _adoption_line(d),
         _probes_line(d),
         _needs_probe_line(d),
         _quorum_line(d),
@@ -504,6 +540,15 @@ def render_report(d: Digest) -> str:
         f"- подтверждено пробами за неделю: {f.confirmed}",
         f"- {_quorum_line(d)}",
         "- по сервисам: " + (" · ".join(f"{s} {n}" for s, n in f.by_service.items()) or "—"),
+        "",
+        "## Принятие (D-092)",
+        "",
+        f"- {_adoption_line(d).removeprefix('принятие: ')}",
+        "- внешний = не наши хосты (APIFACTS_OWN_NETS, loopback, частные адреса); клиент = сеть "
+        "/16 (IPv6 /32) за период соли; вызовы — все ответы check(), pre-flight тоже; "
+        "наблюдения — сохранённые; гейт 30.11: ≥ 10 клиентов за 23–29.11 или ≥ 1 наблюдение",
+        f"- команда: `apifacts stats adoption --db var/observations.sqlite` → "
+        f"`{d.adoption.line() if d.adoption else '—'}`",
         "",
         "## check()",
         "",
@@ -672,7 +717,8 @@ def _journal(state_dir: Path, d: Digest, reports_url: str) -> bool:
     if not d.window.complete:
         title += " (неполная)"
     bullets = [
-        f"- факты {f.total} (+{f.added}): {_counts_line(d)}; {_probes_line(d)}; "
+        f"- факты {f.total} (+{f.added}): {_counts_line(d)}; {_adoption_line(d)}; "
+        f"{_probes_line(d)}; "
         f"{_needs_probe_line(d)}; {_publications_line(d)}.",
         f"- отчёт: [{d.report_id}]({reports_url.rstrip('/')}/{d.report_id})",
     ]
@@ -699,6 +745,7 @@ def _args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--no-send", action="store_true", help="state only, no Telegram")
     parser.add_argument("--gateway", default=GATEWAY)
     parser.add_argument("--reports-url", default=REPORTS_URL)
+    parser.add_argument("--pypistats", default=PYPISTATS, help="pypistats API base URL")
     return parser.parse_args(argv)
 
 
@@ -715,7 +762,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     state_dir: Path = args.state_dir
     open_card = open_needs_probe_card(state_dir)  # read-only, also in a dry run
-    d = build(args.root, now, args.current, args.results, args.db, args.policy, open_card)
+    pypi = pypi_downloads(PACKAGES, salt_window(now, args.current), args.pypistats)
+    d = build(args.root, now, args.current, args.results, args.db, args.policy, open_card, pypi)
     card = needs_probe_card(d) if open_card is None else None
     if card:
         d = replace(d, open_card=card[0])

@@ -94,6 +94,46 @@ def validate(
     raise typer.Exit(EXIT_INVALID)
 
 
+stats_app = typer.Typer(help="Numbers read from the API's sqlite file.", no_args_is_help=True)
+app.add_typer(stats_app, name="stats")
+
+
+@stats_app.command("adoption")
+def stats_adoption(
+    db: Annotated[Path, typer.Option(help="The API's sqlite file.")] = Path(
+        "var/observations.sqlite"
+    ),
+    current: Annotated[
+        bool, typer.Option(help="The running salt period instead of the last complete one.")
+    ] = False,
+    now: Annotated[
+        str | None, typer.Option(help="ISO time with offset (default: now); for tests.")
+    ] = None,
+) -> None:
+    """One line for the gate (D-092): external_clients=N calls=M reported_external=K.
+
+    Window = one salt period (Monday 00:00 UTC → Monday), the only one where distinct networks
+    are exact. Exit codes: 0 printed, 1 no db or no traffic table yet, 2 usage.
+    """
+    from datetime import UTC, datetime
+
+    from apifacts.api.adoption import period_of, read_adoption
+
+    try:
+        moment = datetime.fromisoformat(now) if now else datetime.now(UTC)
+    except ValueError:
+        typer.echo(f"error: --now needs an ISO time, got {now!r}", err=True)
+        raise typer.Exit(EXIT_USAGE) from None
+    if moment.tzinfo is None:
+        typer.echo("error: --now needs an offset", err=True)
+        raise typer.Exit(EXIT_USAGE)
+    found = read_adoption(db, period_of(moment.astimezone(UTC), current))
+    typer.echo(found.line())
+    if not found.available:
+        typer.echo(f"error: {db}: no traffic table (API older than D-092 counting)", err=True)
+        raise typer.Exit(EXIT_INVALID)
+
+
 @app.command("render-fix")
 def render_fix(
     fix_json: Annotated[str, typer.Argument(metavar="JSON", help="One fix as a JSON object.")],

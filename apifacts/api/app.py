@@ -4,7 +4,10 @@ Configuration (environment, read at startup): `APIFACTS_REPO` (registry checkout
 `APIFACTS_DB` (sqlite file, default `observations.sqlite`), `APIFACTS_TRUSTED_PROXIES`
 (comma-separated IPs/CIDRs whose `X-Forwarded-For` is believed, default `127.0.0.1,::1`),
 `APIFACTS_REGISTRY_VERSION` (overrides the version derived from the facts), `APIFACTS_RESULTS`
-(the probe runner's results.jsonl for `/healthz`, default `<repo>/var/results.jsonl`).
+(the probe runner's results.jsonl for `/healthz`, default `<repo>/var/results.jsonl`),
+`APIFACTS_OWN_NETS` (comma-separated IPs/CIDRs of our own hosts; plus one per line, `#` comments,
+in `APIFACTS_OWN_NETS_FILE`, default `own-nets.txt` next to the db — outside git, the addresses
+are private). Loopback and private addresses are always ours. See `ops/README.md`, «Adoption».
 
 The facts index is read once, at startup: a new registry needs a restart (`ops/deploy.sh` does it).
 
@@ -12,6 +15,7 @@ One process: rate limits live in memory and the store is one sqlite connection.
 """
 
 import hashlib
+import ipaddress
 import json
 import os
 import secrets
@@ -101,6 +105,7 @@ class _State:
     daily_cap: int
     template_cap: int
     trusted_proxies: tuple[Network, ...]
+    own_nets: tuple[Network, ...]
     utcnow: Callable[[], datetime]
     results: Path
     pages: dict[str, Page]
@@ -193,6 +198,33 @@ def _drop_reason(entry: ServiceEntry, signal: ExtractedSignal | None) -> str | N
     return None
 
 
+def _reporter_net(state: _State, ip: str, now: datetime) -> str:
+    """sha256(this salt period's salt ‖ the caller's network), spec 03 Q3."""
+    salt = state.store.period_salt(salt_period(now.date()).isoformat())
+    return hashlib.sha256(salt + network_of(ip).encode()).hexdigest()
+
+
+def _is_own(ip: str, own_nets: tuple[Network, ...]) -> bool:
+    """A call from our own hosts (illouminus, home, a dev machine, local tests) is not adoption."""
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped is not None:
+        addr = addr.ipv4_mapped
+    return addr.is_loopback or addr.is_private or any(addr in net for net in own_nets)
+
+
+def own_nets_from_env(db_path: Path) -> tuple[Network, ...]:
+    """`APIFACTS_OWN_NETS` plus the lines of `APIFACTS_OWN_NETS_FILE` (default: own-nets.txt
+    next to the db); a missing file is no nets, a typo fails the startup (ValueError)."""
+    values = os.environ.get("APIFACTS_OWN_NETS", "").split(",")
+    path = Path(os.environ.get("APIFACTS_OWN_NETS_FILE") or db_path.parent / "own-nets.txt")
+    if path.is_file():
+        values += [line.split("#", 1)[0] for line in path.read_text(encoding="utf-8").splitlines()]
+    return parse_proxies(values)
+
+
 def _ingest(
     state: _State,
     entry: ServiceEntry,
@@ -210,7 +242,6 @@ def _ingest(
     if (dropped := _drop_reason(entry, signal)) is not None:
         state.store.bump(dropped, day)
         return False
-    salt = state.store.period_salt(salt_period(now.date()).isoformat())
     context = req.context
     sdk = context.sdk if context else None
     row = {
@@ -221,7 +252,7 @@ def _ingest(
         "status": signal.status,
         "error_hash": signal.error_hash,
         "normalized_error": signal.normalized,
-        "reporter_net": hashlib.sha256(salt + network_of(ip).encode()).hexdigest(),
+        "reporter_net": _reporter_net(state, ip, now),
         "reporter_ua_class": classify_ua(user_agent),
         "sdk_package": sdk.package if sdk else None,
         "sdk_version": sdk.version if sdk else None,
@@ -307,6 +338,9 @@ def _check(state: _State, req: CheckRequest, ip: str, user_agent: str | None) ->
         reason = "unregistered_target"
         _count_unregistered(state.store, target, now.date().isoformat())
 
+    # adoption (D-092): every answered call, pre-flight included; a count per network, no target
+    state.store.count_call(salt_period(now.date()).isoformat(), _reporter_net(state, ip, now),
+                           own=_is_own(ip, state.own_nets), stored=stored)
     return {
         "service": entry.key if entry else None,
         "matched_template": {"method": template[0], "path": template[1]} if template else None,
@@ -404,6 +438,7 @@ def create_app(
     daily_cap: int = DAILY_CAP,
     template_cap: int = TEMPLATE_CAP,
     trusted_proxies: tuple[str, ...] | None = None,
+    own_nets: tuple[str, ...] | None = None,
     clock: Callable[[], float] | None = None,
     utcnow: Callable[[], datetime] | None = None,
 ) -> FastAPI:
@@ -414,7 +449,8 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         root = Path(repo if repo is not None else os.environ.get("APIFACTS_REPO", "."))
-        store = Store(db_path or os.environ.get("APIFACTS_DB", "observations.sqlite"))
+        db = Path(db_path or os.environ.get("APIFACTS_DB", "observations.sqlite"))
+        store = Store(db)
         index = FactsIndex.load(root, os.environ.get("APIFACTS_REGISTRY_VERSION") or None)
         listed = [(e.key, e.service.name, len(e.facts)) for e in index.services.values()]
         app.state.apifacts = _State(
@@ -423,6 +459,7 @@ def create_app(
             daily_cap=daily_cap,
             template_cap=template_cap,
             trusted_proxies=trusted,
+            own_nets=parse_proxies(own_nets) if own_nets is not None else own_nets_from_env(db),
             utcnow=utcnow or (lambda: datetime.now(UTC)),
             results=Path(
                 results_path

@@ -4,6 +4,7 @@ Fixtures only: no network except a local fake of the Telegram gateway, no VPS.
 """
 
 import json
+import sqlite3
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -318,8 +319,8 @@ def test_ping_is_5_to_8_lines_with_the_report_link(week):
     assert lines[0] == "agent-facts · неделя 43"
     assert lines[-1] == "https://ops.baillot.dev/reports/agent-facts-2026-10-26"
     assert "факты: 2 (+2) · verified 1 · official 0 · reported 1 · stale 0 · retracted 0" in lines
-    assert "check(): 3 обращений · сетей 1 · незарегистрированных целей 2 (top: api.notion.com)" \
-        in lines
+    assert ("принятие: внешних клиентов 0 · вызовов 0 · внешних наблюдений 0 · "
+            "PyPI без зеркал: —") in lines
     assert "пробы: 1 прогонов (1 pass) · нарушений бюджета 0 · ключей нет: stripe-test" in lines
     assert "нужна проба: 1 reported без пробы" in lines
     assert "кворум: 1 черновиков за неделю → один PR needs-review в начале следующей (D-093)" \
@@ -490,3 +491,41 @@ def test_rerun_with_new_numbers_replaces_its_journal_entry(registry, state):
     assert "- факты 2 (+2)" in journal
     assert "### 2026-10-20 — старая запись" in journal
     assert len(state.calls()) == 2
+
+
+# ── adoption (D-092) ───────────────────────────────────────────────────────────────────────────
+
+
+def test_adoption_line_counts_external_networks_of_the_window(registry, tmp_path):
+    db = make_db(tmp_path / "observations.sqlite", [], [])
+    con = sqlite3.connect(db)
+    con.executemany("INSERT INTO traffic VALUES (?, ?, ?, ?, ?)", [
+        ("2026-10-19", "n1", 0, 5, 1), ("2026-10-19", "n2", 0, 1, 0),
+        ("2026-10-19", "own", 1, 40, 3), ("2026-10-26", "n3", 0, 9, 9),  # own; next period
+    ])
+    con.commit()
+    con.close()
+    d = digest.build(registry.root, MONDAY, db=db, policy_path=REPO / "ops" / "publish-policy.yaml",
+                     pypi={"apifacts": 12, "apifacts-pytest": None})
+    line = digest._adoption_line(d)
+    assert line == ("принятие: внешних клиентов 2 · вызовов 6 · внешних наблюдений 1 · "
+                    "PyPI без зеркал: apifacts 12 / apifacts-pytest —")
+    report = digest.render_report(d)
+    assert "## Принятие (D-092)" in report
+    assert "`external_clients=2 calls=6 reported_external=1`" in report
+    assert line in digest.render_ping(d, "https://x")
+
+
+@pytest.mark.real_pypistats
+def test_pypi_downloads_sums_the_window_without_mirrors(httpserver):
+    rows = [
+        {"category": "without_mirrors", "date": "2026-10-18", "downloads": 100},  # before
+        {"category": "without_mirrors", "date": "2026-10-19", "downloads": 7},
+        {"category": "without_mirrors", "date": "2026-10-25", "downloads": 5},
+        {"category": "with_mirrors", "date": "2026-10-20", "downloads": 1000},
+    ]
+    httpserver.expect_request("/packages/apifacts/overall",
+                              query_string="mirrors=false").respond_with_json({"data": rows})
+    httpserver.expect_request("/packages/apifacts-pytest/overall").respond_with_data("", 502)
+    got = digest.pypi_downloads(("apifacts", "apifacts-pytest"), WEEK43, httpserver.url_for("/"))
+    assert got == {"apifacts": 12, "apifacts-pytest": None}

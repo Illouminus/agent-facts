@@ -40,3 +40,16 @@ CREATE TABLE IF NOT EXISTS counters (
     n    INTEGER NOT NULL,
     PRIMARY KEY (day, name)
 );
+
+-- adoption (D-092): one row per calling network per salt period, for EVERY check() call that
+-- reached the answer, pre-flight included. `net` is the same salted hash as reporter_net; `own`
+-- is decided at request time from APIFACTS_OWN_NETS (raw IPs are never kept, and last week's
+-- salt is gone by the digest, so "ours" cannot be subtracted afterwards). Kept two periods.
+CREATE TABLE IF NOT EXISTS traffic (
+    period TEXT    NOT NULL,
+    net    TEXT    NOT NULL,
+    own    INTEGER NOT NULL,
+    calls  INTEGER NOT NULL,
+    stored INTEGER NOT NULL,
+    PRIMARY KEY (period, net)
+);

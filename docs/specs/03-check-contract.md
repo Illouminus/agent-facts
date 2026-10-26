@@ -61,6 +61,8 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 4. Store observation only if step 1 matched **and** the request carries an `error` — pre-flight calls
    are answered, never stored (Q5). Reporter net = sha256(salt ‖ IPv4 /16 or IPv6 /32) (Q3); the salt
    rotates weekly, Monday 00:00 UTC, so one network keeps one id inside a quorum window (Q6).
+   Every answered call (pre-flight too) also adds one to its network's row in `traffic` (period,
+   salted net, own/external, calls, stored) — the adoption count of D-092, see `ops/README.md`.
 5. Rate limits: 60 req/min per reporter net, 600/min global; over → 429 with `Retry-After`.
 6. Never store or log: full URL query, request bodies, headers from the caller, raw IP, anything that
    fails the secret-shaped regex filter (replaced by `<redacted>` before any write).
