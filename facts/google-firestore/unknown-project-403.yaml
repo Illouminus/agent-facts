@@ -20,9 +20,9 @@ status: verified:server:prod
 evidence:
   probe: af:google-firestore:probe:unknown-project
   first_seen: 2026-10-24T08:46:02Z
-  confirmations: 28
+  confirmations: 44
   stale_counter: 0
-  last_confirmed: 2026-10-26T00:31:21Z
+  last_confirmed: 2026-10-27T00:30:21Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe

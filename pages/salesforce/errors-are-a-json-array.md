@@ -2,7 +2,7 @@
 
 **Salesforce Platform REST API · GET /services/data/{version}/sobjects/{object}/{id} · HTTP 404**
 
-Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-26 · 80 confirmations from 2 vantages
+Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2026-10-27 · 128 confirmations from 2 vantages
 
 ## What to do
 

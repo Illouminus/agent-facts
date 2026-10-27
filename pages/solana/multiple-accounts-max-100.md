@@ -2,7 +2,7 @@
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 200 `-32602`**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-26 · 65 confirmations from 2 vantages
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-27 · 77 confirmations from 2 vantages
 
 > getMultipleAccounts with more than 100 public keys returns JSON-RPC error -32602 Too many inputs provided; max 100.
 
