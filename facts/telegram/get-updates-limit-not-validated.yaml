@@ -17,10 +17,10 @@ status: verified:server:prod
 evidence:
   probe: af:telegram:probe:get-updates-limit-out-of-range
   first_seen: 2026-10-24T08:17:36Z
-  confirmations: 76
+  confirmations: 123
   stale_counter: 0
   official_url: https://core.telegram.org/bots/api#getupdates
-  last_confirmed: 2026-10-26T01:31:23Z
+  last_confirmed: 2026-10-27T01:30:49Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe

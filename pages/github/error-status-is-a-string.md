@@ -2,7 +2,7 @@
 
 **GitHub REST API · GET /repos/{owner}/{repo} · HTTP 404**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-26 · 30 confirmations from 2 vantages
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-26 · 35 confirmations from 2 vantages
 
 ## What to do
 

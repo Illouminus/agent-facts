@@ -2,7 +2,7 @@
 
 **Gemini API · GET /v1beta/models/{model} · HTTP 200**
 
-Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-26 · 33 confirmations from 2 vantages
+Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026-10-27 · 52 confirmations from 2 vantages
 
 ## What to do
 

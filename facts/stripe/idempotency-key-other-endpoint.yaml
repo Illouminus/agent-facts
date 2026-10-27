@@ -20,9 +20,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:idempotency-key-other-endpoint
   first_seen: 2026-10-24T07:53:51Z
-  confirmations: 4
+  confirmations: 5
   stale_counter: 0
-  last_confirmed: 2026-10-25T12:15:19Z
+  last_confirmed: 2026-10-26T14:46:20Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
