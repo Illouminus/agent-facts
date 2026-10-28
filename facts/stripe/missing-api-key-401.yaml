@@ -19,9 +19,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:stripe:probe:no-api-key
   first_seen: 2026-10-24T07:53:54Z
-  confirmations: 10
+  confirmations: 13
   stale_counter: 0
-  last_confirmed: 2026-10-26T20:46:21Z
+  last_confirmed: 2026-10-27T21:01:21Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe

@@ -20,9 +20,9 @@ status: verified:server:prod
 evidence:
   probe: af:google-gemini:probe:models-invalid-key
   first_seen: 2026-10-24T08:03:54Z
-  confirmations: 34
+  confirmations: 46
   stale_counter: 0
-  last_confirmed: 2026-10-27T01:00:22Z
+  last_confirmed: 2026-10-28T01:00:21Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
