@@ -373,6 +373,7 @@ def run_main(registry, state, *extra: str) -> int:
     return digest.main([
         "--root", str(registry.root), "--state-dir", str(state.root),
         "--now", "2026-10-26T06:00:00Z", "--policy", str(REPO / "ops" / "publish-policy.yaml"),
+        "--dogfood", str(registry.root / "var" / "apifacts-dogfood.jsonl"),  # never the live one
         *extra,
     ])
 
@@ -529,3 +530,59 @@ def test_pypi_downloads_sums_the_window_without_mirrors(httpserver):
     httpserver.expect_request("/packages/apifacts-pytest/overall").respond_with_data("", 502)
     got = digest.pypi_downloads(("apifacts", "apifacts-pytest"), WEEK43, httpserver.url_for("/"))
     assert got == {"apifacts": 12, "apifacts-pytest": None}
+
+
+# ── dogfooding ─────────────────────────────────────────────────────────────────────────────────
+
+
+def dogfood_line(ts: str, result: str, path: str = "/repos/a/b", host: str = "api.github.com"):
+    return json.dumps({"ts": ts, "host": host, "method": "GET", "path": path, "status": 404,
+                       "result": result})
+
+
+def write_dogfood(path: Path, lines: list[str]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def test_dogfood_metrics_count_the_window_only(tmp_path):
+    log = write_dogfood(tmp_path / "df.jsonl", [
+        dogfood_line("2026-10-20T10:00:00+02:00", "verified"),
+        dogfood_line("2026-10-21T10:00:00Z", "official"),
+        dogfood_line("2026-10-21T11:00:00Z", "reported"),
+        dogfood_line("2026-10-22T10:00:00Z", "unknown", "/graphql"),
+        dogfood_line("2026-10-22T11:00:00Z", "unknown", "/graphql"),
+        dogfood_line("2026-10-23T11:00:00Z", "unknown", "/user"),
+        dogfood_line("2026-10-24T11:00:00Z", "error"),
+        dogfood_line("2026-10-27T10:00:00Z", "verified"),  # next week
+        dogfood_line("2026-10-18T23:59:00Z", "verified"),  # previous week
+        "not json",
+        json.dumps({"result": "verified"}),  # no ts
+    ])
+    m = digest.dogfood_metrics(log, WEEK43)
+    assert (m.calls, m.found, m.reported, m.unknown, m.errors, m.bad_lines) == (7, 2, 1, 3, 1, 2)
+    assert m.top_unknown == (("GET api.github.com/graphql", 2), ("GET api.github.com/user", 1))
+
+
+def test_missing_dogfood_log_reads_as_unavailable(tmp_path):
+    assert not digest.dogfood_metrics(tmp_path / "none.jsonl", WEEK43).available
+    assert not digest.dogfood_metrics(None, WEEK43).available
+
+
+def test_report_has_dogfooding_and_ping_names_it_only_when_nonzero(registry, tmp_path):
+    empty = digest.build(registry.root, MONDAY)
+    assert "## Dogfooding" in digest.render_report(empty)
+    assert "нет журнала dogfooding" in digest.render_report(empty)
+    assert "dogfooding" not in digest.render_ping(empty, "https://r")
+    log = write_dogfood(tmp_path / "df.jsonl", [
+        dogfood_line("2026-10-20T10:00:00Z", "verified"),
+        dogfood_line("2026-10-21T10:00:00Z", "unknown", "/graphql"),
+    ])
+    d = digest.build(registry.root, MONDAY, dogfood=log)
+    text = digest.render_report(d)
+    assert "провалов 2 · факт есть 1 · reported 0 · без факта 1 · ошибок хука 0" in text
+    assert "`GET api.github.com/graphql` 1" in text
+    ping = digest.render_ping(d, "https://r")
+    assert "dogfooding 2, факт есть 1" in ping
+    assert 5 <= len(ping.splitlines()) <= 8

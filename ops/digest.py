@@ -2,11 +2,13 @@
 """Weekly digest of agent-facts (spec 08): facts, check() traffic, probe runs, taps to come.
 
     ops/digest.py [--root R] [--state-dir S] [--now ISO] [--current] [--dry-run] [--no-send]
+                  [--dogfood ~/routines/var/apifacts-dogfood.jsonl]
 
 Reads only local files: `facts/` + `services/` (the registry), `var/results.jsonl` (probe runs),
 `var/observations.sqlite` (check() and its `traffic` adoption rows, opened read-only),
-`ops/publish-policy.yaml`; the one network read is pypistats (PyPI downloads, D-092). No LLM, no
-vendor API. Output:
+`ops/publish-policy.yaml`, the routines' dogfooding log (`--dogfood`: one line per HTTP failure in
+an illouminus routine script, written by `~/routines/bin/apifacts-dogfood.sh`); the one network
+read is pypistats (PyPI downloads, D-092). No LLM, no vendor API. Output:
 
 1. `<state>/reviews/agent-facts-<YYYY-MM-DD>.md` — the report (megabrain rule: a report lives in
    state/reviews, rendered at ops.baillot.dev/reports; Telegram only pings);
@@ -56,6 +58,8 @@ DEFAULT_BUDGET_S = 300  # spec 04 default per-template budget
 CARD_SUFFIX = "agent-facts-needs-a-probe"
 PYPISTATS = "https://pypistats.org/api"
 PACKAGES = ("apifacts", "apifacts-pytest")
+DOGFOOD = Path.home() / "routines" / "var" / "apifacts-dogfood.jsonl"
+DOGFOOD_RESULTS = ("verified", "official", "reported", "error")  # anything else: no fact
 RUN_OUTCOMES = ("pass", "fail", "error")
 _NO_KEY = re.compile(r"no key (\S+)")
 
@@ -303,6 +307,64 @@ def check_metrics(db: Path, window: Window) -> CheckMetrics:
     )
 
 
+# ── dogfooding ─────────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class DogfoodMetrics:
+    """Our own routines' HTTP failures sent through `apifacts check` (one jsonl line each).
+
+    "A fact helped" (V1) = the registry answered on the target itself with a verified or official
+    fact; service-level facts on an unregistered target count as "no fact"."""
+
+    available: bool
+    calls: int = 0
+    found: int = 0  # verified + official
+    reported: int = 0
+    unknown: int = 0
+    errors: int = 0  # the hook could not run the client
+    top_unknown: tuple[tuple[str, int], ...] = ()  # host+path without a fact: candidates for facts/
+    bad_lines: int = 0
+
+
+def dogfood_metrics(path: Path | None, window: Window) -> DogfoodMetrics:
+    if path is None or not path.is_file():
+        return DogfoodMetrics(available=False)
+    results: Counter[str] = Counter()
+    misses: Counter[str] = Counter()
+    bad = 0
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            bad += 1
+            continue
+        moment = _moment(rec.get("ts")) if isinstance(rec, dict) else None
+        if moment is None:
+            bad += 1
+            continue
+        if not window.contains(moment):
+            continue
+        result = rec.get("result")
+        if result not in DOGFOOD_RESULTS:
+            result = "unknown"
+            target = f"{rec.get('host', '?')}{rec.get('path', '')}"
+            misses[f"{rec.get('method', '?')} {target}"] += 1
+        results[result] += 1
+    return DogfoodMetrics(
+        available=True,
+        calls=sum(results.values()),
+        found=results["verified"] + results["official"],
+        reported=results["reported"],
+        unknown=results["unknown"],
+        errors=results["error"],
+        top_unknown=tuple(sorted(misses.items(), key=lambda kv: (-kv[1], kv[0]))[:3]),
+        bad_lines=bad,
+    )
+
+
 # ── adoption (D-092) ──────────────────────────────────────────────────────────────────────────
 
 
@@ -413,6 +475,7 @@ class Digest:
     open_card: str | None = None
     adoption: Adoption | None = None
     pypi: dict[str, int | None] = field(default_factory=dict)
+    dogfood: DogfoodMetrics = field(default_factory=lambda: DogfoodMetrics(available=False))
 
     @property
     def report_id(self) -> str:
@@ -421,7 +484,8 @@ class Digest:
 
 def build(root: Path, now: datetime, current: bool = False, results: Path | None = None,
           db: Path | None = None, policy_path: Path | None = None,
-          open_card: str | None = None, pypi: dict[str, int | None] | None = None) -> Digest:
+          open_card: str | None = None, pypi: dict[str, int | None] | None = None,
+          dogfood: Path | None = None) -> Digest:
     window = salt_window(now, current)
     db = db or root / "var" / "observations.sqlite"
     services, facts = load_registry(root)
@@ -445,6 +509,7 @@ def build(root: Path, now: datetime, current: bool = False, results: Path | None
         open_card=open_card,
         adoption=read_adoption(db, window.start.date()),
         pypi=dict(pypi or {}),
+        dogfood=dogfood_metrics(dogfood, window),
     )
 
 
@@ -490,6 +555,12 @@ def _adoption_line(d: Digest) -> str:
     return f"{head} · PyPI без зеркал: {pypi or '—'}"
 
 
+def _dogfood_line(d: Digest) -> str:
+    g = d.dogfood
+    return (f"dogfooding: провалов {g.calls} · факт есть {g.found} · reported {g.reported} · "
+            f"без факта {g.unknown} · ошибок хука {g.errors}")
+
+
 def _needs_probe_line(d: Digest) -> str:
     n = len(d.facts.needs_probe)
     line = f"нужна проба: {n} reported без пробы"
@@ -511,7 +582,8 @@ def render_ping(d: Digest, reports_url: str) -> str:
     lines = [
         title,
         f"факты: {f.total} (+{f.added}) · {_counts_line(d)}",
-        _adoption_line(d),
+        _adoption_line(d) + (f" · dogfooding {d.dogfood.calls}, факт есть {d.dogfood.found}"
+                             if d.dogfood.calls else ""),
         _probes_line(d),
         _needs_probe_line(d),
         _quorum_line(d),
@@ -550,6 +622,24 @@ def render_report(d: Digest) -> str:
         "наблюдения — сохранённые; гейт 30.11: ≥ 10 клиентов за 23–29.11 или ≥ 1 наблюдение",
         f"- команда: `apifacts stats adoption --db var/observations.sqlite` → "
         f"`{d.adoption.line() if d.adoption else '—'}`",
+        "",
+        "## Dogfooding",
+        "",
+    ]
+    g = d.dogfood
+    if g.available:
+        top = ", ".join(f"`{k}` {n}" for k, n in g.top_unknown) or "—"
+        out += [
+            f"- {_dogfood_line(d).removeprefix('dogfooding: ')}",
+            f"- без факта, top-3 (кандидаты в `facts/`): {top}",
+            "- источник: `~/routines/var/apifacts-dogfood.jsonl` (хук `bin/apifacts-dogfood.sh` "
+            "рутин illouminus); «факт есть» = verified или official по самой цели",
+        ]
+        if g.bad_lines:
+            out.append(f"- нечитаемых строк: {g.bad_lines}")
+    else:
+        out.append("- нет журнала dogfooding (хук рутин ещё не писал)")
+    out += [
         "",
         "## check()",
         "",
@@ -747,6 +837,8 @@ def _args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--gateway", default=GATEWAY)
     parser.add_argument("--reports-url", default=REPORTS_URL)
     parser.add_argument("--pypistats", default=PYPISTATS, help="pypistats API base URL")
+    parser.add_argument("--dogfood", type=Path, default=DOGFOOD,
+                        help="routines' dogfooding jsonl (bin/apifacts-dogfood.sh)")
     return parser.parse_args(argv)
 
 
@@ -764,7 +856,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     state_dir: Path = args.state_dir
     open_card = open_needs_probe_card(state_dir)  # read-only, also in a dry run
     pypi = pypi_downloads(PACKAGES, salt_window(now, args.current), args.pypistats)
-    d = build(args.root, now, args.current, args.results, args.db, args.policy, open_card, pypi)
+    d = build(args.root, now, args.current, args.results, args.db, args.policy, open_card, pypi,
+              args.dogfood)
     card = needs_probe_card(d) if open_card is None else None
     if card:
         d = replace(d, open_card=card[0])
