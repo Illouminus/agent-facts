@@ -2,7 +2,7 @@
 
 **PyPI (Python Package Index) · GET /simple/{project} · HTTP 301**
 
-Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-27 · 349 confirmations from 2 vantages
+Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026-10-28 · 401 confirmations from 2 vantages
 
 ## What to do
 

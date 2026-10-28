@@ -19,9 +19,9 @@ status: verified:server:prod
 evidence:
   probe: af:google-calendar:probe:invalid-page-token
   first_seen: 2026-10-24T08:41:04Z
-  confirmations: 34
+  confirmations: 46
   stale_counter: 0
-  last_confirmed: 2026-10-27T01:46:19Z
+  last_confirmed: 2026-10-28T01:46:20Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
