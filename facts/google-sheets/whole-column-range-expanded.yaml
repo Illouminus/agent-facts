@@ -17,9 +17,9 @@ status: verified:server:prod
 evidence:
   probe: af:google-sheets:probe:range-clipped-to-grid
   first_seen: 2026-10-24T08:32:31Z
-  confirmations: 37
+  confirmations: 44
   stale_counter: 0
-  last_confirmed: 2026-10-29T01:01:19Z
+  last_confirmed: 2026-10-29T23:46:19Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe

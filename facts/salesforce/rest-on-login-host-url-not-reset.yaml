@@ -20,9 +20,9 @@ status: verified:server:sandbox
 evidence:
   probe: af:salesforce:probe:rest-on-login-host
   first_seen: 2026-10-24T09:20:10Z
-  confirmations: 126
+  confirmations: 152
   stale_counter: 0
-  last_confirmed: 2026-10-29T01:46:24Z
+  last_confirmed: 2026-10-30T01:01:06Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe
