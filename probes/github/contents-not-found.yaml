@@ -1,0 +1,22 @@
+# A missing file path under contents/, at each registered depth: 404 Not Found with the contents
+# documentation_url (what our own routines hit when a state file is not there yet).
+id: af:github:probe:contents-not-found
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World/contents/agent-facts-no-such-file}
+  - {do: http, method: GET, path: /repos/octocat/Hello-World/contents/agent-facts-dir/no-such-file}
+  - {do: http, method: GET, path: /repos/octocat/Hello-World/contents/agent-facts-dir/a/no-such-file}
+  - {do: http, method: GET, path: /repos/octocat/Hello-World/contents/agent-facts-dir/a/b/no-such-file}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.message, equals: Not Found}
+  - {step: 1, json_path: $.status, equals: "404"}
+  - {step: 1, json_path: $.documentation_url, contains: "repos/contents#get-repository-content"}
+  - {step: 2, status: 404}
+  - {step: 2, json_path: $.message, equals: Not Found}
+  - {step: 3, status: 404}
+  - {step: 3, json_path: $.message, equals: Not Found}
+  - {step: 4, status: 404}
+  - {step: 4, json_path: $.message, equals: Not Found}

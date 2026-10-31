@@ -1,0 +1,34 @@
+# Resend email API, keyless: probes send no key and only GET, so they reach nothing but the
+# authentication layer (an invalid key would need an Authorization header, which probes may not
+# set). POST /emails is registered so check() stores what agents report; prod probes may not POST.
+key: resend
+name: Resend
+hosts: [api.resend.com]
+doc_hosts: [resend.com]
+surfaces:
+  http:
+    base_url: https://api.resend.com
+    templates:
+      - {method: POST, path: /emails}
+      - {method: POST, path: /emails/batch}
+      - {method: GET, path: /emails}
+      - {method: GET, path: "/emails/{email_id}"}
+      - {method: GET, path: /domains}
+      - {method: GET, path: "/domains/{domain_id}"}
+    signal_fields:  # name first: check() takes the first code-shaped field
+      - status
+      - name
+      - message
+      - retry-after
+      - ratelimit-limit
+      - ratelimit-remaining
+      - ratelimit-reset
+dimensions:
+  env: {prod: https://api.resend.com}
+  account_state: [anonymous]
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://resend.com/legal/terms-of-service
+probe_budget: {per_template_seconds: 1800}

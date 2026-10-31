@@ -1,0 +1,30 @@
+id: af:npm-registry:dist-tags-not-found-404
+service: npm-registry
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/-/package/{package}/dist-tags"
+signal:
+  status: 404
+  error_string: "Not Found"
+  normalized: "not found"
+claim: "GET /-/package/{package}/dist-tags for a package that does not exist returns HTTP 404 with the bare JSON string \"Not Found\", not an error object."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:npm-registry:probe:dist-tags-not-found
+  first_seen: 2026-10-31T13:09:00Z
+  last_confirmed: 2026-10-31T13:09:00Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]
