@@ -1,6 +1,6 @@
 # apifacts registry
 
-Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-31 · 13 services · 200 facts.
+Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how its fact was established. Registry version 2026-10-31 · 15 services · 211 facts.
 
 | Service | Facts | ✅ verified | 🔵 official | 🟡 reported | ⚪ stale | ⛔ retracted |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -10,9 +10,11 @@ Facts about how APIs, SDKs and CLIs behave, for AI agents; each page shows how i
 | [Cloud Firestore (Firebase) REST API](google-firestore/index.md) | 18 | 15 | 3 | 0 | 0 | 0 |
 | [Gemini API](google-gemini/index.md) | 17 | 13 | 4 | 0 | 0 | 0 |
 | [Google Sheets API](google-sheets/index.md) | 20 | 18 | 2 | 0 | 0 | 0 |
+| [Linear API](linear/index.md) | 4 | 4 | 0 | 0 | 0 | 0 |
 | [npm registry](npm-registry/index.md) | 5 | 5 | 0 | 0 | 0 | 0 |
+| [OpenAI API](openai/index.md) | 5 | 5 | 0 | 0 | 0 | 0 |
 | [PyPI (Python Package Index)](pypi/index.md) | 16 | 12 | 4 | 0 | 0 | 0 |
-| [Resend](resend/index.md) | 2 | 2 | 0 | 0 | 0 | 0 |
+| [Resend](resend/index.md) | 4 | 4 | 0 | 0 | 0 | 0 |
 | [Salesforce Platform REST API](salesforce/index.md) | 18 | 15 | 3 | 0 | 0 | 0 |
 | [Solana JSON-RPC (public mainnet endpoint)](solana/index.md) | 14 | 11 | 3 | 0 | 0 | 0 |
 | [Stripe API](stripe/index.md) | 26 | 23 | 3 | 0 | 0 | 0 |
