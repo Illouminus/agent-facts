@@ -57,7 +57,10 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
    kept (Q4); a non-JSON body falls back to its first line. Normalize: lowercase, collapse whitespace, digits → `#`, UUID/hex ≥ 16 → `<id>`,
    emails → `<email>`, URLs → `<url>`, truncate 512. Hash = sha256 of normalized.
 3. Look up facts: exact `(service, template, normalized hash)`, then `(service, template, status)`,
-   then `(service, kind in {rate_limit, availability})`. Render fixes.
+   then `auth_quirk` facts of the service's other templates that answer the error itself (same hash,
+   or same vendor code and status; never status alone — 31.10.2026: a key is checked before the
+   route, probes GET `/v1/models`, agents fail on `POST /v1/chat/completions`), then
+   `(service, kind in {rate_limit, availability})`. Render fixes.
 4. Store observation only if step 1 matched **and** the request carries an `error` — pre-flight calls
    are answered, never stored (Q5). Reporter net = sha256(salt ‖ IPv4 /16 or IPv6 /32) (Q3); the salt
    rotates weekly, Monday 00:00 UTC, so one network keeps one id inside a quorum window (Q6).

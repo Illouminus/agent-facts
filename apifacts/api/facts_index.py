@@ -3,7 +3,8 @@
 Only documents that pass `apifacts validate` are loaded; any other file is skipped and logged,
 so one bad file cannot take the API down or put an unvalidated claim in an answer. Lookup follows
 spec 03 step 3: exact `(service, template, normalized hash)`, then `(service, template, status)`,
-then `(service, kind in {rate_limit, availability})`.
+then the service's `auth_quirk` facts from any template when the error itself matches (hash, or
+code and status), then `(service, kind in {rate_limit, availability})`.
 """
 
 import logging
@@ -26,6 +27,11 @@ from apifacts.schema.validate import Report, default_paths, validate_paths
 log = logging.getLogger("apifacts.api")
 
 SERVICE_LEVEL_KINDS = frozenset({Kind.rate_limit, Kind.availability})
+# A key is checked before the route (the probes show it: `*-before-model-lookup`), so an auth error
+# reads the same on every endpoint of a service. Probes may only GET in prod, which puts these facts
+# on `GET /v1/models`; agents fail on `POST /v1/chat/completions`. Tier 2b lends them across
+# templates, but only on the error itself — never on the status alone (any 401 is not this 401).
+SERVICE_WIDE_KINDS = frozenset({Kind.auth_quirk})
 _RATE_LIMIT_HEADER = re.compile(r"(?i)retry-after|rate-?limit")
 _DATE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
@@ -222,7 +228,7 @@ class FactsIndex:
         signal: ExtractedSignal,
         sdk: Locator | None,
     ) -> tuple[list[IndexedFact], bool]:
-        """Facts for an observed error, and whether they answer the signal itself (tiers 1–2)
+        """Facts for an observed error, and whether they answer the signal itself (tiers 1–2b)
         or are only the service-level fallback (tier 3)."""
         candidates = self._candidates(entry, template, sdk)
         exact = [f for f in candidates if signal.error_hash in f.hashes]
@@ -244,7 +250,30 @@ class FactsIndex:
             ]
             if by_status:
                 return by_status, True
+        borrowed = self.service_wide(entry, template, signal, sdk)
+        if borrowed:
+            return borrowed, True
         return self.service_level(entry, sdk), False
+
+    def service_wide(
+        self,
+        entry: ServiceEntry,
+        template: Template,
+        signal: ExtractedSignal,
+        sdk: Locator | None,
+    ) -> list[IndexedFact]:
+        """Tier 2b: `SERVICE_WIDE_KINDS` facts of other templates that answer this very error:
+        same normalized hash, else same vendor code with the same status."""
+        here = set(map(id, self._candidates(entry, template, sdk)))
+        pool = [
+            f
+            for f in entry.facts
+            if f.fact.kind in SERVICE_WIDE_KINDS and id(f) not in here and f.fits(sdk)
+        ]
+        exact = [f for f in pool if signal.error_hash in f.hashes]
+        if exact or not (signal.error_code and signal.status is not None):
+            return exact
+        return [f for f in pool if f.code == signal.error_code and f.status == signal.status]
 
     def for_template(
         self, entry: ServiceEntry, template: Template, sdk: Locator | None
