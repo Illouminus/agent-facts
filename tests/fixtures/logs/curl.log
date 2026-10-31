@@ -1,0 +1,20 @@
+Run curl -sS --fail-with-body -v https://api.github.com/repos/octo-org/octo-repo/actions/secrets/public-key
+* Host api.github.com:443 was resolved.
+*   Trying 140.82.112.6:443...
+* Connected to api.github.com (140.82.112.6) port 443
+> GET /repos/octo-org/octo-repo/actions/secrets/public-key HTTP/2
+> Host: api.github.com
+> User-Agent: curl/8.5.0
+> Accept: */*
+> Authorization: Bearer abcDEF123456789xyz
+>
+< HTTP/2 403
+< content-type: application/json; charset=utf-8
+<
+{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/actions/secrets#get-a-repository-public-key","status":"403"}curl: (22) The requested URL returned error: 403
++ curl -fsS -X POST -d '{"text":"deploy done"}' https://api.telegram.org/bot123456789:AAbbccddeeffgghhiijjkkllmmnnooppqq/sendMessage
+curl: (22) The requested URL returned error: 400
++ curl -fsS \
+    -H 'Accept: application/json' \
+    https://pypi.org/pypi/no-such-package-xyz/json
+curl: (22) The requested URL returned error: 404

@@ -1,0 +1,3 @@
+message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers/cus_Q1w2E3r4T5y6U7
+message='Stripe API response' path=https://api.stripe.com/v1/customers/cus_Q1w2E3r4T5y6U7 response_code=404
+message='Stripe API error received' error_code=resource_missing error_type=invalid_request_error error_message="No such customer: 'cus_Q1w2E3r4T5y6U7'" error_param=id

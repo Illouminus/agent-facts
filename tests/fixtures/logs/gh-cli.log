@@ -1,0 +1,6 @@
+Run gh release view v9.9.9 --repo octo-org/octo-repo
+release not found
+Run gh api repos/octo-org/private-repo/hooks
+gh: Not Found (HTTP 404)
+HTTP 403: Resource not accessible by integration (https://api.github.com/repos/octo-org/octo-repo/issues/12/labels)
+Error: Process completed with exit code 1.

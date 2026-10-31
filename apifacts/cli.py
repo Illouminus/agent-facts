@@ -6,7 +6,7 @@ from typing import Annotated
 
 import typer
 
-from apifacts import __version__, cli_check
+from apifacts import __version__, cli_check, cli_scan
 from apifacts.bot.cli import app as bot_app
 from apifacts.pages.cli import app as pages_app
 from apifacts.probe.cli import app as probe_app
@@ -22,6 +22,7 @@ EXIT_OK, EXIT_INVALID, EXIT_USAGE = 0, 1, 2
 
 app.add_typer(pages_app, name="pages")
 app.command("check")(cli_check.check)
+app.command("scan")(cli_scan.scan)
 app.add_typer(probe_app, name="probe")
 app.add_typer(quorum_app, name="quorum")
 app.add_typer(bot_app, name="bot")

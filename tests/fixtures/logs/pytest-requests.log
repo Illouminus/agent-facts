@@ -1,0 +1,27 @@
+2026-10-31T09:12:01.1234567Z ============================= test session starts ==============================
+2026-10-31T09:12:01.1234567Z platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+2026-10-31T09:12:01.1234567Z collected 3 items
+2026-10-31T09:12:02.1234567Z
+2026-10-31T09:12:02.1234567Z tests/test_billing.py .F.                                                [100%]
+2026-10-31T09:12:02.1234567Z
+2026-10-31T09:12:02.1234567Z =================================== FAILURES ===================================
+2026-10-31T09:12:02.1234567Z ___________________________ test_create_payment_intent ___________________________
+2026-10-31T09:12:02.1234567Z
+2026-10-31T09:12:02.1234567Z     def test_create_payment_intent():
+2026-10-31T09:12:02.1234567Z >       client.create_intent(amount=100)
+2026-10-31T09:12:02.1234567Z
+2026-10-31T09:12:02.1234567Z tests/test_billing.py:14:
+2026-10-31T09:12:02.1234567Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+2026-10-31T09:12:02.1234567Z billing/client.py:31: in create_intent
+2026-10-31T09:12:02.1234567Z     response.raise_for_status()
+2026-10-31T09:12:02.1234567Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+2026-10-31T09:12:02.1234567Z E       requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://api.stripe.com/v1/payment_intents?key=sk_test_abcdefgh12345678
+2026-10-31T09:12:02.1234567Z
+2026-10-31T09:12:02.1234567Z .venv/lib/python3.12/site-packages/requests/models.py:1024: HTTPError
+2026-10-31T09:12:02.1234567Z ───────────────────── Known facts (apifacts, CC BY 4.0) ─────────────────────
+2026-10-31T09:12:02.1234567Z POST api.stripe.com/v1/payment_intents → 400 idempotency_error
+2026-10-31T09:12:02.1234567Z no known facts (no_fact_for_signal)
+2026-10-31T09:12:02.1234567Z =========================== short test summary info ============================
+2026-10-31T09:12:02.1234567Z FAILED tests/test_billing.py::test_create_payment_intent - requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://api.stripe.com/v1/payment_intents?key=sk_test_abcdefgh12345678
+2026-10-31T09:12:02.1234567Z FAILED tests/test_status.py::test_health - requests.exceptions.HTTPError: 503 Server Error: Service Unavailable for url: http://localhost:8000/healthz
+2026-10-31T09:12:02.1234567Z ========================= 2 failed, 1 passed in 0.41s ==========================

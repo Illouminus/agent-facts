@@ -51,3 +51,36 @@ re-serialized. Same client as the CLI (filters, 2 s timeout, 20 checks per sessi
 
 `apifacts check <url-or-locator> [--status N --body file]` for humans and shell agents; prints the
 same section as the plugin.
+
+## CI logs (`apifacts scan`, GitHub Action `action/`)
+
+Agents that fix red CI read the failing step's log, the run's annotations and the job summary, not a
+test report. `apifacts scan [FILE|-]` (`apifacts/cli_scan.py`, extractor `apifacts/client/logscan.py`)
+reads the last 2 MB of a log, finds failed calls (status ≥ 400) in the formats clients print —
+`requests` and `httpx` `raise_for_status()`, httpx's `HTTP Request:` log line (the OpenAI and Anthropic
+SDKs, with their `Error code: N - {…}` as the body), stripe-python's logfmt log, `gh` (`HTTP 404: … (url)`),
+axios with its `config` dump, ky, ofetch, `curl -f` with `-v` or the echoed command — and asks about each
+distinct `(method, scrubbed URL, status)`, at most 10 (`--max-lookups`). Same filters and host gate as
+the plugin: only hosts in `GET /v0/services` are sent, never a query string, a header or a request body
+(axios `config.data` is never read). Our own "Known facts" sections and `title=apifacts` annotations in
+the log are skipped. Exit 0 whatever happens (advisory); 2 only for an unreadable file.
+
+**Method.** Many formats omit it, and the server refuses a path without one (spec 03); a guessed method
+would be stored as an observation under the wrong template and count toward a quorum. So: a method the
+log states (inline, `-X`/`-d` on a visible curl command, the axios dump, the stripe log) is used and the
+error is reported as the plugin reports it. Otherwise, when the registry's templates (packaged snapshot or
+`APIFACTS_SNAPSHOT`) give the path exactly one method, the call is a pre-flight — that method, no `error`
+object, so nothing is stored (Q5) — and the facts are filtered by status on the client; with zero or
+several candidate methods nothing is sent and the output names the `apifacts check … -X <METHOD>` command.
+
+`--github` (default when `GITHUB_ACTIONS=true`): one `::warning title=apifacts: <target>::…` per call that
+has a fact for its exact status (the service-wide rate-limit facts the cascade adds stay in the log only),
+escaped like actions/toolkit (`%`, CR, LF; `:` and `,` in the title), and a markdown section appended to
+`$GITHUB_STEP_SUMMARY` with the sections in a code fence (no server string becomes markdown). `--json`
+prints the calls and answers instead of the plain sections.
+
+The composite action (`uses: Illouminus/apifacts/action@v0`) takes `run` (a command run with
+`bash -eo pipefail`, output tee'd, scanned only on failure, the step exits with the command's code) or
+`log-file` (scan a file, always exit 0), `offline`, and `version` (default = the current release; a test
+keeps it equal to `apifacts.__version__`). It starts `apifacts` with `uvx` when present, else `pipx run`,
+preinstalled with Python ≥ 3.12 on ubuntu-, macos- and windows-latest; nothing in it can fail a step.

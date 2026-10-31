@@ -1,0 +1,85 @@
+# Composite action: `apifacts scan` over a failing step's output (docs/specs/07-plugins.md, "CI logs").
+# One bash step, so it runs the same on ubuntu-, macos- and windows-latest (Git Bash). The script
+# reads inputs from env only, never `${{ }}` inside the script: a command is data, not code to splice.
+# Install: `uvx` when the runner has uv, else `pipx run` (preinstalled on all three hosted images,
+# Python ≥ 3.12 there); only on a failure, so a green run downloads nothing.
+name: apifacts scan
+description: >-
+  Verified facts about the third-party API errors in a failing step, written to its log, as
+  annotations and in the job summary, where coding agents look when they fix CI.
+author: Illouminus
+branding:
+  icon: alert-triangle
+  color: blue
+
+inputs:
+  run:
+    description: >-
+      Shell command to run with bash (-eo pipefail). Its output is shown as usual and, if it fails,
+      scanned; the step ends with the command's own exit code.
+    required: false
+    default: ""
+  log-file:
+    description: >-
+      A log file to scan instead of running a command, e.g. in a later step with `if: failure()`.
+      This mode always succeeds.
+    required: false
+    default: ""
+  offline:
+    description: Answer from the fact snapshot packaged in the release; nothing is sent.
+    required: false
+    default: "false"
+  version:
+    description: apifacts version installed from PyPI (needs one that has `apifacts scan`).
+    required: false
+    default: "0.2.1"
+
+runs:
+  using: composite
+  steps:
+    - name: apifacts scan
+      shell: bash
+      env:
+        APIFACTS_ACTION_RUN: ${{ inputs.run }}
+        APIFACTS_ACTION_LOG: ${{ inputs.log-file }}
+        APIFACTS_ACTION_OFFLINE: ${{ inputs.offline }}
+        APIFACTS_ACTION_VERSION: ${{ inputs.version }}
+        PYTHONUTF8: "1"  # Windows: the section has → and badges; cp1252 would raise on print
+      run: |
+        set +e  # this step decides its own exit code, below
+
+        apifacts_scan() {
+          local spec="apifacts==${APIFACTS_ACTION_VERSION:-0.2.1}" args=(scan --github)
+          [ "$APIFACTS_ACTION_OFFLINE" = "true" ] && args+=(--offline)
+          if command -v uvx >/dev/null 2>&1; then
+            uvx --quiet --from "$spec" apifacts "${args[@]}" "$1"
+          elif command -v pipx >/dev/null 2>&1; then
+            pipx run --spec "$spec" apifacts "${args[@]}" "$1"
+          else
+            echo "::notice title=apifacts::neither uvx nor pipx on this runner; scan skipped"
+            return 0
+          fi
+          local code=$?
+          [ "$code" -eq 0 ] || echo "::notice title=apifacts::scan did not complete (exit $code)"
+          return 0  # advisory: never the reason a step fails
+        }
+
+        if [ -n "$APIFACTS_ACTION_RUN" ]; then
+          [ -n "$APIFACTS_ACTION_LOG" ] && echo "::warning title=apifacts::both run and log-file set; log-file ignored"
+          log="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/apifacts-$$.log"
+          bash --noprofile --norc -eo pipefail -c "$APIFACTS_ACTION_RUN" 2>&1 | tee "$log"
+          code=${PIPESTATUS[0]}
+          [ "$code" -ne 0 ] && apifacts_scan "$log"
+          rm -f "$log"
+          exit "$code"  # the command's own outcome, pass or fail
+        elif [ -n "$APIFACTS_ACTION_LOG" ]; then
+          if [ -f "$APIFACTS_ACTION_LOG" ]; then
+            apifacts_scan "$APIFACTS_ACTION_LOG"
+          else
+            echo "::notice title=apifacts::no log file at $APIFACTS_ACTION_LOG; nothing scanned"
+          fi
+          exit 0
+        else
+          echo "::warning title=apifacts::set the run or the log-file input"
+          exit 0
+        fi
