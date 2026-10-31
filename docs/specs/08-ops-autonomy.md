@@ -39,6 +39,13 @@ publications proposed (batch #7, 4 items):
 [✅ Publish batch #7]  [⏭ Skip this week]
 ```
 
+The report behind the ping (`state/reviews/agent-facts-<date>.md`) carries the detail: adoption
+(D-092), «Читатели» — requests to `apifacts.dev` by User-Agent family over the week's UTC days,
+grouped as AI agents (live fetch: ChatGPT-User, Claude-User, Perplexity-User…), AI crawlers, search
+engines, scripts, browsers, our own clients, with the path-class split per family (spec 03,
+«Readers»; no paths are kept, so no per-page top) — dogfooding, check(), probes. The ping stays at
+8 lines; readers are in the report only.
+
 Rules for the batch (decision 2026-10-20): templates and the vendor list are pre-approved in
 `ops/publish-policy.yaml`; every item links a `verified:*` fact; no vendor opinions, no vulnerabilities;
 the tap publishes all items, a skip keeps them for the next batch; nothing is ever published without

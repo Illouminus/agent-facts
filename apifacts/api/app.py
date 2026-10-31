@@ -8,12 +8,16 @@ Configuration (environment, read at startup): `APIFACTS_REPO` (registry checkout
 `APIFACTS_OWN_NETS` (comma-separated IPs/CIDRs of our own hosts; plus one per line, `#` comments,
 in `APIFACTS_OWN_NETS_FILE`, default `own-nets.txt` next to the db — outside git, the addresses
 are private). Loopback and private addresses are always ours. See `ops/README.md`, «Adoption».
+`APIFACTS_READERS_DIR` (daily reader counts by User-Agent family, default `readers/` next to the
+db; `apifacts/api/readers.py`).
 
 The facts index is read once, at startup: a new registry needs a restart (`ops/deploy.sh` does it).
 
 One process: rate limits live in memory and the store is one sqlite connection.
 """
 
+import asyncio
+import contextlib
 import hashlib
 import ipaddress
 import json
@@ -67,6 +71,12 @@ from apifacts.api.models import (
 )
 from apifacts.api.normalize import ExtractedSignal, extract_signal, find_urls, looks_like_prompt
 from apifacts.api.ratelimit import RateLimiter
+from apifacts.api.readers import (
+    FLUSH_SECONDS,
+    ReaderCounts,
+    ReadersMiddleware,
+    readers_dir_from_env,
+)
 from apifacts.api.seed_hosts import metric_host
 from apifacts.api.site import NOT_FOUND, ROBOTS, Page, llms_txt, load_pages, text_page
 from apifacts.api.store import Drop, Store, salt_period
@@ -441,10 +451,19 @@ def create_app(
     own_nets: tuple[str, ...] | None = None,
     clock: Callable[[], float] | None = None,
     utcnow: Callable[[], datetime] | None = None,
+    readers_dir: str | Path | None = None,
+    readers_flush_s: float = FLUSH_SECONDS,
 ) -> FastAPI:
     """Arguments override the environment (tests); the index and the store open at startup."""
     env_proxies = os.environ.get("APIFACTS_TRUSTED_PROXIES", ",".join(DEFAULT_TRUSTED_PROXIES))
     trusted = parse_proxies(trusted_proxies or env_proxies.split(","))
+    now = utcnow or (lambda: datetime.now(UTC))
+    readers = ReaderCounts()
+
+    async def flush_readers_every(seconds: float) -> None:
+        while True:
+            await asyncio.sleep(seconds)
+            await asyncio.to_thread(readers.flush)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -460,7 +479,7 @@ def create_app(
             template_cap=template_cap,
             trusted_proxies=trusted,
             own_nets=parse_proxies(own_nets) if own_nets is not None else own_nets_from_env(db),
-            utcnow=utcnow or (lambda: datetime.now(UTC)),
+            utcnow=now,
             results=Path(
                 results_path
                 or os.environ.get("APIFACTS_RESULTS")
@@ -469,9 +488,15 @@ def create_app(
             pages=load_pages(root),
             llms=text_page(llms_txt(listed, index.version, OPT_OUT_EMAIL)),
         )
+        readers.directory = Path(readers_dir) if readers_dir else readers_dir_from_env(db)
+        flusher = asyncio.create_task(flush_readers_every(readers_flush_s))
         try:
             yield
         finally:
+            flusher.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await flusher
+            readers.flush()  # shutdown (systemd's SIGTERM too): the last minutes are kept
             store.close()
 
     app = FastAPI(
@@ -486,6 +511,8 @@ def create_app(
         limiter=RateLimiter(per_net=per_net, global_limit=global_limit, **limiter_kwargs),
         trusted=trusted,
     )
+    app.add_middleware(ReadersMiddleware, counts=readers, utcnow=now)  # added last = outermost
+    app.state.readers = readers
     app.add_exception_handler(RequestValidationError, _on_validation)
     app.add_exception_handler(StarletteHTTPException, _on_http)
     app.openapi = _without_422(app.openapi)

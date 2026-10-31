@@ -78,6 +78,18 @@ When no fact matches: `facts: []`, but `observed` carries what the probes know a
 - `GET /healthz` → `{ok, registry_version, probes_last_run}`; `probes_last_run` = `started` of the newest
   `pass`/`fail`/`error` line in the runner's `results.jsonl` (`APIFACTS_RESULTS`), `null` if none.
 
+## Readers (every request, site and API)
+
+Caddy keeps no access log and uvicorn runs without one (rule 6), so the only trace of who reads
+`apifacts.dev` is a count per (UTC day, User-Agent family, path class, status class)
+(`apifacts/api/readers.py`). The family is one token of a fixed, ordered table (GPTBot, ClaudeBot,
+ChatGPT-User, …, `script`, `browser`, `unknown`); the path class is the route's shape (`home`,
+`fact_page`, `api_check`, …), never the path. Like `reporter_ua_class`, the derived token is all
+that is kept of the User-Agent: no raw UA, path, query or IP is stored. The family is what the
+caller claims (unverifiable without the IP). Counts are flushed to `var/readers/<YYYY-MM-DD>.json`
+every 5 minutes and at shutdown; no db table. Read by `apifacts stats readers` and the weekly digest
+(spec 08).
+
 ## Design parameters
 
 | Parameter | Value |

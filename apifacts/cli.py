@@ -94,7 +94,9 @@ def validate(
     raise typer.Exit(EXIT_INVALID)
 
 
-stats_app = typer.Typer(help="Numbers read from the API's sqlite file.", no_args_is_help=True)
+stats_app = typer.Typer(
+    help="Numbers read from the API's var/ (sqlite, reader counts).", no_args_is_help=True
+)
 app.add_typer(stats_app, name="stats")
 
 
@@ -132,6 +134,57 @@ def stats_adoption(
     if not found.available:
         typer.echo(f"error: {db}: no traffic table (API older than D-092 counting)", err=True)
         raise typer.Exit(EXIT_INVALID)
+
+
+@stats_app.command("readers")
+def stats_readers(
+    days: Annotated[int, typer.Option(min=1, max=400, help="UTC days back, today included.")] = 7,
+    readers_dir: Annotated[
+        Path, typer.Option("--dir", help="The API's reader counts (APIFACTS_READERS_DIR).")
+    ] = Path("var/readers"),
+    now: Annotated[
+        str | None, typer.Option(help="ISO time with offset (default: now); for tests.")
+    ] = None,
+) -> None:
+    """Who reads apifacts.dev: requests by User-Agent family, path class and status class.
+
+    Counts only (apifacts/api/readers.py): no path, no raw User-Agent, no IP. Today is partial
+    (the API flushes every 5 minutes). Exit codes: 0 printed, 1 no directory yet, 2 usage.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from apifacts.api.readers import GROUPS, STATUS_CLASSES, group_of, read_readers
+
+    try:
+        moment = datetime.fromisoformat(now) if now else datetime.now(UTC)
+    except ValueError:
+        typer.echo(f"error: --now needs an ISO time, got {now!r}", err=True)
+        raise typer.Exit(EXIT_USAGE) from None
+    if moment.tzinfo is None:
+        typer.echo("error: --now needs an offset", err=True)
+        raise typer.Exit(EXIT_USAGE)
+    today = moment.astimezone(UTC).date()
+    span = [(today - timedelta(days=i)).isoformat() for i in range(days - 1, -1, -1)]
+    found = read_readers(readers_dir, span)
+    if not found.available:
+        typer.echo(f"error: {readers_dir}: no such directory (API without reader counts yet)",
+                   err=True)
+        raise typer.Exit(EXIT_INVALID)
+    bad = f", {found.bad_files} unreadable" if found.bad_files else ""
+    typer.echo(f"readers {span[0]}..{span[-1]} UTC ({found.days_found}/{days} days with data{bad},"
+               f" today partial): {found.total} requests")
+    if not found.total:
+        return
+    typer.echo(f"{'group':<11} {'family':<20} {'total':>6} "
+               + " ".join(f"{s:>5}" for s in STATUS_CLASSES) + "  paths")
+    families = found.by_family()
+    order = sorted(families, key=lambda f: (GROUPS.index(group_of(f)), -families[f], f))
+    for family in order:
+        statuses = found.statuses(family)
+        paths = sorted(found.paths_of(family).items(), key=lambda pn: (-pn[1], pn[0]))
+        typer.echo(f"{group_of(family):<11} {family:<20} {families[family]:>6} "
+                   + " ".join(f"{statuses.get(s, 0):>5}" for s in STATUS_CLASSES)
+                   + "  " + ", ".join(f"{p} {n}" for p, n in paths))
 
 
 @app.command("render-fix")
