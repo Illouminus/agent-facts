@@ -1,0 +1,18 @@
+# The runner's fake constant as Bearer (`auth: invalid`): 400 validation_error "API key is invalid",
+# not a 401, before the resource is looked up (an email id that does not exist is the same 400).
+id: af:resend:probe:invalid-key
+service: resend
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /domains, auth: invalid}
+  - {do: http, method: GET, path: /emails/agent-facts-no-such-email, auth: invalid}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.statusCode, equals: 400}
+  - {step: 1, json_path: $.name, equals: validation_error}
+  - {step: 1, json_path: $.message, equals: API key is invalid}
+  - {step: 1, header: www-authenticate, matches: "^Bearer"}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: $.name, equals: validation_error}
+  - {step: 2, json_path: $.message, equals: API key is invalid}

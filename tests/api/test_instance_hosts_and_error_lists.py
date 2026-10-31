@@ -144,7 +144,16 @@ def test_check_and_runner_read_the_same_string(body, fields):
 
 def test_list_paths_come_from_the_runners_list():
     assert "[0].message" in MESSAGE_PATHS
-    assert set(CODE_PATHS) == {".error.errors[0].reason", "[0].errorCode"}
+    assert set(CODE_PATHS) == {".error.errors[0].reason", "[0].errorCode",
+                               ".errors[0].extensions.code"}
+
+
+def test_graphql_extensions_code_is_the_code():
+    body = json.dumps({"errors": [{"message": "Authentication required, not authenticated",
+                                   "extensions": {"code": "AUTHENTICATION_ERROR"}}]})
+    s = extract_signal(401, body, ("status",))
+    assert s.error_code == "AUTHENTICATION_ERROR"
+    assert s.raw_string == "Authentication required, not authenticated"
 
 
 # ── the client side: /v0/services, the hosts list, the offline snapshot ─────────────────────────

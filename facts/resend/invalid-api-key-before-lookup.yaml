@@ -1,0 +1,31 @@
+id: af:resend:invalid-api-key-before-lookup
+service: resend
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/emails/{email_id}"
+signal:
+  status: 400
+  error_code: validation_error
+  error_string: "API key is invalid"
+  normalized: "api key is invalid"
+claim: "GET /emails/{email_id} with an invalid API key returns HTTP 400 validation_error \"API key is invalid\" even for an id that does not exist: the key is checked before the email is looked up, so the 400 says nothing about the id."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Authorization, value_source: account_setting:bearer_api_key}
+status: verified:server:prod
+evidence:
+  probe: af:resend:probe:invalid-key
+  first_seen: 2026-10-31T13:45:07Z
+  last_confirmed: 2026-10-31T13:45:07Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

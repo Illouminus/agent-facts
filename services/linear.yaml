@@ -1,0 +1,33 @@
+# Linear GraphQL API, keyless: probes GET a read-only query ({viewer{id}}) with no key or the
+# runner's fake constant (`auth: invalid`), so they reach nothing but the CSRF and authentication
+# layers. The Terms (read 31.10.2026) ban reverse engineering and non-public APIs; this is the
+# public API. A personal API key goes raw in Authorization (OAuth tokens as Bearer), hence a
+# header scheme. POST /graphql is registered so check() stores what agents report on it; prod
+# probes may not POST.
+key: linear
+name: Linear API
+hosts: [api.linear.app]
+doc_hosts: [linear.app, developers.linear.app]
+surfaces:
+  http:
+    base_url: https://api.linear.app
+    templates:
+      - {method: POST, path: /graphql}
+      - {method: GET, path: /graphql}
+    signal_fields:  # GraphQL errors sit in a list: check() reads errors[0].message / .extensions.code
+      - status
+      - x-request-id
+      - retry-after
+      - x-ratelimit-requests-remaining
+      - x-complexity
+  sdk:
+    - {ecosystem: npm, package: "@linear/sdk"}
+dimensions:
+  env: {prod: https://api.linear.app}
+  account_state: [anonymous]
+auth: {kind: header, header_name: Authorization}  # scheme only, no key file
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://linear.app/terms
+probe_budget: {per_template_seconds: 1800}

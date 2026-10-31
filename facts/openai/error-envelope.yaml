@@ -1,0 +1,28 @@
+id: af:openai:error-envelope
+service: openai
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/models"
+signal:
+  status: 401
+claim: "Errors are a JSON object {error: {message, type, param, code}}; code can be null (a missing key), so the vendor code is error.code when set, else error.type, and the request id comes only in the x-request-id header."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:openai:probe:no-key
+  first_seen: 2026-10-31T13:45:07Z
+  last_confirmed: 2026-10-31T13:45:07Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

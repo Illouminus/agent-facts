@@ -1,0 +1,31 @@
+id: af:linear:missing-api-key-401
+service: linear
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/graphql"
+signal:
+  status: 401
+  error_code: AUTHENTICATION_ERROR
+  error_string: "Authentication required, not authenticated"
+  normalized: "authentication required, not authenticated"
+claim: "A query without an Authorization header returns HTTP 401 (not 200 with errors) and errors[0].extensions.code AUTHENTICATION_ERROR \"Authentication required, not authenticated\", before the query is resolved: an issue id that does not exist is the same 401."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Authorization, value_source: account_setting:api_key}
+status: verified:server:prod
+evidence:
+  probe: af:linear:probe:no-key
+  first_seen: 2026-10-31T13:45:06Z
+  last_confirmed: 2026-10-31T13:45:06Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

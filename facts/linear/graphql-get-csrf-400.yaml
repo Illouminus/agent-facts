@@ -1,0 +1,31 @@
+id: af:linear:graphql-get-csrf-400
+service: linear
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/graphql"
+signal:
+  status: 400
+  error_code: BAD_REQUEST
+  error_string: "This operation has been blocked as a potential Cross-Site Request Forgery (CSRF). Please either specify a 'content-type' header (with a type that is not one of application/x-www-form-urlencoded, multipart/form-data, text/plain) or provide a non-empty value for one of the following headers: x-apollo-operation-name, apollo-require-preflight"
+  normalized: "this operation has been blocked as a potential cross-site request forgery (csrf). please either specify a 'content-type' header (with a type that is not one of application/x-www-form-urlencoded, multipart/form-data, text/plain) or provide a non-empty value for one of the following headers: x-apollo-operation-name, apollo-require-preflight"
+claim: "GET /graphql without a Content-Type is blocked as a potential CSRF: HTTP 400 BAD_REQUEST in a GraphQL errors[] body, before the key is checked (an Authorization header gets the same 400). With Content-Type: application/json the same GET reaches authentication."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Content-Type, value_source: "literal:application/json"}
+status: verified:server:prod
+evidence:
+  probe: af:linear:probe:graphql-get-csrf
+  first_seen: 2026-10-31T13:45:05Z
+  last_confirmed: 2026-10-31T13:45:05Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

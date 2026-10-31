@@ -1,0 +1,20 @@
+# No Authorization: 401 invalid_request_error "Missing bearer authentication in header" with a null
+# error.code, before anything else is looked at (a model that does not exist is a 401 too, not a
+# 404), with WWW-Authenticate: Bearer and an x-request-id.
+id: af:openai:probe:no-key
+service: openai
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /v1/models}
+  - {do: http, method: GET, path: /v1/models/gpt-agent-facts-no-such-model}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: $.error.type, equals: invalid_request_error}
+  - {step: 1, json_path: $.error.message, equals: Missing bearer authentication in header}
+  - {step: 1, json_path: $.error.code, equals: null}
+  - {step: 1, json_path: $.error.param, exists: true}
+  - {step: 1, header: www-authenticate, matches: "^Bearer realm="}
+  - {step: 1, header: x-request-id, present: true}
+  - {step: 2, status: 401}
+  - {step: 2, json_path: $.error.message, equals: Missing bearer authentication in header}

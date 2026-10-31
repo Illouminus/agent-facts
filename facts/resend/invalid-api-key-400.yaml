@@ -1,0 +1,31 @@
+id: af:resend:invalid-api-key-400
+service: resend
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/domains"
+signal:
+  status: 400
+  error_code: validation_error
+  error_string: "API key is invalid"
+  normalized: "api key is invalid"
+claim: "A request whose Bearer API key is not a valid key returns HTTP 400 validation_error \"API key is invalid\", not a 401 (a missing key is 401 missing_api_key), in the flat {statusCode, name, message} body with WWW-Authenticate: Bearer."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Authorization, value_source: account_setting:bearer_api_key}
+status: verified:server:prod
+evidence:
+  probe: af:resend:probe:invalid-key
+  first_seen: 2026-10-31T13:45:07Z
+  last_confirmed: 2026-10-31T13:45:07Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]
