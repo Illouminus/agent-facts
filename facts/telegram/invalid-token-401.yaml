@@ -19,9 +19,9 @@ status: verified:server:prod
 evidence:
   probe: af:telegram:probe:invalid-token
   first_seen: 2026-10-24T08:17:39Z
-  confirmations: 540
+  confirmations: 632
   stale_counter: 0
-  last_confirmed: 2026-10-30T01:46:24Z
+  last_confirmed: 2026-10-31T01:46:26Z
   vantages: [mac-dev, illouminus]
 provenance:
   source: probe

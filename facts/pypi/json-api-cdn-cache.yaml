@@ -15,9 +15,9 @@ status: verified:server:prod
 evidence:
   probe: af:pypi:probe:json-project
   first_seen: 2026-10-20T09:06:07Z
-  confirmations: 132
+  confirmations: 146
   official_url: https://docs.pypi.org/api/#caching
-  last_confirmed: 2026-10-30T00:46:04Z
+  last_confirmed: 2026-10-31T01:16:21Z
   stale_counter: 0
   vantages: [mac-dev, illouminus]
 provenance:
