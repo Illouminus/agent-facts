@@ -62,7 +62,10 @@ def test_missing_key_matches_by_message(client):
 
 
 def test_status_alone_borrows_nothing(client):
-    other = '{"error": {"message": "You exceeded your current quota", "type": "x", "code": "insufficient_quota"}}'
+    other = (
+        '{"error": {"message": "You exceeded your current quota", "type": "x",'
+        ' "code": "insufficient_quota"}}'
+    )
     body = check(client, 401, other)
     assert not any(f["kind"] == "auth_quirk" for f in body["facts"])
     assert body["unknown"]["reason"] == "no_fact_for_signal"
