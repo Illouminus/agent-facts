@@ -10,6 +10,37 @@ Status: ✅ verified:server:prod · first seen 2026-10-31 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:github:probe:contents-not-found`](../../probes/github/contents-not-found.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://api.github.com/repos/octocat/Hello-World/contents/agent-facts-no-such-file
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+
+{
+  "message": "Not Found",
+  "status": "404",
+  "documentation_url": "…repos/contents#get-repository-content…"
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `PyGithub` (community) | `github.UnknownObjectException` | `e.status == 404` |
+| Node `@octokit/request` | `RequestError` | `err.status === 404` |
+
+Read from the SDK source: PyGithub 2.10.0: github/Requester.py Requester.createException; @octokit/request 10.0.16: dist-bundle/index.js fetchWrapper; @octokit/request-error 7.1.2.
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +50,15 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:github:probe:contents-not-found` (declarative, [source](../../probes/github/contents-not-found.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`No commit found for the ref agent-facts-no-such-ref`](contents-unknown-ref-404.md) · GET /repos/{owner}/{repo}/contents/{path} · HTTP 404
+- [`Not Found`](contents-missing-path-404-depth-2.md) · GET /repos/{owner}/{repo}/contents/{dir}/{path} · HTTP 404
+- [`Not Found`](contents-missing-path-404-depth-3.md) · GET /repos/{owner}/{repo}/contents/{dir}/{subdir}/{path} · HTTP 404
+- [`Not Found`](contents-missing-path-404-depth-4.md) · GET /repos/{owner}/{repo}/contents/{dir}/{subdir}/{subdir2}/{path} · HTTP 404
+- [REST error bodies carry a status field holding the HTTP code as a JSON string, such as "404", not as a number.](error-status-is-a-string.md) · GET /repos/{owner}/{repo} · HTTP 404
+- [`Not Found`](missing-repo-404.md) · GET /repos/{owner}/{repo} · HTTP 404
 
 ## Machine access
 

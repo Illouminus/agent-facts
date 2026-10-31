@@ -74,6 +74,10 @@ ROBOTS = f"User-agent: *\nAllow: /\n\nSitemap: {SITEMAP_URL}\n"
 # Rotate = new value here + deploy; the engines re-fetch keyLocation on the next submission.
 INDEXNOW_KEY = "2512f7f2a72f05dc4e4a02300eaac754"
 LASTMOD_STATE = "var/sitemap-lastmod.json"
+SERVER_JSON = "server.json"  # the MCP registry entry (stdio package), published as-is
+MCP_WELL_KNOWN = "/.well-known/mcp.json"
+MCP_COMMAND = "uvx --from 'apifacts[mcp]' apifacts mcp"
+PUBLISHER_META = "io.modelcontextprotocol.registry/publisher-provided"
 
 
 @dataclass(frozen=True)
@@ -86,6 +90,7 @@ class Page:
 class Head:
     title: str | None  # None: the page's H1, clipped
     description: str | None = None
+    article: dict | None = None  # JSON-LD without url/dateModified (templates.json_ld)
 
 
 HOME_DESCRIPTION = (
@@ -94,8 +99,22 @@ HOME_DESCRIPTION = (
 )
 
 
-def _page(title: str, content: str, description: str | None = None) -> Page:
+def json_ld_script(data: Mapping) -> str:
+    """`<script type="application/ld+json">`: data, not code. `<`, `>` and `&` only occur inside
+    JSON strings, where the `\\u003c` escapes mean the same, so no registry text can close the
+    element."""
+    text = json.dumps(data, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    for char, escaped in (("&", "\\u0026"), ("<", "\\u003c"), (">", "\\u003e")):
+        text = text.replace(char, escaped)
+    return f'<script type="application/ld+json">{text}</script>'
+
+
+def _page(
+    title: str, content: str, description: str | None = None, ld: Mapping | None = None
+) -> Page:
     meta = f'<meta name="description" content="{html.escape(description)}">' if description else ""
+    if ld is not None:
+        meta += json_ld_script(ld)
     doc = (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         f"<title>{html.escape(title)}</title>{meta}"
@@ -149,7 +168,11 @@ def _title(tokens: list[Token]) -> str:
 
 
 def render(
-    markdown: str, source: str, description: str | None = None, title: str | None = None
+    markdown: str,
+    source: str,
+    description: str | None = None,
+    title: str | None = None,
+    ld: Mapping | None = None,
 ) -> Page:
     md = MarkdownIt("commonmark", {"html": False}).enable("table")
     tokens = md.parse(markdown)
@@ -162,7 +185,7 @@ def render(
         h1 = _title(tokens)
         limit = templates.HEAD_TITLE_MAX - len(templates.HEAD_SUFFIX)
         title = h1 if h1 == "apifacts" else templates.clip_words(h1, limit) + templates.HEAD_SUFFIX
-    return _page(title, body, description)
+    return _page(title, body, description, ld)
 
 
 NOT_FOUND = _page(
@@ -194,6 +217,8 @@ def llms_txt(services: list[tuple[str, str, int]], version: str, opt_out: str) -
         f"- [GET /v0/facts/{{service}}/{{slug}}]({SITE}/v0/facts/stripe/missing-api-key-401):"
         " one fact",
         f"- [OpenAPI schema]({SITE}/openapi.json) · [Swagger UI]({SITE}/docs)",
+        f"- [MCP server]({SITE}{MCP_WELL_KNOWN}): stdio, `{MCP_COMMAND}`;"
+        " the same lookup as POST /v0/check, as an MCP tool",
         f"- [Fact schema]({BLOB}/schema/fact.schema.json)",
         "",
         "## Services",
@@ -238,7 +263,8 @@ def heads(index: FactsIndex) -> dict[str, Head]:
         if (entry := index.services.get(fact.service)) is not None:
             path = f"/{fact.service}/{templates.slug_of(fact)}"
             title = templates.head_title(fact, entry.service)
-            out[path] = Head(title, templates.head_description(fact))
+            article = templates.json_ld(fact, entry.service)
+            out[path] = Head(title, templates.head_description(fact), article)
     return out
 
 
@@ -246,6 +272,33 @@ def heads(index: FactsIndex) -> dict[str, Head]:
 class Site:
     pages: dict[str, Page]
     sitemap: Page
+    mcp: Page | None = None  # /.well-known/mcp.json; None without a server.json
+
+
+def mcp_manifest(root: Path) -> str | None:
+    """`/.well-known/mcp.json`: the repository's `server.json` (the official MCP registry entry:
+    a stdio package, `uvx --from apifacts[mcp] apifacts mcp`) plus, under the registry's
+    publisher-provided `_meta` key, the HTTP API that is not MCP. Server cards (SEP-1649/2127)
+    describe remote MCP endpoints and are still a draft; apifacts has no remote MCP endpoint, so it
+    publishes no card and claims no `remotes`. None when server.json is missing or unreadable."""
+    try:
+        data = json.loads((root / SERVER_JSON).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    meta = dict(data.get("_meta") or {})
+    meta[PUBLISHER_META] = {
+        **(meta.get(PUBLISHER_META) or {}),
+        "stdio_command": MCP_COMMAND,
+        "http_api": {
+            "check": {"method": "POST", "url": f"{SITE}/v0/check"},
+            "openapi": f"{SITE}/openapi.json",
+            "llms_txt": f"{SITE}/llms.txt",
+            "auth": "none",
+        },
+    }
+    return json.dumps({**data, "_meta": meta}, indent=2, ensure_ascii=False) + "\n"
 
 
 def load_site(root: Path, index: FactsIndex, today: str, state: Path | None) -> Site:
@@ -261,15 +314,24 @@ def load_site(root: Path, index: FactsIndex, today: str, state: Path | None) -> 
             if (path := url_for(source)) is not None:
                 sources[path] = (source, file.read_text(encoding="utf-8"))
     known = heads(index) | {"/": Head("apifacts", HOME_DESCRIPTION)}
-    pages = {}
-    for path, (source, text) in sources.items():
-        head = known.get(path) or (ERROR_STUB_HEAD if path.startswith("/errors/") else None)
-        pages[path] = render(text, source, *((head.description, head.title) if head else ()))
     digests = {
         path: hashlib.sha256(templates.substantive(text).encode("utf-8")).hexdigest()
         for path, (_, text) in sources.items()
     }
-    return Site(pages, text_page(sitemap_xml(lastmods(digests, state, today))))
+    dates = lastmods(digests, state, today)
+    pages = {}
+    for path, (source, text) in sources.items():
+        head = known.get(path) or (ERROR_STUB_HEAD if path.startswith("/errors/") else None)
+        if head is None:
+            pages[path] = render(text, source)
+            continue
+        ld = None
+        if head.article is not None:  # dated like the sitemap: the last change of substance
+            ld = {**head.article, "url": SITE + path, "dateModified": dates[path]}
+        pages[path] = render(text, source, head.description, head.title, ld)
+    manifest = mcp_manifest(root)
+    mcp = text_page(manifest) if manifest is not None else None
+    return Site(pages, text_page(sitemap_xml(dates)), mcp)
 
 
 _DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")

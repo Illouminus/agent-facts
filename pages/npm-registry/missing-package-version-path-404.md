@@ -10,6 +10,32 @@ Status: ✅ verified:server:prod · first seen 2026-10-31 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:npm-registry:probe:missing-package-two-segments`](../../probes/npm-registry/missing-package-two-segments.yaml) sends (prod) and what it checks in the answer.
+
+Step 1 → HTTP 404:
+
+```http
+GET https://registry.npmjs.org/agent-facts-probe-no-such-package/latest
+```
+
+Step 2 → HTTP 404:
+
+```http
+GET https://registry.npmjs.org/@agent-facts-probe/no-such-package
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+
+{
+  "error": "Not found"
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +45,12 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:npm-registry:probe:missing-package-two-segments` (declarative, [source](../../probes/npm-registry/missing-package-two-segments.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`version not found: 0.0.99`](version-not-found-404.md) · GET /{package}/{version} · HTTP 404
+- [`Not Found`](dist-tags-not-found-404.md) · GET /-/package/{package}/dist-tags · HTTP 404
+- [`Not found`](package-not-found-404.md) · GET /{package} · HTTP 404
 
 ## Machine access
 

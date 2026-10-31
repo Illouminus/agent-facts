@@ -12,8 +12,11 @@ from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
 from apifacts.fixes.templates import render_fix
+from apifacts.pages import sdk
 from apifacts.pages.errors_index import error_hash, normalized_of
-from apifacts.schema.models import VERIFIED_STATUSES, Fact, Kind, Service, Status, Surface
+from apifacts.pages.example import example
+from apifacts.probe.http import INVALID_KEY
+from apifacts.schema.models import VERIFIED_STATUSES, Fact, Kind, Probe, Service, Status, Surface
 
 _INLINE = re.compile(r"[\\`*\[\]<>|$~]|(?<![A-Za-z0-9])_|_(?![A-Za-z0-9])")
 _BLOCK_START = re.compile(r"^(?:[#+=-]|\d+[.)])")
@@ -279,6 +282,95 @@ def _machine_access(fact: Fact, service: Service) -> str:
     )
 
 
+def fenced(text: str, language: str = "") -> str:
+    """A fenced code block that no backtick run inside `text` can close early."""
+    longest = max((len(run) for run in re.findall(r"`{3,}", text)), default=2)
+    fence = "`" * (longest + 1)
+    return f"{fence}{language}\n{text}\n{fence}"
+
+
+def _example(fact: Fact, service: Service, probe: Probe | None) -> str | None:
+    found = example(fact, service, probe)
+    if found is None:
+        return None
+    _, svc, _, slug = found.probe_id.split(":", 3)
+    sent = "\n".join(text for _, text, _ in found.steps)
+    notes = []
+    if any(mark in sent for mark in ("<key>", "<access token>", "<credentials>")):
+        notes.append("the real key is elided")
+    if INVALID_KEY in sent:
+        notes.append(f"{code_span(INVALID_KEY)} is a deliberately wrong key")
+    intro = (
+        f"What probe [{code_span(found.probe_id)}](../../probes/{svc}/{slug}.yaml) sends "
+        f"({md_text(found.env)}) and what it checks in the answer"
+        + "".join(f"; {note}" for note in notes)
+        + "."
+    )
+    blocks = [intro]
+    many = len(found.steps) > 1
+    for number, text, status in found.steps:
+        if many:
+            tail = f" → HTTP {status}" if status is not None else ""
+            blocks.append(f"Step {number}{tail}:")
+        blocks.append(fenced(text, "http"))
+    blocks.append("Response (only what the probe asserts; other fields omitted):")
+    blocks.append(fenced(found.response, "http"))
+    return "## Example\n\n" + "\n\n".join(blocks)
+
+
+def _sdk_table(fact: Fact) -> str | None:
+    rows = []
+    verified = []
+    for r in sdk.raised(fact):
+        who = f"{sdk.LANGUAGES[r.ecosystem]} {code_span(r.package)}"
+        if not r.official:
+            who += " (community)"
+        what = f"returns {code_span(r.returns)}" if r.returns else code_span(r.raises or "")
+        checks = " · ".join(code_span(sdk.check_expr(r.ecosystem, a, v)) for a, v in r.checks)
+        rows.append(f"| {who} | {what} | {checks or '—'} |")
+        verified.append(md_text(r.verified))
+    if not rows:
+        return None
+    table = "\n".join(["| SDK | Raises | Check |", "| --- | --- | --- |", *rows])
+    return (
+        "When an SDK receives this response:\n\n"
+        + table
+        + "\n\nRead from the SDK source: "
+        + "; ".join(verified)
+        + "."
+    )
+
+
+def _fix_snippets(fact: Fact) -> str | None:
+    blocks = []
+    for i, fix in enumerate(fact.fixes, 1):
+        snippet = sdk.fix_snippet(fix, fact)
+        if snippet is not None:
+            language, code = snippet
+            blocks.append(f"Fix {i}:\n\n" + fenced(code, language))
+    return "\n\n".join(blocks) if blocks else None
+
+
+def _in_code(fact: Fact) -> str | None:
+    parts = [p for p in (_sdk_table(fact), _fix_snippets(fact)) if p]
+    return "## In your code\n\n" + "\n\n".join(parts) if parts else None
+
+
+RELATED_MAX = 6
+
+
+def _related(facts: Sequence[Fact]) -> str | None:
+    if not facts:
+        return None
+    rows = []
+    for f in facts[:RELATED_MAX]:
+        parts = [f"- [{title(f)}]({slug_of(f)}.md)", *_target_parts(f)[:1]]
+        if (signal := _signal_part(f)) is not None:
+            parts.append(signal)
+        rows.append(" · ".join(parts))
+    return "## Related errors\n\n" + "\n".join(rows)
+
+
 def _page(*blocks: str) -> str:
     return "\n\n".join([*blocks, "---", FOOTER]) + "\n"
 
@@ -304,21 +396,33 @@ def retracted_page(fact: Fact) -> str:
     return _page(f"# {title(fact)}", line)
 
 
-def fact_page(fact: Fact, service: Service, siblings: Sequence[Fact] = ()) -> str:
+def fact_page(
+    fact: Fact,
+    service: Service,
+    siblings: Sequence[Fact] = (),
+    probe: Probe | None = None,
+    related: Sequence[Fact] = (),
+) -> str:
+    """`probe`: the fact's evidence probe, for the Example; `related`: other facts of the
+    service with the same error status or endpoint, best first (build.related)."""
     if fact.status is Status.retracted:
         return retracted_page(fact)
     # The claim is quoted under the title, unless it already is the title.
     claim = [f"> {md_text(fact.claim)}"] if error_string_of(fact) or normalized_of(fact) else []
-    return _page(
+    optional = (_example(fact, service, probe), _in_code(fact), _related(related))
+    blocks = [
         f"# {title(fact)}",
         f"**{target_line(fact, service)}**",
         _status_line(fact),
         *claim,
         f"## What to do\n\n{_fixes(fact)}",
+        *(b for b in optional[:2] if b),
         f"## Dimensions\n\n{_dimensions(fact, siblings)}",
         f"## Evidence\n\n{_evidence(fact)}",
+        *(b for b in optional[2:] if b),
         f"## Machine access\n\n{_machine_access(fact, service)}",
-    )
+    ]
+    return _page(*blocks)
 
 
 def service_index(service: Service, facts: Sequence[Fact]) -> str:
@@ -433,6 +537,36 @@ def head_description(fact: Fact) -> str:
     """The claim: the page's one-line summary (≤ 300 characters by schema)."""
     claim = _one_line(fact.claim)
     return f"Retracted. {claim}" if fact.status is Status.retracted else claim
+
+
+CC_BY = "https://creativecommons.org/licenses/by/4.0/"
+
+
+def json_ld(fact: Fact, service: Service) -> dict | None:
+    """schema.org `TechArticle` of a fact page, without `url` and `dateModified` (the site adds
+    them: the page address and the sitemap lastmod). None for a retracted fact."""
+    if fact.status is Status.retracted:
+        return None
+    about: dict = {"@type": "WebAPI", "name": _one_line(service.name)}
+    if service.surfaces.http is not None:
+        about["url"] = service.surfaces.http.base_url
+    if service.doc_hosts:
+        about["documentation"] = f"https://{service.doc_hosts[0]}"
+    article = {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": heading(fact),
+        "description": _one_line(fact.claim),
+        "about": about,
+        "datePublished": fact.provenance.created,
+        "inLanguage": "en",
+        "isAccessibleForFree": True,
+        "license": CC_BY,
+        "publisher": {"@type": "Organization", "name": "apifacts", "url": "https://apifacts.dev"},
+    }
+    if fact.signal is not None and fact.signal.error_code:
+        article["keywords"] = [_one_line(fact.signal.error_code)]
+    return article
 
 
 def service_head(service: Service, facts: Sequence[Fact]) -> tuple[str, str]:

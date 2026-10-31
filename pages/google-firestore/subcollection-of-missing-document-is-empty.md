@@ -8,6 +8,21 @@ Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:google-firestore:probe:subcollection-of-missing-document`](../../probes/google-firestore/subcollection-of-missing-document.yaml) sends (prod) and what it checks in the answer; the real key is elided.
+
+```http
+GET https://firestore.googleapis.com/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch/children
+Authorization: Bearer <access token>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: service_account

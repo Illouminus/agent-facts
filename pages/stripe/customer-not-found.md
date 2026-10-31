@@ -10,6 +10,41 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:stripe:probe:customer-not-found`](../../probes/stripe/customer-not-found.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+```http
+GET https://api.stripe.com/v1/customers/cus_apifactsnosuch
+Authorization: Bearer <key>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "resource_missing",
+    "param": "id",
+    "message": "No such customer: 'cus_apifactsnosuch'"
+  }
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `stripe` | `stripe.InvalidRequestError` | `e.http_status == 404` · `e.code == "resource_missing"` |
+| Node `stripe` | `Stripe.errors.StripeInvalidRequestError` | `err.statusCode === 404` · `err.code === "resource_missing"` |
+
+Read from the SDK source: stripe 16.1.0: stripe/\_api_requestor.py specific_v1_api_error, stripe/\_error.py; stripe 23.1.0: cjs/Error.js generateV1Error, cjs/RequestSender.js.
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: any

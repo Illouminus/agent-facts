@@ -8,6 +8,34 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2
 
 1. Send header Idempotency-Key = new UUID per distinct request.
 
+## Example
+
+What probe [`af:stripe:probe:server-idempotency-key`](../../probes/stripe/server-idempotency-key.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+```http
+POST https://api.stripe.com/v1/customers
+Authorization: Bearer <key>
+Content-Type: application/x-www-form-urlencoded
+
+description=agent-facts+probe
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+Idempotency-Key: <matches ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$>
+```
+
+## In your code
+
+Fix 1:
+
+```python
+import uuid
+headers["Idempotency-Key"] = str(uuid.uuid4())  # a new value per distinct request; reuse it only to retry
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: any
@@ -17,6 +45,12 @@ env: sandbox · plan: any · region: any · account_state: any
 Probe `af:stripe:probe:server-idempotency-key` (declarative, [source](../../probes/stripe/server-idempotency-key.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Idempotent key length is 256 characters long, which is outside accepted lengths. Idempotent Keys must be 1-255 characters long. If you're looking for a decent generator, try using a UUID defined by IETF RFC 4122.`](idempotency-key-too-long.md) · POST /v1/customers · HTTP 400 `idempotency_error`
+- [`Received unknown parameter: agent_facts_unknown`](parameter-unknown.md) · POST /v1/customers · HTTP 400 `parameter_unknown`
+- [`Received unknown parameter: agent_facts_unknown`](validation-errors-are-not-replayed.md) · POST /v1/customers · HTTP 400 `parameter_unknown`
 
 ## Machine access
 

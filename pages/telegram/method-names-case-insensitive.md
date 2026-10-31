@@ -8,6 +8,32 @@ Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:telegram:probe:method-names-case-insensitive`](../../probes/telegram/method-names-case-insensitive.yaml) sends (prod) and what it checks in the answer; the real key is elided.
+
+Step 1 → HTTP 200:
+
+```http
+GET https://api.telegram.org/bot<key>/getme
+```
+
+Step 2 → HTTP 200:
+
+```http
+GET https://api.telegram.org/bot<key>/GETME
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+
+{
+  "ok": true
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -17,6 +43,11 @@ env: prod · plan: any · region: any · account_state: any
 Probe `af:telegram:probe:method-names-case-insensitive` (declarative, [source](../../probes/telegram/method-names-case-insensitive.yaml)) · official doc: <https://core.telegram.org/bots/api#making-requests>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Unauthorized`](invalid-token-401.md) · GET /{bot_token}/getMe · HTTP 401
+- [`Not Found`](malformed-token-404.md) · GET /{bot_token}/getMe · HTTP 404
 
 ## Machine access
 

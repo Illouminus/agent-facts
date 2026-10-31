@@ -238,7 +238,7 @@ def _open_bot_pr(gh: Gh) -> str | None:
 def _build_tree(tree: Path, root: Path, changes: Sequence[Change]) -> list[str]:
     """Copy the changes into the worktree, regenerate pages, validate; problems as strings."""
     from apifacts.pages import PagesError
-    from apifacts.pages.build import build_pages, load_registry, sync
+    from apifacts.pages.build import registry_pages, sync
     from apifacts.schema.validate import default_paths, validate_paths
 
     for change in changes:
@@ -252,7 +252,7 @@ def _build_tree(tree: Path, root: Path, changes: Sequence[Change]) -> list[str]:
     if not report.ok:
         return [str(p).replace(str(tree) + "/", "") for p in report.problems]
     try:
-        sync(tree / "pages", build_pages(*load_registry(tree)))
+        sync(tree / "pages", registry_pages(tree))
     except PagesError as exc:
         return [f"pages: {exc}"]
     return []

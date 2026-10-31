@@ -18,6 +18,11 @@ official doc: <https://solana.com/docs/references/clusters#common-http-error-cod
 
 Observations: none from reporters yet.
 
+## Related errors
+
+- [`Your IP or provider is blocked from this endpoint`](get-program-accounts-blocked-403.md) · POST / · HTTP 403 `403`
+- [The public mainnet endpoint allows 100 requests per 10 s per IP, 40 per 10 s per IP for a single RPC method, 40 concurrent connections and 100 MB per 30 s; exceeding them returns HTTP 429 with Retry-After.](public-mainnet-rate-limits.md) · POST / · HTTP 429
+
 ## Machine access
 
 ```sh

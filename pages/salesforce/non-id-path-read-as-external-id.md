@@ -10,6 +10,28 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:salesforce:probe:non-id-read-as-external-id`](../../probes/salesforce/non-id-read-as-external-id.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+```http
+GET https://<org>.my.salesforce.com/services/data/v62.0/sobjects/Account/notanid
+Authorization: Bearer <access token>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+
+[
+  {
+    "errorCode": "NOT_FOUND",
+    "message": "Provided external ID field does not exist or is not accessible: notanid"
+  }
+]
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: developer_edition
@@ -19,6 +41,12 @@ env: sandbox · plan: any · region: any · account_state: developer_edition
 Probe `af:salesforce:probe:non-id-read-as-external-id` (declarative, [source](../../probes/salesforce/non-id-read-as-external-id.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [REST errors are a JSON array of objects with errorCode and message (e.g. \[{errorCode: NOT_FOUND, …}\]), not a single error object.](errors-are-a-json-array.md) · GET /services/data/{version}/sobjects/{object}/{id} · HTTP 404
+- [`The requested resource does not exist`](record-not-found-404.md) · GET /services/data/{version}/sobjects/{object}/{id} · HTTP 404 `NOT_FOUND`
+- [`The requested resource does not exist`](unknown-sobject-describe-404.md) · GET /services/data/{version}/sobjects/{object}/describe · HTTP 404 `NOT_FOUND`
 
 ## Machine access
 

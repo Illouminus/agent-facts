@@ -10,6 +10,45 @@ Status: ✅ verified:server:prod · first seen 2026-10-31 · last confirmed 2026
 
 1. Send header Authorization = the account setting bearer_api_key.
 
+## Example
+
+What probe [`af:resend:probe:invalid-key`](../../probes/resend/invalid-key.yaml) sends (prod) and what it checks in the answer; `apifacts-invalid-key` is a deliberately wrong key.
+
+```http
+GET https://api.resend.com/domains
+Authorization: Bearer apifacts-invalid-key
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 400
+www-authenticate: <matches ^Bearer>
+
+{
+  "statusCode": 400,
+  "name": "validation_error",
+  "message": "API key is invalid"
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `resend` | `resend.exceptions.ValidationError` | `e.code == 400` · `e.error_type == "validation_error"` |
+| Node `resend` | returns `{ data: null, error }` | `error.statusCode === 400` · `error.name === "validation_error"` |
+
+Read from the SDK source: resend 2.50.1: resend/request.py Request.perform, resend/exceptions.py ERRORS; resend 6.37.0: dist/index.cjs Resend.fetchRequest.
+
+Fix 1:
+
+```python
+headers["Authorization"] = YOUR_BEARER_API_KEY
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +58,11 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:resend:probe:invalid-key` (declarative, [source](../../probes/resend/invalid-key.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`API key is invalid`](invalid-api-key-before-lookup.md) · GET /emails/{email_id} · HTTP 400 `validation_error`
+- [`Missing API Key`](missing-api-key-401.md) · GET /domains · HTTP 401 `missing_api_key`
 
 ## Machine access
 

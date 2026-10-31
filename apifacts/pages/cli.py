@@ -46,12 +46,12 @@ def build(
     Exit codes: 0 written / up to date, 1 out of date (--check) or unreadable registry, 2 usage.
     """
     from apifacts.pages import PagesError
-    from apifacts.pages.build import build_pages, load_registry, sync
+    from apifacts.pages.build import registry_pages, sync
     from apifacts.pages.templates import plural
 
     out = out if out is not None else root / "pages"
     try:
-        pages = build_pages(*load_registry(root), version=registry_version)
+        pages = registry_pages(root, version=registry_version)
         report = sync(out, pages, check=check)
     except PagesError as exc:
         typer.echo(f"error: {exc}", err=True)

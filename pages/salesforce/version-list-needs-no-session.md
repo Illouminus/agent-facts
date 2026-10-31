@@ -8,6 +8,36 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:salesforce:probe:versions-without-session`](../../probes/salesforce/versions-without-session.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+Step 1 → HTTP 200:
+
+```http
+GET https://<org>.my.salesforce.com/services/data/v62.0/limits
+Authorization: Bearer <access token>
+```
+
+Step 2 → HTTP 200:
+
+```http
+GET https://login.salesforce.com/services/data
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+
+[
+  {
+    "version": "…",
+    "url": "…"
+  }
+]
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: developer_edition

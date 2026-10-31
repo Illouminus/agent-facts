@@ -8,6 +8,15 @@ Status: 🔵 official · first seen 2026-10-24
 
 1. Send header Idempotency-Key = new UUID per distinct request.
 
+## In your code
+
+Fix 1:
+
+```python
+import uuid
+headers["Idempotency-Key"] = str(uuid.uuid4())  # a new value per distinct request; reuse it only to retry
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: any
@@ -17,6 +26,15 @@ env: sandbox · plan: any · region: any · account_state: any
 official doc: <https://docs.stripe.com/api/idempotent_requests>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Amount must convert to at least 50 cents. $0.10 converts to approximately €0.09.`](amount-too-small.md) · POST /v1/payment_intents · HTTP 400 `amount_too_small`
+- [`Your card was declined.`](card-declined-generic.md) · POST /v1/payment_intents · HTTP 402 `card_declined`
+- [`Your card has expired.`](card-expired.md) · POST /v1/payment_intents · HTTP 402 `expired_card`
+- [`Your card's security code is incorrect.`](card-incorrect-cvc.md) · POST /v1/payment_intents · HTTP 402 `incorrect_cvc`
+- [`Your card has insufficient funds. Use a different payment method to complete this purchase.`](card-insufficient-funds.md) · POST /v1/payment_intents · HTTP 402 `card_declined`
+- [`Your card was declined.`](card-lost-generic-message.md) · POST /v1/payment_intents · HTTP 402 `card_declined`
 
 ## Machine access
 

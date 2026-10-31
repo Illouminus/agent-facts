@@ -8,7 +8,7 @@ import subprocess
 from collections.abc import Sequence
 from pathlib import Path
 
-from apifacts.pages.build import build_pages, load_registry, sync
+from apifacts.pages.build import registry_pages, sync
 
 VALID = Path(__file__).parents[1] / "fixtures" / "valid"
 GIT_ENV_USER = ("-c", "user.name=Test", "-c", "user.email=test@example.invalid")
@@ -38,7 +38,7 @@ class Checkout:
             shutil.copy(VALID / src, self.work / dst)
         (self.work / "apifacts").mkdir()
         (self.work / "apifacts" / "code.py").write_text("x = 1\n")
-        sync(self.work / "pages", build_pages(*load_registry(self.work)))
+        sync(self.work / "pages", registry_pages(self.work))
         sh(self.work, "add", "-A")
         sh(self.work, "commit", "--quiet", "-m", "seed")
         sh(self.work, "remote", "add", "origin", str(self.origin))

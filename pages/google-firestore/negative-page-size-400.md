@@ -10,6 +10,61 @@ Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026
 
 1. Omit query parameter pageSize.
 
+## Example
+
+What probe [`af:google-firestore:probe:list-parameter-errors`](../../probes/google-firestore/list-parameter-errors.yaml) sends (prod) and what it checks in the answer; the real key is elided.
+
+Step 1 → HTTP 400:
+
+```http
+GET https://firestore.googleapis.com/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts?pageToken=apifacts
+Authorization: Bearer <access token>
+```
+
+Step 2 → HTTP 400:
+
+```http
+GET https://firestore.googleapis.com/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts?pageSize=-1
+Authorization: Bearer <access token>
+```
+
+Step 3 → HTTP 400:
+
+```http
+GET https://firestore.googleapis.com/v1/projects/agent-facts-probes/databases/(default)/documents/agent_facts?mask.fieldPaths=a+b
+Authorization: Bearer <access token>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 400
+
+{
+  "error": {
+    "message": "…Invalid property path \"a b\"…",
+    "status": "INVALID_ARGUMENT"
+  }
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `google-cloud-firestore` | `google.api_core.exceptions.InvalidArgument` | `e.code == 400` |
+| Node `@google-cloud/firestore` | `Error` | `err.code === 3` |
+
+Read from the SDK source: google-cloud-firestore 2.34.1, google-api-core 2.43.2: exceptions.exception_class_for_grpc_status; google-gax 6.14.0 (dependency of @google-cloud/firestore 9.4.0): build/src/status.js Status.
+
+Fix 1:
+
+```python
+params.pop("pageSize", None)
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: service_account
@@ -19,6 +74,11 @@ env: prod · plan: any · region: any · account_state: service_account
 Probe `af:google-firestore:probe:list-parameter-errors` (declarative, [source](../../probes/google-firestore/list-parameter-errors.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [``Invalid property path "a b". Unquoted property paths must match regex ([a-zA-Z_][a-zA-Z_0-9]*), and quoted property paths must match regex (`(?:[^`\\]|(?:\\.))+`)``](invalid-field-path-400.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection} · HTTP 400 `INVALID_ARGUMENT`
+- [`invalid page token`](invalid-page-token-400.md) · GET /v1/projects/{project}/databases/{database}/documents/{collection} · HTTP 400 `INVALID_ARGUMENT`
 
 ## Machine access
 

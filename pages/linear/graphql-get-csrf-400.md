@@ -10,6 +10,47 @@ Status: ✅ verified:server:prod · first seen 2026-10-31 · last confirmed 2026
 
 1. Send header Content-Type = application/json.
 
+## Example
+
+What probe [`af:linear:probe:graphql-get-csrf`](../../probes/linear/graphql-get-csrf.yaml) sends (prod) and what it checks in the answer; `apifacts-invalid-key` is a deliberately wrong key.
+
+Step 1 → HTTP 400:
+
+```http
+GET https://api.linear.app/graphql?query=%7B+viewer+%7B+id+%7D+%7D
+```
+
+Step 2 → HTTP 400:
+
+```http
+GET https://api.linear.app/graphql?query=%7B+viewer+%7B+id+%7D+%7D
+Authorization: apifacts-invalid-key
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 400
+
+{
+  "errors": [
+    {
+      "extensions": {
+        "code": "BAD_REQUEST"
+      }
+    }
+  ]
+}
+```
+
+## In your code
+
+Fix 1:
+
+```python
+headers["Content-Type"] = "application/json"
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +60,12 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:linear:probe:graphql-get-csrf` (declarative, [source](../../probes/linear/graphql-get-csrf.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [Errors are a GraphQL body {errors: \[{message, extensions: {code, type, statusCode, userError, userPresentableMessage, http}}\]} sent with a matching HTTP status; the vendor code is errors\[0\].extensions.code and the request id comes in the x-request-id header.](error-envelope.md) · GET /graphql · HTTP 401
+- [`Authentication required, not authenticated`](invalid-api-key-same-as-missing.md) · GET /graphql · HTTP 401 `AUTHENTICATION_ERROR`
+- [`Authentication required, not authenticated`](missing-api-key-401.md) · GET /graphql · HTTP 401 `AUTHENTICATION_ERROR`
 
 ## Machine access
 

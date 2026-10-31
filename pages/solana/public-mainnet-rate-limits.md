@@ -8,6 +8,20 @@ Status: 🔵 official · first seen 2026-10-20
 
 1. Wait the number of seconds in Retry-After, then retry (≤ 5 attempts).
 
+## In your code
+
+Fix 1:
+
+```python
+import time
+
+for attempt in range(5):
+    response = client.send(request)
+    if "Retry-After" not in response.headers:
+        break
+    time.sleep(float(response.headers["Retry-After"]))
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -17,6 +31,11 @@ env: prod · plan: any · region: any · account_state: any
 official doc: <https://solana.com/docs/references/clusters#mainnet-rate-limits>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Your IP or provider is blocked from this endpoint`](get-program-accounts-blocked-403.md) · POST / · HTTP 403 `403`
+- [On the public RPC endpoints HTTP 403 means the IP address or website has been blocked; high-traffic websites may be blocked without prior notice.](public-endpoint-403-blocked.md) · POST / · HTTP 403
 
 ## Machine access
 

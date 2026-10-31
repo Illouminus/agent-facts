@@ -8,6 +8,37 @@ Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:telegram:probe:error-envelope`](../../probes/telegram/error-envelope.yaml) sends (prod) and what it checks in the answer; the real key is elided.
+
+```http
+GET https://api.telegram.org/bot<key>/getChat
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 400
+
+{
+  "ok": false,
+  "error_code": 400,
+  "description": "…"
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `python-telegram-bot` (community) | `telegram.error.BadRequest` | — |
+| Node `telegraf` (community) | `TelegramError` | `err.code === 400` |
+
+Read from the SDK source: python-telegram-bot 22.8: telegram/request/\_baserequest.py BaseRequest.\_request_wrapper; telegraf 4.16.3: lib/core/network/client.js callApi, lib/core/network/error.js.
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -17,6 +48,14 @@ env: prod · plan: any · region: any · account_state: any
 Probe `af:telegram:probe:error-envelope` (declarative, [source](../../probes/telegram/error-envelope.yaml)) · official doc: <https://core.telegram.org/bots/api#making-requests>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Bad Request: user not found`](user-not-found-400.md) · GET /{bot_token}/{method} · HTTP 400
+- [`Bad Request: chat_id is empty`](chat-id-empty-400.md) · GET /{bot_token}/getChat · HTTP 400
+- [`Bad Request: chat not found`](chat-not-found-400.md) · GET /{bot_token}/getChat · HTTP 400
+- [`Bad Request: invalid file_id`](invalid-file-id-400.md) · GET /{bot_token}/getFile · HTTP 400
+- [`Not Found`](unknown-method-404.md) · GET /{bot_token}/{method} · HTTP 404
 
 ## Machine access
 

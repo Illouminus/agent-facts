@@ -1,0 +1,224 @@
+# How an error response surfaces in a service's SDKs: the "In your code" table of a fact page
+# (docs/specs/06-pages.md). Hand-maintained data, one entry per SDK, each read from the SDK's own
+# source at the version in `verified` — never from docs, blog posts or memory. An SDK we did not
+# read is absent; a service without one (pypi, npm-registry, salesforce, solana) gets no table.
+#
+# Shape (apifacts/pages/sdk.py):
+#   <service key>:
+#     - sdk: {ecosystem, package, official}   official: published by the vendor itself
+#       verified: "<package> <version>: <file> <function>"   what was read, and where
+#       catch: <class>        what every error response of this client raises (or a base of it)
+#       status: <attribute>   where the HTTP status lands on that object
+#       returns: <text>       instead of raising (the SDK hands the error back as a value)
+#       rules:                first match wins, in the SDK's own order
+#         - when: {status: 404 | [400, 404] | 4xx, error_code: x | [x, y], path_template: /…,
+#                  message_equals | message_startswith | message_endswith | message_contains: [..]}
+#           raises: <class>   null = the SDK decides on something the registry does not record;
+#                             absent = `catch` itself
+#           read: {<attribute>: error_code | <literal>}
+#
+# Matching (sdk.py): `status` and `error_code` come from the fact's signal; a missing error_code
+# never equals a value. `message_*` compare the lowercased error string; a fact without one leaves
+# the rule undetermined, and an undetermined rule (or `raises: null`) stops the walk: the page then
+# names only `catch`, which is right whatever the SDK picks.
+
+stripe:
+  - sdk: {ecosystem: pypi, package: stripe, official: true}
+    verified: "stripe 16.1.0: stripe/_api_requestor.py specific_v1_api_error, stripe/_error.py"
+    catch: stripe.StripeError
+    status: e.http_status
+    rules:
+      - {when: {status: 429}, raises: stripe.RateLimitError}
+      - {when: {status: 400, error_code: rate_limit}, raises: stripe.RateLimitError}
+      # Idempotency errors carry no error.code, so the registry's error_code is error.type
+      # (services/stripe.yaml signal_fields: error.code, then error.type).
+      - {when: {status: [400, 404], error_code: idempotency_error}, raises: stripe.IdempotencyError,
+         read: {e.error.type: error_code}}
+      - {when: {status: [400, 404]}, raises: stripe.InvalidRequestError, read: {e.code: error_code}}
+      - {when: {status: 401}, raises: stripe.AuthenticationError}
+      - {when: {status: 402}, raises: stripe.CardError, read: {e.code: error_code}}
+      - {when: {status: 403}, raises: stripe.PermissionError}
+      - {when: {}, raises: stripe.APIError}
+  - sdk: {ecosystem: npm, package: stripe, official: true}
+    verified: "stripe 23.1.0: cjs/Error.js generateV1Error, cjs/RequestSender.js"
+    catch: Stripe.errors.StripeError
+    status: err.statusCode
+    rules:
+      - {when: {status: 429}, raises: Stripe.errors.StripeRateLimitError}
+      - {when: {status: 400, error_code: rate_limit}, raises: Stripe.errors.StripeRateLimitError}
+      - {when: {status: [400, 404], error_code: idempotency_error},
+         raises: Stripe.errors.StripeIdempotencyError, read: {err.rawType: error_code}}
+      - {when: {status: [400, 404]}, raises: Stripe.errors.StripeInvalidRequestError,
+         read: {err.code: error_code}}
+      - {when: {status: 401}, raises: Stripe.errors.StripeAuthenticationError}
+      - {when: {status: 402}, raises: Stripe.errors.StripeCardError, read: {err.code: error_code}}
+      - {when: {status: 403}, raises: Stripe.errors.StripePermissionError}
+      - {when: {}, raises: Stripe.errors.StripeAPIError}
+
+google-gemini:
+  - sdk: {ecosystem: pypi, package: google-genai, official: true}
+    verified: "google-genai 2.34.0: google/genai/errors.py APIError.raise_error"
+    catch: google.genai.errors.APIError
+    status: e.code
+    rules:
+      - {when: {status: 4xx}, raises: google.genai.errors.ClientError, read: {e.status: error_code}}
+      - {when: {status: 5xx}, raises: google.genai.errors.ServerError, read: {e.status: error_code}}
+  - sdk: {ecosystem: npm, package: "@google/genai", official: true}
+    verified: "@google/genai 2.32.0: dist/node/index.cjs throwErrorIfNotOK, class ApiError"
+    catch: ApiError
+    status: err.status
+    rules:
+      - {when: {status: [4xx, 5xx]}, raises: ApiError}
+
+anthropic:
+  - sdk: {ecosystem: pypi, package: anthropic, official: true}
+    verified: "anthropic 2.3.0: anthropic/_client.py Anthropic._make_status_error"
+    catch: anthropic.APIStatusError
+    status: e.status_code
+    rules:
+      - {when: {status: 400}, raises: anthropic.BadRequestError, read: {e.type: error_code}}
+      - {when: {status: 401}, raises: anthropic.AuthenticationError, read: {e.type: error_code}}
+      - {when: {status: 403}, raises: anthropic.PermissionDeniedError, read: {e.type: error_code}}
+      - {when: {status: 404}, raises: anthropic.NotFoundError, read: {e.type: error_code}}
+      - {when: {status: 409}, raises: anthropic.ConflictError, read: {e.type: error_code}}
+      - {when: {status: 413}, raises: anthropic.RequestTooLargeError, read: {e.type: error_code}}
+      - {when: {status: 422}, raises: anthropic.UnprocessableEntityError, read: {e.type: error_code}}
+      - {when: {status: 429}, raises: anthropic.RateLimitError, read: {e.type: error_code}}
+      - {when: {status: 529}, raises: anthropic.OverloadedError, read: {e.type: error_code}}
+      - {when: {status: 5xx}, raises: anthropic.InternalServerError, read: {e.type: error_code}}
+      - {when: {}, raises: anthropic.APIStatusError, read: {e.type: error_code}}
+  - sdk: {ecosystem: npm, package: "@anthropic-ai/sdk", official: true}
+    verified: "@anthropic-ai/sdk 1.3.0: core/error.js APIError.generate"
+    catch: Anthropic.APIError
+    status: err.status
+    rules:
+      - {when: {status: 400}, raises: Anthropic.BadRequestError, read: {err.type: error_code}}
+      - {when: {status: 401}, raises: Anthropic.AuthenticationError, read: {err.type: error_code}}
+      - {when: {status: 403}, raises: Anthropic.PermissionDeniedError, read: {err.type: error_code}}
+      - {when: {status: 404}, raises: Anthropic.NotFoundError, read: {err.type: error_code}}
+      - {when: {status: 409}, raises: Anthropic.ConflictError, read: {err.type: error_code}}
+      - {when: {status: 422}, raises: Anthropic.UnprocessableEntityError, read: {err.type: error_code}}
+      - {when: {status: 429}, raises: Anthropic.RateLimitError, read: {err.type: error_code}}
+      - {when: {status: 5xx}, raises: Anthropic.InternalServerError, read: {err.type: error_code}}
+      - {when: {}, raises: Anthropic.APIError, read: {err.type: error_code}}
+
+resend:
+  - sdk: {ecosystem: pypi, package: resend, official: true}
+    verified: "resend 2.50.1: resend/request.py Request.perform, resend/exceptions.py ERRORS"
+    catch: resend.exceptions.ResendError
+    status: e.code
+    rules:
+      # error_code is the body's `name` (services/resend.yaml), which the SDK passes as error_type
+      - {when: {status: 400, error_code: validation_error}, raises: resend.exceptions.ValidationError,
+         read: {e.error_type: error_code}}
+      - {when: {status: 422, error_code: [missing_required_field, missing_required_fields]},
+         raises: resend.exceptions.MissingRequiredFieldsError, read: {e.error_type: error_code}}
+      - {when: {status: 422, error_code: validation_error}, raises: resend.exceptions.ValidationError,
+         read: {e.error_type: error_code}}
+      - {when: {status: 401, error_code: missing_api_key}, raises: resend.exceptions.MissingApiKeyError,
+         read: {e.error_type: error_code}}
+      - {when: {status: 403, error_code: invalid_api_key}, raises: resend.exceptions.InvalidApiKeyError,
+         read: {e.error_type: error_code}}
+      - {when: {status: 429, error_code: [rate_limit_exceeded, daily_quota_exceeded, monthly_quota_exceeded]},
+         raises: resend.exceptions.RateLimitError, read: {e.error_type: error_code}}
+      - {when: {status: 500, error_code: application_error}, raises: resend.exceptions.ApplicationError,
+         read: {e.error_type: error_code}}
+      - {when: {}, raises: resend.exceptions.ResendError, read: {e.error_type: error_code}}
+  - sdk: {ecosystem: npm, package: resend, official: true}
+    verified: "resend 6.37.0: dist/index.cjs Resend.fetchRequest"
+    returns: "{ data: null, error }"
+    status: error.statusCode
+    rules:
+      - {when: {}, read: {error.name: error_code}}
+
+github:
+  - sdk: {ecosystem: pypi, package: PyGithub, official: false}
+    verified: "PyGithub 2.10.0: github/Requester.py Requester.createException"
+    catch: github.GithubException
+    status: e.status
+    rules:
+      - {when: {status: 401, message_equals: ["bad credentials"]},
+         raises: github.BadCredentialsException}
+      - {when: {status: 401}, raises: null}  # TwoFactorException depends on the X-GitHub-OTP header
+      - {when: {status: 403, message_startswith: ["missing or invalid user agent string"]},
+         raises: github.BadUserAgentException}
+      - {when: {status: 403, message_startswith: ["api rate limit exceeded",
+                                                  "you have exceeded a secondary rate limit"]},
+         raises: github.RateLimitExceededException}
+      - {when: {status: 403, message_endswith: ["please retry your request again later.",
+                                                "please wait a few minutes before you try again."]},
+         raises: github.RateLimitExceededException}
+      - {when: {status: 404, message_contains: ["not found", "no object found"]},
+         raises: github.UnknownObjectException}
+      - {when: {}, raises: github.GithubException}
+  - sdk: {ecosystem: npm, package: "@octokit/request", official: true}
+    verified: "@octokit/request 10.0.16: dist-bundle/index.js fetchWrapper; @octokit/request-error 7.1.2"
+    catch: RequestError
+    status: err.status
+    rules:
+      - {when: {status: [304, 4xx, 5xx]}, raises: RequestError}
+
+telegram:
+  - sdk: {ecosystem: pypi, package: python-telegram-bot, official: false}
+    verified: "python-telegram-bot 22.8: telegram/request/_baserequest.py BaseRequest._request_wrapper"
+    catch: telegram.error.TelegramError
+    status: null
+    rules:
+      # The SDK checks parameters.retry_after before the status; Telegram sends it with every 429.
+      - {when: {status: 429}, raises: telegram.error.RetryAfter}
+      - {when: {status: 403}, raises: telegram.error.Forbidden}
+      # An arbitrary method goes through Bot.do_api_request, which turns a 404 into
+      # EndPointNotFound once the bot is initialized (InvalidToken before).
+      - {when: {status: 404, path_template: "/{bot_token}/{method}"}, raises: null}
+      - {when: {status: [401, 404]}, raises: telegram.error.InvalidToken}
+      - {when: {status: 400}, raises: telegram.error.BadRequest}
+      - {when: {status: 409}, raises: telegram.error.Conflict}
+      - {when: {}, raises: telegram.error.NetworkError}
+  - sdk: {ecosystem: npm, package: telegraf, official: false}
+    verified: "telegraf 4.16.3: lib/core/network/client.js callApi, lib/core/network/error.js"
+    catch: TelegramError
+    status: err.code
+    rules:
+      - {when: {status: [4xx, 5xx]}, raises: TelegramError}
+
+google-sheets: &google-discovery
+  - sdk: {ecosystem: pypi, package: google-api-python-client, official: true}
+    verified: "google-api-python-client 2.201.0: googleapiclient/http.py HttpRequest.execute"
+    catch: googleapiclient.errors.HttpError
+    status: e.status_code
+    rules:
+      - {when: {status: [3xx, 4xx, 5xx]}, raises: googleapiclient.errors.HttpError}
+  - sdk: {ecosystem: npm, package: googleapis, official: true}
+    verified: "googleapis 189.0.0 → googleapis-common 9 → gaxios 8.3.2: build/cjs/src/gaxios.js, common.js GaxiosError"
+    catch: GaxiosError
+    status: err.status
+    rules:
+      - {when: {status: [4xx, 5xx]}, raises: GaxiosError}
+
+google-calendar: *google-discovery
+
+google-firestore:
+  # The client libraries speak gRPC; the registry's error_code is the same canonical status name
+  # the REST API returns (NOT_FOUND …), which is what they map from.
+  - sdk: {ecosystem: pypi, package: google-cloud-firestore, official: true}
+    verified: "google-cloud-firestore 2.34.1, google-api-core 2.43.2: exceptions.exception_class_for_grpc_status"
+    catch: google.api_core.exceptions.GoogleAPICallError
+    status: e.code
+    rules:
+      - {when: {error_code: INVALID_ARGUMENT}, raises: google.api_core.exceptions.InvalidArgument}
+      - {when: {error_code: NOT_FOUND}, raises: google.api_core.exceptions.NotFound}
+      - {when: {error_code: PERMISSION_DENIED}, raises: google.api_core.exceptions.PermissionDenied}
+      - {when: {error_code: RESOURCE_EXHAUSTED}, raises: google.api_core.exceptions.ResourceExhausted}
+      - {when: {error_code: UNAUTHENTICATED}, raises: google.api_core.exceptions.Unauthenticated}
+      - {when: {}, raises: null}
+  - sdk: {ecosystem: npm, package: "@google-cloud/firestore", official: true}
+    verified: "google-gax 6.14.0 (dependency of @google-cloud/firestore 9.4.0): build/src/status.js Status"
+    catch: Error
+    status: null
+    rules:
+      - {when: {error_code: INVALID_ARGUMENT}, read: {err.code: 3}}
+      - {when: {error_code: NOT_FOUND}, read: {err.code: 5}}
+      - {when: {error_code: PERMISSION_DENIED}, read: {err.code: 7}}
+      - {when: {error_code: RESOURCE_EXHAUSTED}, read: {err.code: 8}}
+      - {when: {error_code: UNAUTHENTICATED}, read: {err.code: 16}}
+      - {when: {}, raises: null}

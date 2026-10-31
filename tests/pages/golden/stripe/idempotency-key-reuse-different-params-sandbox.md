@@ -10,6 +10,63 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-23 · last confirmed 2
 
 1. Set parameter Idempotency-Key to new UUID per distinct request.
 
+## Example
+
+What probe [`af:stripe:probe:idempotency-key-reuse`](../../probes/stripe/idempotency-key-reuse.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+Step 1:
+
+```http
+POST https://api.stripe.com/v1/payment_intents
+Authorization: Bearer <key>
+Idempotency-Key: <run_uuid>
+Content-Type: application/x-www-form-urlencoded
+
+amount=100&currency=usd
+```
+
+Step 2 → HTTP 400:
+
+```http
+POST https://api.stripe.com/v1/payment_intents
+Authorization: Bearer <key>
+Idempotency-Key: <run_uuid>
+Content-Type: application/x-www-form-urlencoded
+
+amount=200&currency=usd
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 400
+
+{
+  "error": {
+    "code": "idempotency_error",
+    "message": "Keys for idempotent requests can only be used with the same parameters they were first used with."
+  }
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `stripe` | `stripe.IdempotencyError` | `e.http_status == 400` · `e.error.type == "idempotency_error"` |
+| Node `stripe` | `Stripe.errors.StripeIdempotencyError` | `err.statusCode === 400` · `err.rawType === "idempotency_error"` |
+
+Read from the SDK source: stripe 16.1.0: stripe/\_api_requestor.py specific_v1_api_error, stripe/\_error.py; stripe 23.1.0: cjs/Error.js generateV1Error, cjs/RequestSender.js.
+
+Fix 1:
+
+```python
+import uuid
+params["Idempotency-Key"] = str(uuid.uuid4())  # a new value per distinct request; reuse it only to retry
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: test_mode · also seen: [prod/any](idempotency-key-reuse-different-params.md) (verified 2026-10-22)

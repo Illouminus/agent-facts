@@ -8,6 +8,43 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:stripe:probe:idempotent-replay`](../../probes/stripe/idempotent-replay.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+Step 1 → HTTP 200:
+
+```http
+POST https://api.stripe.com/v1/customers
+Authorization: Bearer <key>
+Idempotency-Key: <run_uuid>
+Content-Type: application/x-www-form-urlencoded
+
+description=agent-facts+probe
+```
+
+Step 2 → HTTP 200:
+
+```http
+POST https://api.stripe.com/v1/customers
+Authorization: Bearer <key>
+Idempotency-Key: <run_uuid>
+Content-Type: application/x-www-form-urlencoded
+
+description=agent-facts+probe
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+Idempotent-Replayed: true
+
+{
+  "object": "customer"
+}
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: any
@@ -17,6 +54,12 @@ env: sandbox · plan: any · region: any · account_state: any
 Probe `af:stripe:probe:idempotent-replay` (declarative, [source](../../probes/stripe/idempotent-replay.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Idempotent key length is 256 characters long, which is outside accepted lengths. Idempotent Keys must be 1-255 characters long. If you're looking for a decent generator, try using a UUID defined by IETF RFC 4122.`](idempotency-key-too-long.md) · POST /v1/customers · HTTP 400 `idempotency_error`
+- [`Received unknown parameter: agent_facts_unknown`](parameter-unknown.md) · POST /v1/customers · HTTP 400 `parameter_unknown`
+- [`Received unknown parameter: agent_facts_unknown`](validation-errors-are-not-replayed.md) · POST /v1/customers · HTTP 400 `parameter_unknown`
 
 ## Machine access
 

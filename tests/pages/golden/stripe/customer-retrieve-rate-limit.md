@@ -10,6 +10,32 @@ Status: 🟡 reported · first seen 2026-10-26 · last confirmed 2026-10-28 · n
 
 1. Retry with exponential backoff from 500 ms × 2, cap 8000 ms, ≤ 5 attempts, with jitter.
 
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `stripe` | `stripe.RateLimitError` | `e.http_status == 429` |
+| Node `stripe` | `Stripe.errors.StripeRateLimitError` | `err.statusCode === 429` |
+
+Read from the SDK source: stripe 16.1.0: stripe/\_api_requestor.py specific_v1_api_error, stripe/\_error.py; stripe 23.1.0: cjs/Error.js generateV1Error, cjs/RequestSender.js.
+
+Fix 1:
+
+```python
+import random
+import time
+
+delay_ms = 500
+for attempt in range(5):
+    response = client.send(request)
+    if response.status_code != 429:
+        break
+    time.sleep(random.uniform(0, delay_ms) / 1000)
+    delay_ms = min(delay_ms * 2, 8000)
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any

@@ -8,6 +8,29 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. Call GET /pypi/{project}/json instead.
 
+## Example
+
+What probe [`af:pypi:probe:json-trailing-slash`](../../probes/pypi/json-trailing-slash.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/pypi/requests/json/
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 301
+Location: /pypi/requests/json
+```
+
+## In your code
+
+Fix 1:
+
+```python
+response = client.request("GET", f"/pypi/{project}/json")
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous

@@ -81,6 +81,7 @@ from apifacts.api.seed_hosts import metric_host
 from apifacts.api.site import (
     INDEXNOW_KEY,
     LASTMOD_STATE,
+    MCP_WELL_KNOWN,
     NOT_FOUND,
     ROBOTS,
     Page,
@@ -99,6 +100,28 @@ TEMPLATE_CAP = 200  # spec 05: distinct error strings per (service, method, temp
 CACHE_CONTROL = "public, max-age=300"
 DEFAULT_TRUSTED_PROXIES = ("127.0.0.1", "::1")
 CHECK_PATH = "/v0/check"
+API_DESCRIPTION = (
+    "An open registry of dated facts about what third-party HTTP APIs, SDKs and CLIs actually "
+    "return, established by deterministic probes (no language model in the verification path). "
+    "No authentication. Start with `POST /v0/check` when a call to a third-party API fails; "
+    "every fact also has a page at https://apifacts.dev/<service>/<slug>. "
+    "MCP (stdio): `uvx --from 'apifacts[mcp]' apifacts mcp`, described at "
+    "https://apifacts.dev/.well-known/mcp.json."
+)
+CHECK_SUMMARY = "Look up known facts for a failed API call"
+CHECK_DESCRIPTION = (
+    "Send the request that failed (`target`: method and URL) and, if you have it, what came back "
+    "(`error`: HTTP status and the first 2 KB of the body or exception text). The answer lists "
+    "the matching facts (by normalized error string on that endpoint, else by status, else the "
+    "service's rate-limit and availability facts), each with typed fixes (a closed vocabulary: "
+    "set_header, retry_after_header, use_endpoint, ...), its verification status and dates. "
+    "Never empty: `unknown` says why nothing matched "
+    "(unregistered target, no fact for the signal, no extractable signal).\n\n"
+    "Privacy: query string and fragment are dropped before matching; a call with an `error` on a "
+    "registered template is stored as one normalized observation (no body, headers, query or "
+    "raw IP). "
+    "Do not send credentials: the body excerpt is for the vendor's error message."
+)
 ROBOTS_PAGE = text_page(ROBOTS)
 INDEXNOW_KEY_PAGE = text_page(INDEXNOW_KEY)
 
@@ -131,6 +154,7 @@ class _State:
     pages: dict[str, Page]
     llms: Page
     sitemap: Page
+    mcp: Page | None = None
 
 
 def _state(request: Request) -> _State:
@@ -502,6 +526,7 @@ def create_app(
             pages=site.pages,
             llms=text_page(llms_txt(listed, index.version, OPT_OUT_EMAIL)),
             sitemap=site.sitemap,
+            mcp=site.mcp,
         )
         readers.directory = Path(readers_dir) if readers_dir else readers_dir_from_env(db)
         flusher = asyncio.create_task(flush_readers_every(readers_flush_s))
@@ -518,6 +543,7 @@ def create_app(
         title="apifacts",
         version="v0",
         summary="Verified facts about machine interfaces for AI agents (data CC BY 4.0).",
+        description=API_DESCRIPTION,
         lifespan=lifespan,
     )
     limiter_kwargs = {"clock": clock} if clock else {}
@@ -532,7 +558,13 @@ def create_app(
     app.add_exception_handler(StarletteHTTPException, _on_http)
     app.openapi = _without_422(app.openapi)
 
-    @app.post(CHECK_PATH, response_model=CheckResponse, responses=_ERRORS)
+    @app.post(
+        CHECK_PATH,
+        response_model=CheckResponse,
+        responses=_ERRORS,
+        summary=CHECK_SUMMARY,
+        description=CHECK_DESCRIPTION,
+    )
     def check(req: CheckRequest, request: Request) -> Response:
         """Facts and typed fixes for a target and (optionally) an observed error. Never empty.
         A target outside the registered templates is answered but not stored."""
@@ -540,7 +572,9 @@ def create_app(
         ip = _caller_ip(request.scope.get("client"), request.headers, state.trusted_proxies)
         return JSONResponse(_check(state, req, ip, request.headers.get("user-agent")))
 
-    @app.get("/v0/services", response_model=ServicesResponse)
+    @app.get(
+        "/v0/services", response_model=ServicesResponse, summary="Services, hosts and fact counts"
+    )
     def services(request: Request) -> Response:
         index = _state(request).index
         payload = {
@@ -559,7 +593,12 @@ def create_app(
         }
         return _cached(request, payload)
 
-    @app.get("/v0/facts/{service}", response_model=FactsResponse, responses=_NOT_FOUND)
+    @app.get(
+        "/v0/facts/{service}",
+        response_model=FactsResponse,
+        responses=_NOT_FOUND,
+        summary="Every fact of one service",
+    )
     def facts(service: str, request: Request) -> Response:
         index = _state(request).index
         entry = index.services.get(service)
@@ -572,7 +611,12 @@ def create_app(
         }
         return _cached(request, payload)
 
-    @app.get("/v0/facts/{service}/{slug}", response_model=FactOut, responses=_NOT_FOUND)
+    @app.get(
+        "/v0/facts/{service}/{slug}",
+        response_model=FactOut,
+        responses=_NOT_FOUND,
+        summary="One fact, as its YAML says",
+    )
     def fact(service: str, slug: str, request: Request) -> Response:
         found = _state(request).index.fact(service, slug)
         if found is None:
@@ -621,6 +665,10 @@ def create_app(
     @page("/robots.txt")
     def robots(request: Request) -> Response:
         return _site(request, ROBOTS_PAGE, "text/plain")
+
+    @page(MCP_WELL_KNOWN)
+    def mcp_manifest(request: Request) -> Response:
+        return _site(request, _state(request).mcp, "application/json")
 
     @page("/sitemap.xml")
     def sitemap(request: Request) -> Response:

@@ -10,6 +10,24 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:pypi:probe:json-not-found`](../../probes/pypi/json-not-found.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/pypi/agent-facts-probe-no-such-project/json
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+
+{
+  "message": "Not Found"
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +37,11 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:pypi:probe:json-not-found` (declarative, [source](../../probes/pypi/json-not-found.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](release-not-found-404.md) · GET /pypi/{project}/{version}/json · HTTP 404
+- [`404 Not Found`](simple-not-found-404.md) · GET /simple/{project}/ · HTTP 404
 
 ## Machine access
 

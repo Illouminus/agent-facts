@@ -9,7 +9,15 @@ import pytest
 
 from apifacts.fixes.templates import render_fix
 from apifacts.pages import PagesError
-from apifacts.pages.build import build_pages, load_registry, published, registry_version, sync
+from apifacts.pages.build import (
+    build_pages,
+    load_probes,
+    load_registry,
+    published,
+    registry_pages,
+    registry_version,
+    sync,
+)
 from apifacts.pages.templates import (
     FOOTER,
     HEAD_TITLE_MAX,
@@ -37,8 +45,13 @@ def registry(fixture_root):
 
 
 @pytest.fixture
-def pages(registry):
-    return build_pages(*registry)
+def probes(fixture_root):
+    return load_probes(fixture_root)
+
+
+@pytest.fixture
+def pages(fixture_root):
+    return registry_pages(fixture_root)
 
 
 def _tree(directory: Path) -> dict[str, str]:
@@ -61,17 +74,17 @@ def test_golden_tree(pages):
 
 def test_build_twice_is_byte_identical(fixture_root, tmp_path):
     first, second = tmp_path / "one", tmp_path / "two"
-    sync(first, build_pages(*load_registry(fixture_root)))
-    sync(second, build_pages(*load_registry(fixture_root)))
+    sync(first, registry_pages(fixture_root))
+    sync(second, registry_pages(fixture_root))
     assert _tree(first) == _tree(second)
     assert {p.relative_to(first) for p in first.rglob("*")} == {
         p.relative_to(second) for p in second.rglob("*")
     }
 
 
-def test_input_order_does_not_change_output(registry, pages):
+def test_input_order_does_not_change_output(registry, probes, pages):
     services, facts = registry
-    assert build_pages(services[::-1], facts[::-1]) == pages
+    assert build_pages(services[::-1], facts[::-1], probes[::-1]) == pages
 
 
 def test_layout(pages):
@@ -278,10 +291,10 @@ def _refreshed(fact):
     return fact.model_copy(update={"evidence": ev.model_copy(update=bumped)})
 
 
-def test_a_refresh_does_not_change_any_page_substance(registry):
+def test_a_refresh_does_not_change_any_page_substance(registry, probes):
     services, facts = registry
-    before = build_pages(services, facts, version="2026-10-29")
-    after = build_pages(services, [_refreshed(f) for f in facts], version="2026-10-30")
+    before = build_pages(services, facts, probes, version="2026-10-29")
+    after = build_pages(services, [_refreshed(f) for f in facts], probes, version="2026-10-30")
     assert before.keys() == after.keys()
     assert any(before[p] != after[p] for p in before)
     for path in before:

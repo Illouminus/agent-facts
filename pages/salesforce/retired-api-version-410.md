@@ -10,6 +10,35 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2
 
 1. Call GET /services/data instead.
 
+## Example
+
+What probe [`af:salesforce:probe:api-version-retired-or-unknown`](../../probes/salesforce/api-version-retired-or-unknown.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+```http
+GET https://<org>.my.salesforce.com/services/data/v30.0/limits
+Authorization: Bearer <access token>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 410
+
+[
+  {
+    "message": "The requested resource no longer exists."
+  }
+]
+```
+
+## In your code
+
+Fix 1:
+
+```python
+response = client.request("GET", "/services/data")
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: developer_edition
@@ -19,6 +48,11 @@ env: sandbox · plan: any · region: any · account_state: developer_edition
 Probe `af:salesforce:probe:api-version-retired-or-unknown` (declarative, [source](../../probes/salesforce/api-version-retired-or-unknown.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Session expired or invalid`](missing-session-401.md) · GET /services/data/{version}/limits · HTTP 401 `INVALID_SESSION_ID`
+- [`Destination URL not reset. The URL returned from login must be set`](rest-on-login-host-url-not-reset.md) · GET /services/data/{version}/limits · HTTP 400 `URL_NOT_RESET`
 
 ## Machine access
 

@@ -299,3 +299,85 @@ def test_indexnow_key_file(site):
 def test_no_pages_no_crash(client):
     assert client.get("/").status_code == 404
     assert client.get("/llms.txt").status_code == 200
+
+
+# ── structured data and machine discovery ─────────────────────────────────────────────────────
+
+LD_OPEN = '<script type="application/ld+json">'
+
+
+def _json_ld(text: str) -> dict:
+    head = _head(text)
+    start = head.index(LD_OPEN) + len(LD_OPEN)
+    return json.loads(head[start : head.index("</script>", start)])
+
+
+def test_fact_page_carries_json_ld_dated_like_the_sitemap(repo, make_client):
+    write_pages(repo)
+    client = make_client(utcnow=day(1))
+    data = _json_ld(client.get("/stripe/customer-not-found").text)
+    assert data["@context"] == "https://schema.org" and data["@type"] == "TechArticle"
+    assert data["headline"] == "No such customer: 'cus_123'"
+    assert data["url"] == "https://apifacts.dev/stripe/customer-not-found"
+    assert data["license"] == "https://creativecommons.org/licenses/by/4.0/"
+    assert data["about"]["@type"] == "WebAPI"
+    sitemap = _sitemap(client)
+    assert data["dateModified"] == sitemap["https://apifacts.dev/stripe/customer-not-found"]
+    # a refresh keeps the date, like the sitemap does
+    refreshed = CUSTOMER.replace("3 confirmations", "8 confirmations")
+    write_pages(repo, **{"pages/stripe/customer-not-found.md": refreshed})
+    again = _json_ld(make_client(utcnow=day(4)).get("/stripe/customer-not-found").text)
+    assert again["dateModified"] == "2026-11-01"
+
+
+def test_no_json_ld_on_retracted_unknown_or_non_fact_pages(site):
+    for path in ("/stripe/withdrawn", "/stripe/missing-api-key-401", "/", "/registry",
+                 "/stripe/", "/errors/0604a899fa8d"):
+        assert "application/ld+json" not in site.get(path).text, path
+
+
+def test_json_ld_cannot_close_its_element():
+    from apifacts.api.site import json_ld_script
+
+    text = "</script><script>alert(1)</script> & <!--"
+    tag = json_ld_script({"headline": text})
+    body = tag[len(LD_OPEN) : -len("</script>")]
+    assert "<" not in body and ">" not in body and "&" not in body
+    assert json.loads(body)["headline"] == text
+
+
+SERVER_JSON = {
+    "name": "io.github.Illouminus/apifacts",
+    "version": "0.2.1",
+    "packages": [
+        {"registryType": "pypi", "identifier": "apifacts", "transport": {"type": "stdio"}}
+    ],
+}
+
+
+def test_well_known_mcp_is_server_json_plus_the_http_api(repo, make_client):
+    write_pages(repo)
+    (repo / "server.json").write_text(json.dumps(SERVER_JSON), encoding="utf-8")
+    client = make_client()
+    r = client.get("/.well-known/mcp.json")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/json; charset=utf-8"
+    data = r.json()
+    assert {k: data[k] for k in SERVER_JSON} == SERVER_JSON
+    assert "remotes" not in data  # no remote MCP endpoint is claimed
+    extra = data["_meta"]["io.modelcontextprotocol.registry/publisher-provided"]
+    assert extra["stdio_command"] == "uvx --from 'apifacts[mcp]' apifacts mcp"
+    assert extra["http_api"]["check"] == {"method": "POST", "url": "https://apifacts.dev/v0/check"}
+    assert "https://apifacts.dev/.well-known/mcp.json" in client.get("/llms.txt").text
+
+
+def test_well_known_mcp_without_server_json_is_a_404(site):
+    assert site.get("/.well-known/mcp.json").status_code == 404
+    assert site.get("/.well-known/agent.json").status_code == 404  # no A2A endpoint, no card
+
+
+def test_openapi_describes_check_for_agents(site):
+    operation = site.get("/openapi.json").json()["paths"]["/v0/check"]["post"]
+    assert operation["summary"] == "Look up known facts for a failed API call"
+    assert "typed fixes" in operation["description"]
+    assert "Do not send credentials" in operation["description"]

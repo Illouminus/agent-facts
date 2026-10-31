@@ -8,6 +8,36 @@ Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026
 
 1. Set query parameter limit to 100.
 
+## Example
+
+What probe [`af:telegram:probe:get-updates-limit-out-of-range`](../../probes/telegram/get-updates-limit-out-of-range.yaml) sends (prod) and what it checks in the answer; the real key is elided.
+
+Step 1 → HTTP 200:
+
+```http
+GET https://api.telegram.org/bot<key>/getUpdates?limit=0
+```
+
+Step 2 → HTTP 200:
+
+```http
+GET https://api.telegram.org/bot<key>/getUpdates?limit=1000
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+```
+
+## In your code
+
+Fix 1:
+
+```python
+params["limit"] = "100"
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any

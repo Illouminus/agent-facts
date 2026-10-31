@@ -8,6 +8,30 @@ Status: ✅ verified:server:prod · first seen 2026-10-31 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:openai:probe:no-key`](../../probes/openai/no-key.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://api.openai.com/v1/models
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 401
+www-authenticate: <matches ^Bearer realm=>
+x-request-id: …
+
+{
+  "error": {
+    "type": "invalid_request_error",
+    "message": "Missing bearer authentication in header",
+    "param": "…"
+  }
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -17,6 +41,13 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:openai:probe:no-key` (declarative, [source](../../probes/openai/no-key.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Incorrect API key provided: apifacts********-key. You can find your API key at https://platform.openai.com/account/api-keys.`](invalid-api-key-401.md) · GET /v1/models · HTTP 401 `invalid_api_key`
+- [`Missing bearer authentication in header`](missing-api-key-401.md) · GET /v1/models · HTTP 401 `invalid_request_error`
+- [`Incorrect API key provided: apifacts********-key. You can find your API key at https://platform.openai.com/account/api-keys.`](invalid-api-key-before-model-lookup.md) · GET /v1/models/{model} · HTTP 401 `invalid_api_key`
+- [`Missing bearer authentication in header`](missing-api-key-before-model-lookup.md) · GET /v1/models/{model} · HTTP 401 `invalid_request_error`
 
 ## Machine access
 

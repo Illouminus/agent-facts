@@ -10,6 +10,23 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:pypi:probe:simple-not-found`](../../probes/pypi/simple-not-found.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/simple/agent-facts-probe-no-such-project/
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+Content-Type: <matches ^text/plain>
+
+body contains "404 Not Found"
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +36,11 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:pypi:probe:simple-not-found` (declarative, [source](../../probes/pypi/simple-not-found.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](project-not-found-404.md) · GET /pypi/{project}/json · HTTP 404
+- [`Not Found`](release-not-found-404.md) · GET /pypi/{project}/{version}/json · HTTP 404
 
 ## Machine access
 
