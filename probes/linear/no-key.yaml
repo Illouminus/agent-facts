@@ -1,0 +1,20 @@
+# No Authorization (GET with Content-Type: application/json, past the CSRF guard): HTTP 401 with
+# a GraphQL errors[] body, extensions.code AUTHENTICATION_ERROR, before the query is resolved (an
+# issue id that does not exist is the same 401).
+id: af:linear:probe:no-key
+service: linear
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /graphql, query: {query: "{ viewer { id } }"}, headers: {Content-Type: application/json}}
+  - {do: http, method: GET, path: /graphql, query: {query: "{ issue(id: \"agent-facts-no-such-issue\") { id } }"}, headers: {Content-Type: application/json}}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: "$.errors[0].message", equals: "Authentication required, not authenticated"}
+  - {step: 1, json_path: "$.errors[0].extensions.code", equals: AUTHENTICATION_ERROR}
+  - {step: 1, json_path: "$.errors[0].extensions.type", equals: authentication error}
+  - {step: 1, json_path: "$.errors[0].extensions.statusCode", equals: 401}
+  - {step: 1, json_path: "$.errors[0].extensions.userPresentableMessage", exists: true}
+  - {step: 1, header: x-request-id, present: true}
+  - {step: 2, status: 401}
+  - {step: 2, json_path: "$.errors[0].extensions.code", equals: AUTHENTICATION_ERROR}

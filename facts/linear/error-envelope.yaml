@@ -1,0 +1,28 @@
+id: af:linear:error-envelope
+service: linear
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/graphql"
+signal:
+  status: 401
+claim: "Errors are a GraphQL body {errors: [{message, extensions: {code, type, statusCode, userError, userPresentableMessage, http}}]} sent with a matching HTTP status; the vendor code is errors[0].extensions.code and the request id comes in the x-request-id header."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:linear:probe:no-key
+  first_seen: 2026-10-31T13:45:06Z
+  last_confirmed: 2026-10-31T13:45:06Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

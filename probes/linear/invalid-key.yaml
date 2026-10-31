@@ -1,0 +1,15 @@
+# The runner's fake constant in Authorization (`auth: invalid`): the same 401 AUTHENTICATION_ERROR
+# "Authentication required, not authenticated" as no key at all — no separate "invalid key" error.
+id: af:linear:probe:invalid-key
+service: linear
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /graphql, query: {query: "{ viewer { id } }"}, headers: {Content-Type: application/json}, auth: invalid}
+  - {do: http, method: GET, path: /graphql, query: {query: "{ issue(id: \"agent-facts-no-such-issue\") { id } }"}, headers: {Content-Type: application/json}, auth: invalid}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: "$.errors[0].message", equals: "Authentication required, not authenticated"}
+  - {step: 1, json_path: "$.errors[0].extensions.code", equals: AUTHENTICATION_ERROR}
+  - {step: 2, status: 401}
+  - {step: 2, json_path: "$.errors[0].extensions.code", equals: AUTHENTICATION_ERROR}

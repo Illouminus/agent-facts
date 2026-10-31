@@ -1,0 +1,18 @@
+# The runner's fake constant as Bearer (`auth: invalid`): 401 invalid_api_key "Incorrect API key
+# provided: <first 8 chars>****<last 4>…", checked before the model id (a model that does not
+# exist is the same 401).
+id: af:openai:probe:invalid-key
+service: openai
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /v1/models, auth: invalid}
+  - {do: http, method: GET, path: /v1/models/gpt-agent-facts-no-such-model, auth: invalid}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: $.error.code, equals: invalid_api_key}
+  - {step: 1, json_path: $.error.type, equals: invalid_request_error}
+  - {step: 1, json_path: $.error.message, contains: "Incorrect API key provided: apifacts****"}
+  - {step: 1, header: www-authenticate, matches: "^Bearer realm="}
+  - {step: 2, status: 401}
+  - {step: 2, json_path: $.error.code, equals: invalid_api_key}

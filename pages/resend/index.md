@@ -1,9 +1,11 @@
 # Resend
 
-Hosts: `api.resend.com` · 2 facts
+Hosts: `api.resend.com` · 4 facts
 
 ## Auth quirks
 
+- ✅ verified:server:prod · [`API key is invalid`](invalid-api-key-400.md) · GET /domains · env prod
+- ✅ verified:server:prod · [`API key is invalid`](invalid-api-key-before-lookup.md) · GET /emails/{email_id} · env prod
 - ✅ verified:server:prod · [`Missing API Key`](missing-api-key-401.md) · GET /domains · env prod
 - ✅ verified:server:prod · [`Missing API Key`](missing-api-key-before-lookup.md) · GET /emails/{email_id} · env prod
 

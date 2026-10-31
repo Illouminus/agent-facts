@@ -1,0 +1,16 @@
+# A GET /graphql with no Content-Type is blocked as a potential CSRF: 400 BAD_REQUEST in a GraphQL
+# errors[] body, before authentication is looked at (the fake key gets the same 400).
+id: af:linear:probe:graphql-get-csrf
+service: linear
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /graphql, query: {query: "{ viewer { id } }"}}
+  - {do: http, method: GET, path: /graphql, query: {query: "{ viewer { id } }"}, auth: invalid}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: "$.errors[0].extensions.code", equals: BAD_REQUEST}
+  - {step: 1, json_path: "$.errors[0].message", contains: "Cross-Site Request Forgery (CSRF)"}
+  - {step: 1, json_path: "$.errors[0].message", contains: "apollo-require-preflight"}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: "$.errors[0].extensions.code", equals: BAD_REQUEST}

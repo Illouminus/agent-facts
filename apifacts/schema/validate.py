@@ -5,8 +5,8 @@ Every problem prints as `file:line: code message`. Schema codes come from the sc
 `fixes[]`), else `schema_<keyword>`. Cross-document codes: duplicate_id, id_mismatch,
 unknown_service, unknown_probe, unknown_step, unregistered_template, foreign_url,
 unknown_account_state, env_not_offered, auth_env_mismatch, forbidden_header,
-prod_probe_not_readonly, key_not_bound, foreign_env_url. Cross-document rules run only on documents
-that passed their schema, so one mistake gives one problem.
+prod_probe_not_readonly, key_not_bound, foreign_env_url, no_auth_scheme. Cross-document rules run
+only on documents that passed their schema, so one mistake gives one problem.
 """
 
 from collections.abc import Iterable, Mapping, Sequence
@@ -406,14 +406,18 @@ def _probe_checks(doc: _Doc, registry: Registry) -> list[Problem]:
     if not service.knows_account_state(state):
         problems.append(_unknown_state(doc, ["account_state"], state, service))
 
-    keyed = service.auth_kind != "none"
     for i, step in enumerate(steps):
         if step["do"] != "http":
             continue
+        if step.get("auth") == "invalid" and service.auth_kind == "none":
+            # The fake constant needs a scheme to travel in; any env may receive it (HttpStep).
+            message = f"auth: invalid but {service.key} declares no auth scheme (auth.kind)"
+            problems.append(doc.problem(["steps", i, "auth"], "no_auth_scheme", message))
         if not service.matches_template(step["method"], step["path"]):
             message = f"{step['method']} {step['path']} matches no template of {service.key}"
             problems.append(doc.problem(["steps", i, "path"], "unregistered_template", message))
-        if keyed and step.get("auth", "service") == "service" and service.auth_env != env:
+        if (service.auth_keyed and step.get("auth", "service") == "service"
+                and service.auth_env != env):
             # The key decides which environment is reached: a sandbox-labelled probe with a prod
             # key would write to production.
             message = f"probe env {env} but the {service.key} key reaches {service.auth_env}"

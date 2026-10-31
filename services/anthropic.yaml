@@ -1,6 +1,7 @@
-# Claude API (Anthropic), keyless: probes send no key or an obviously fake x-api-key and only
-# GET model metadata, so they reach nothing but the authentication layer. POST endpoints are
-# registered so check() stores what agents report on them; prod probes may not POST.
+# Claude API (Anthropic), keyless: probes send no key or the runner's fake constant in x-api-key
+# (`auth: invalid`) and only GET model metadata, so they reach nothing but the authentication
+# layer. POST endpoints are registered so check() stores what agents report on them; prod probes
+# may not POST.
 key: anthropic
 name: Claude API (Anthropic)
 hosts: [api.anthropic.com]
@@ -29,7 +30,7 @@ surfaces:
 dimensions:
   env: {prod: https://api.anthropic.com}
   account_state: [anonymous]
-auth: {kind: none}
+auth: {kind: header, header_name: x-api-key}  # scheme only, no key file
 tos:
   automated_access: allowed
   publish_measurements: allowed

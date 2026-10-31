@@ -1,6 +1,6 @@
-# Resend email API, keyless: probes send no key and only GET, so they reach nothing but the
-# authentication layer (an invalid key would need an Authorization header, which probes may not
-# set). POST /emails is registered so check() stores what agents report; prod probes may not POST.
+# Resend email API, keyless: probes send no key or the runner's fake constant as Bearer
+# (`auth: invalid`) and only GET, so they reach nothing but the authentication layer. POST /emails
+# is registered so check() stores what agents report; prod probes may not POST.
 key: resend
 name: Resend
 hosts: [api.resend.com]
@@ -19,6 +19,7 @@ surfaces:
       - status
       - name
       - message
+      - www-authenticate
       - retry-after
       - ratelimit-limit
       - ratelimit-remaining
@@ -26,7 +27,7 @@ surfaces:
 dimensions:
   env: {prod: https://api.resend.com}
   account_state: [anonymous]
-auth: {kind: none}
+auth: {kind: bearer}  # scheme only, no key file
 tos:
   automated_access: allowed
   publish_measurements: allowed

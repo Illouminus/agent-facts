@@ -68,8 +68,14 @@ def _scalar_text(value: Any) -> str:
     return value if isinstance(value, str) else json.dumps(value)
 
 
+# What `auth: invalid` steps send in the service's scheme (`HttpStep`, decision Edouard
+# 31.10.2026): one fixed, obviously fake value, never read from a key file and shaped like no
+# vendor's key (no `sk-`, `ghp_`, `re_`… prefix), so an API can only answer "invalid key".
+INVALID_KEY = "apifacts-invalid-key"
+
+
 def uses_key(step: HttpStep, service: Service) -> bool:
-    return step.auth == "service" and service.auth is not None and service.auth.kind != "none"
+    return step.auth == "service" and service.auth is not None and service.auth.keyed
 
 
 def _header_problem(name: str, value: str) -> str | None:
@@ -184,6 +190,17 @@ def auth_for(service: Service, secret: str | None) -> Credentials:
             raise Refused("key_not_path_safe", message)
         return Credentials({}, {}, prefix)
     raise Refused("unknown_auth_kind", f"auth kind {auth.kind} of {service.key} is not supported")
+
+
+def invalid_credentials(service: Service) -> Credentials:
+    """`auth: invalid`: `INVALID_KEY` where the service's scheme carries a key (a minting kind
+    sends it as the Bearer access token it would mint). Basic sends it as user and password: a
+    bare user would measure "no password", a different error (Twilio 20003)."""
+    if service.auth is None or service.auth.kind == "none":
+        raise Refused("no_auth_scheme", f"{service.key} declares no auth scheme to send an "
+                      "invalid key in")
+    basic = service.auth.kind == "basic"
+    return auth_for(service, f"{INVALID_KEY}:{INVALID_KEY}" if basic else INVALID_KEY)
 
 
 def make_client(timeout: float = TIMEOUT_S) -> httpx.Client:

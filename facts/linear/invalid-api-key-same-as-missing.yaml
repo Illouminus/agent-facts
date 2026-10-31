@@ -1,0 +1,31 @@
+id: af:linear:invalid-api-key-same-as-missing
+service: linear
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/graphql"
+signal:
+  status: 401
+  error_code: AUTHENTICATION_ERROR
+  error_string: "Authentication required, not authenticated"
+  normalized: "authentication required, not authenticated"
+claim: "An Authorization value that is not a valid key returns exactly what no key returns: HTTP 401 AUTHENTICATION_ERROR \"Authentication required, not authenticated\". Linear has no separate invalid-key error, so this 401 does not tell a wrong key from a missing one."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Authorization, value_source: account_setting:api_key}
+status: verified:server:prod
+evidence:
+  probe: af:linear:probe:invalid-key
+  first_seen: 2026-10-31T13:45:05Z
+  last_confirmed: 2026-10-31T13:45:05Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

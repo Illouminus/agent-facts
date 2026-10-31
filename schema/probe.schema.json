@@ -79,7 +79,7 @@
           "propertyNames": {"$ref": "fix.schema.json#/$defs/header_name"},
           "additionalProperties": {"type": "string", "maxLength": 1024}
         },
-        "auth": {"enum": ["service", "none"], "default": "service"},
+        "auth": {"description": "service: the service's key; none: no credential; invalid: the runner's fixed fake constant in the service's auth scheme (any env, decision Edouard 31.10.2026).", "enum": ["service", "none", "invalid"], "default": "service"},
         "expect_rate_limit": {"type": "boolean"}
       }
     },

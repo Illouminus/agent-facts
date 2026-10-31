@@ -1,11 +1,11 @@
-# A made-up x-api-key (an obviously fake constant, not key-shaped): 401 "invalid x-api-key".
+# The runner's fake constant in x-api-key (`auth: invalid`, not key-shaped): 401 "invalid x-api-key".
 id: af:anthropic:probe:invalid-key
 service: anthropic
 env: prod
 account_state: anonymous
 steps:
-  - {do: http, method: GET, path: /v1/models, headers: {x-api-key: apifacts-invalid-key}}
-  - {do: http, method: GET, path: /v1/models/claude-agent-facts-no-such-model, headers: {x-api-key: apifacts-invalid-key}}
+  - {do: http, method: GET, path: /v1/models, auth: invalid}
+  - {do: http, method: GET, path: /v1/models/claude-agent-facts-no-such-model, auth: invalid}
 assert:
   - {step: 1, status: 401}
   - {step: 1, json_path: $.error.type, equals: authentication_error}

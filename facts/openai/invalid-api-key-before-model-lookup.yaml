@@ -1,0 +1,31 @@
+id: af:openai:invalid-api-key-before-model-lookup
+service: openai
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/models/{model}"
+signal:
+  status: 401
+  error_code: invalid_api_key
+  error_string: "Incorrect API key provided: apifacts********-key. You can find your API key at https://platform.openai.com/account/api-keys."
+  normalized: "incorrect api key provided: apifacts********-key. you can find your api key at <url>"
+claim: "GET /v1/models/{model} with an invalid key returns HTTP 401 invalid_api_key even for a model id that does not exist: the key is checked before the model, so a 404 model_not_found is only reachable with a valid key."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Authorization, value_source: account_setting:bearer_api_key}
+status: verified:server:prod
+evidence:
+  probe: af:openai:probe:invalid-key
+  first_seen: 2026-10-31T13:45:06Z
+  last_confirmed: 2026-10-31T13:45:06Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

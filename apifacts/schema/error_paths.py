@@ -27,6 +27,7 @@ MESSAGE_PATHS = (
 CODE_PATHS = (
     ".error.errors[0].reason",  # Google: {error: {code, message, errors: [{domain, reason}]}}
     "[0].errorCode",  # Salesforce
+    ".errors[0].extensions.code",  # GraphQL (Apollo, Linear): {errors: [{message, extensions}]}
 )
 # The message paths that go through a list: the only ones check() takes off its whitelist.
 LIST_MESSAGE_PATHS = tuple(p for p in MESSAGE_PATHS if "[" in p)

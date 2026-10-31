@@ -1,0 +1,40 @@
+# OpenAI API, keyless: probes send no key or the runner's fake constant (`auth: invalid`) and only
+# GET model metadata, so they reach nothing but the authentication layer. The Services Agreement
+# (read 31.10.2026) bans reverse engineering and model extraction, not automated API requests;
+# recording error responses is neither. POST endpoints are registered so check() stores what
+# agents report on them; prod probes may not POST.
+key: openai
+name: OpenAI API
+hosts: [api.openai.com]
+doc_hosts: [platform.openai.com]
+surfaces:
+  http:
+    base_url: https://api.openai.com
+    templates:
+      - {method: POST, path: /v1/chat/completions}
+      - {method: POST, path: /v1/responses}
+      - {method: POST, path: /v1/embeddings}
+      - {method: GET, path: /v1/models}
+      - {method: GET, path: "/v1/models/{model}"}
+    signal_fields:  # error.code first, error.type when the code is null: check() takes the first code-shaped field
+      - status
+      - error.code
+      - error.type
+      - error.message
+      - x-request-id
+      - www-authenticate
+      - retry-after
+      - x-ratelimit-remaining-requests
+      - x-ratelimit-remaining-tokens
+  sdk:
+    - {ecosystem: pypi, package: openai}
+    - {ecosystem: npm, package: openai}
+dimensions:
+  env: {prod: https://api.openai.com}
+  account_state: [anonymous]
+auth: {kind: bearer}  # scheme only, no key file: `auth: invalid` steps send the fake constant
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://openai.com/policies/services-agreement/
+probe_budget: {per_template_seconds: 1800}
