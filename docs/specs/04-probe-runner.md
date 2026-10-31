@@ -16,6 +16,8 @@ fact stays `reported` or `official`.
 | `method`, `path`, `query`, `form`, `json`, `headers` | request; `path` must be a registered template instance |
 | `{{run_uuid}}`, `{{now_rfc3339}}`, `{{step[1].json.id}}` | templating; only these three forms |
 | `auth: service` (default) | adds the service's auth header from the injected key |
+| `auth: none` | sends no credential |
+| `auth: invalid` | sends the fixed fake constant `apifacts-invalid-key` (`http.INVALID_KEY`) in the service's scheme (bearer / header / query / path prefix; basic sends it as user and password); any env, no key file (added 31.10.2026) |
 | `expect_rate_limit: true` | marks a step allowed to return 429 without failing the run |
 
 | Assertion (every entry carries `step: N`, 1-based) | Shape (as in the spec 01 example and `schema/probe.schema.json`) |
@@ -55,6 +57,15 @@ fact stays `reported` or `official`.
 - Redaction filter on every string before it reaches `results.jsonl`, logs or facts: the key values
   themselves, `sk_[a-z]+_[A-Za-z0-9]{8,}`, `Bearer [A-Za-z0-9._-]{16,}`, generic 32+ hex/base64 runs.
 - A test injects a fake key and asserts it appears in no output file.
+- Invalid key (decision Edouard 31.10.2026): what an API answers to a wrong key — status, error
+  code, envelope, whether the key is checked before the resource — is what agents hit most, so an
+  `auth: invalid` step may run in prod and sandbox alike. The guard stays: the value is one
+  constant in the code, never read from `~/.private_keys` and shaped like no vendor's key (no
+  `sk-`…), so it reaches only the authentication layer; probes still may not write
+  `Authorization`/`Cookie` by hand (`FORBIDDEN_PROBE_HEADERS`), results never record them
+  (`NEVER_HEADERS`), and prod steps stay read-only. A keyless service declares its scheme without
+  `key_name`/`env` (`auth: {kind: bearer}`): its `auth: service` steps send nothing; the validator
+  rejects `auth: invalid` on `kind: none` (`no_auth_scheme`).
 
 ## Vantage points
 

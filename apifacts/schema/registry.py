@@ -183,6 +183,7 @@ class ServiceInfo:
     envs: frozenset[str]
     auth_kind: str
     auth_env: str | None
+    auth_keyed: bool = False  # a key file is named: `auth: service` steps send a real key
     jsonrpc: JsonRpcRead | None = None
 
     @classmethod
@@ -206,6 +207,7 @@ class ServiceInfo:
             envs=frozenset(_strings(dimensions.get("env"))),
             auth_kind=auth.get("kind", "none"),
             auth_env=auth.get("env"),
+            auth_keyed=auth.get("kind", "none") != "none" and bool(auth.get("key_name")),
             jsonrpc=_jsonrpc(http.get("jsonrpc")),
         )
 

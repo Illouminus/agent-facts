@@ -183,9 +183,11 @@
       },
       "allOf": [
         {
-          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["bearer", "basic", "header", "query", "path_prefix", "google_service_account", "oauth_refresh_token"]}}},
+          "description": "A keyless service may declare its scheme without key_name and env (auth: invalid probes send a fake constant in it); the minting kinds always need a key file.",
+          "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["google_service_account", "oauth_refresh_token"]}}},
           "then": {"required": ["key_name", "env"]}
         },
+        {"dependentRequired": {"key_name": ["env"], "env": ["key_name"]}},
         {
           "if": {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "path_prefix"}}},
           "then": {"required": ["path_prefix"]},

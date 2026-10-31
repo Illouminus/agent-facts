@@ -430,12 +430,20 @@ class ServiceDimensions(_Closed):
 GoogleScope = _pattern(r"^https://www\.googleapis\.com/auth/[a-z0-9._-]{1,64}$")
 
 
+MINTING_KINDS = frozenset({"google_service_account", "oauth_refresh_token"})
+
+
 class Auth(_Closed):
     """How the runner turns the key file into credentials. `path_prefix` puts the key into a path
     prefix the templates never contain (`/bot{key}` + `/getMe`); `google_service_account` reads a
     service-account JSON key and sends a minted access token as Bearer; `oauth_refresh_token`
     trades the refresh token of an sfdx auth URL at `token_path` and sends the access token as
-    Bearer to the instance the token names."""
+    Bearer to the instance the token names.
+
+    A keyless service may still declare its scheme (`bearer`, `basic`, `header`, `query`,
+    `path_prefix`) without `key_name` and `env`: its `auth: service` steps then send nothing, and
+    `auth: invalid` steps send the runner's fake constant in that scheme (`HttpStep`). The minting
+    kinds always need a key file."""
 
     kind: Literal["none", "bearer", "basic", "header", "query", "path_prefix",
                   "google_service_account", "oauth_refresh_token"]
@@ -453,7 +461,9 @@ class Auth(_Closed):
 
     @model_validator(mode="after")
     def _kind_fields(self) -> "Auth":
-        if self.kind != "none" and (self.key_name is None or self.env is None):
+        if (self.key_name is None) != (self.env is None):
+            raise ValueError("key_name and env go together")
+        if self.kind in MINTING_KINDS and self.key_name is None:
             raise ValueError(f"auth kind {self.kind} requires key_name and env")
         if self.kind == "header" and self.header_name is None:
             raise ValueError("auth kind header requires header_name")
@@ -470,6 +480,11 @@ class Auth(_Closed):
             if (value := getattr(self, name)) is not None and {".", ".."} & set(value.split("/")):
                 raise ValueError(f"{name} has a dot segment")
         return self
+
+    @property
+    def keyed(self) -> bool:
+        """The runner sends a real key for `auth: service` steps (a key file is named)."""
+        return self.kind != "none" and self.key_name is not None
 
 
 class Tos(_Closed):
@@ -498,6 +513,18 @@ Scalar = Annotated[str, StringConstraints(max_length=1024)] | StrictInt | Strict
 
 
 class HttpStep(_Closed):
+    """One request. `auth` says what credential the runner adds (a probe never writes one itself,
+    `FORBIDDEN_PROBE_HEADERS`): `service` (default) the service's key, `none` nothing, `invalid`
+    the fixed fake constant `apifacts.probe.http.INVALID_KEY` in the service's scheme.
+
+    `auth: invalid` is allowed in prod and sandbox alike (decision Edouard 31.10.2026): it records
+    what an API answers to a wrong key (status, error code, envelope, whether the key is checked
+    before the resource), which is what agents hit most. The guard stays intact: the value is one
+    constant in the code, never read from a key file and not shaped like any vendor's key, so it
+    reaches nothing but the authentication layer; a probe still cannot write `Authorization` by
+    hand, results never record it (`results.NEVER_HEADERS`), and prod steps stay read-only. The
+    service must declare a scheme (`auth.kind` other than `none`), a key file is not needed."""
+
     do: Literal["http"]
     method: HttpMethod
     path: PathTemplate
@@ -505,7 +532,7 @@ class HttpStep(_Closed):
     form: dict[Identifier, Scalar] | None = None
     json_body: dict | list | None = Field(default=None, alias="json")
     headers: dict[HeaderName, Annotated[str, StringConstraints(max_length=1024)]] | None = None
-    auth: Literal["service", "none"] = "service"
+    auth: Literal["service", "none", "invalid"] = "service"
     expect_rate_limit: StrictBool | None = None
 
 

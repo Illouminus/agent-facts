@@ -43,6 +43,7 @@ from apifacts.probe.http import (
     Refused,
     auth_for,
     base_url_for,
+    invalid_credentials,
     make_client,
     matching_template,
     prepare,
@@ -68,7 +69,7 @@ from apifacts.probe.results import (
     sleep_step_record,
 )
 from apifacts.probe.templating import NOT_JSON, RunContext, rfc3339
-from apifacts.schema.models import AssertStatus, HttpStep, Service, SleepStep
+from apifacts.schema.models import MINTING_KINDS, AssertStatus, HttpStep, Service, SleepStep
 from apifacts.schema.registry import family_key_reaches, key_bound_to_service, service_urls
 from apifacts.schema.validate import Problem
 
@@ -86,7 +87,6 @@ TOKEN_MARGIN_S = 300  # a minted token is not sent in its last 5 minutes
 # A refresh grant answers no lifetime; a Salesforce org's session timeout can be as short as
 # 15 minutes, so a refreshed token is reused for at most 10 (with TOKEN_MARGIN_S).
 OAUTH_LIFETIME_S = 900
-MINTING_KINDS = frozenset({"google_service_account", "oauth_refresh_token"})
 REFUSING_AUTH_ERRORS = frozenset({"bad_key_file", "foreign_host", "foreign_instance"})
 
 
@@ -295,7 +295,10 @@ def _execute(
             run.detail, run.refused = f"refused:{exc.code}: {exc.message}", True
             return run
         try:
-            credentials = auth_for(service, key) if request.uses_key else NO_CREDENTIALS
+            if step.auth == "invalid":
+                credentials = invalid_credentials(service)
+            else:
+                credentials = auth_for(service, key) if request.uses_key else NO_CREDENTIALS
         except Refused as exc:
             run.steps.append(refused_step_record(i, step, exc))
             run.detail, run.refused = f"refused:{exc.code}: {exc.message}", True
