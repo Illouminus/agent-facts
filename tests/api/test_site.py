@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from apifacts.api.site import INDEXNOW_KEY
+from apifacts.api.site import GOOGLE_VERIFICATION, INDEXNOW_KEY
 
 README = """# apifacts
 
@@ -381,3 +381,9 @@ def test_openapi_describes_check_for_agents(site):
     assert operation["summary"] == "Look up known facts for a failed API call"
     assert "typed fixes" in operation["description"]
     assert "Do not send credentials" in operation["description"]
+
+
+def test_google_verification_file(site):
+    r = site.get(f"/{GOOGLE_VERIFICATION}.html")
+    assert r.status_code == 200
+    assert r.text == f"google-site-verification: {GOOGLE_VERIFICATION}.html"

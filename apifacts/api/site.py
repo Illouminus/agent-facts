@@ -73,6 +73,10 @@ ROBOTS = f"User-agent: *\nAllow: /\n\nSitemap: {SITEMAP_URL}\n"
 # host file: the route and ops/indexnow.py can never disagree, and nothing extra to deploy.
 # Rotate = new value here + deploy; the engines re-fetch keyLocation on the next submission.
 INDEXNOW_KEY = "2512f7f2a72f05dc4e4a02300eaac754"
+# Google Search Console ownership of https://apifacts.dev/ (URL-prefix property, 31.10.2026):
+# Google does not take IndexNow, the sitemap is submitted there. Public by design like the key
+# above; removing the file drops the verified owner.
+GOOGLE_VERIFICATION = "googlefd9feaeb53b87df5"
 LASTMOD_STATE = "var/sitemap-lastmod.json"
 SERVER_JSON = "server.json"  # the MCP registry entry (stdio package), published as-is
 MCP_WELL_KNOWN = "/.well-known/mcp.json"

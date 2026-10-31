@@ -79,6 +79,7 @@ from apifacts.api.readers import (
 )
 from apifacts.api.seed_hosts import metric_host
 from apifacts.api.site import (
+    GOOGLE_VERIFICATION,
     INDEXNOW_KEY,
     LASTMOD_STATE,
     MCP_WELL_KNOWN,
@@ -124,6 +125,7 @@ CHECK_DESCRIPTION = (
 )
 ROBOTS_PAGE = text_page(ROBOTS)
 INDEXNOW_KEY_PAGE = text_page(INDEXNOW_KEY)
+GOOGLE_VERIFICATION_PAGE = text_page(f"google-site-verification: {GOOGLE_VERIFICATION}.html")
 
 
 def _error_body(code: str, message: str, field: str | None = None) -> dict[str, Any]:
@@ -677,6 +679,10 @@ def create_app(
     @page(f"/{INDEXNOW_KEY}.txt")
     def indexnow_key(request: Request) -> Response:
         return _site(request, INDEXNOW_KEY_PAGE, "text/plain")
+
+    @page(f"/{GOOGLE_VERIFICATION}.html")
+    def google_verification(request: Request) -> Response:
+        return _site(request, GOOGLE_VERIFICATION_PAGE)
 
     @page("/")
     def home(request: Request) -> Response:
