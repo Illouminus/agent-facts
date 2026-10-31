@@ -1,0 +1,10 @@
+# ?ref= naming no branch, tag or commit: 404 with a message that names the ref (not "Not Found").
+id: af:github:probe:contents-unknown-ref
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World/contents/README, query: {ref: agent-facts-no-such-ref}}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.message, equals: No commit found for the ref agent-facts-no-such-ref}

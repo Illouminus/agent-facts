@@ -1,0 +1,30 @@
+id: af:github:contents-missing-path-404
+service: github
+kind: error_meaning
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}/contents/{path}"
+signal:
+  status: 404
+  error_string: "Not Found"
+  normalized: "not found"
+claim: "An anonymous GET /repos/{owner}/{repo}/contents/{path} for a file path that does not exist returns HTTP 404 with message Not Found and a documentation_url to the get-repository-content docs."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:contents-not-found
+  first_seen: 2026-10-31T13:08:59Z
+  last_confirmed: 2026-10-31T13:08:59Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

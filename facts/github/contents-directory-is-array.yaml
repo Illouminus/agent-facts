@@ -1,0 +1,28 @@
+id: af:github:contents-directory-is-array
+service: github
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/repos/{owner}/{repo}/contents"
+signal:
+  status: 200
+claim: "GET /repos/{owner}/{repo}/contents on a directory returns a JSON array of entries, while a file path returns one object with type file and base64-encoded content (encoding: base64)."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:github:probe:contents-directory-vs-file
+  first_seen: 2026-10-31T13:08:59Z
+  last_confirmed: 2026-10-31T13:08:59Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

@@ -1,0 +1,17 @@
+# One endpoint, two shapes: a directory is a JSON array of entries, a file one object with
+# base64 content.
+id: af:github:probe:contents-directory-vs-file
+service: github
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /repos/octocat/Hello-World/contents}
+  - {do: http, method: GET, path: /repos/octocat/Hello-World/contents/README}
+assert:
+  - {step: 1, status: 200}
+  - {step: 1, json_path: "$[0].path", equals: README}
+  - {step: 1, json_path: "$[0].type", equals: file}
+  - {step: 2, status: 200}
+  - {step: 2, json_path: $.type, equals: file}
+  - {step: 2, json_path: $.encoding, equals: base64}
+  - {step: 2, json_path: $.content, exists: true}

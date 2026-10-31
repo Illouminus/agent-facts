@@ -12,6 +12,12 @@ surfaces:
       - {method: GET, path: /rate_limit/}
       - {method: DELETE, path: /rate_limit}
       - {method: GET, path: "/repos/{owner}/{repo}"}
+      # Repository contents: a slot fills one segment, so a file path is registered per depth.
+      - {method: GET, path: "/repos/{owner}/{repo}/contents"}
+      - {method: GET, path: "/repos/{owner}/{repo}/contents/{path}"}
+      - {method: GET, path: "/repos/{owner}/{repo}/contents/{dir}/{path}"}
+      - {method: GET, path: "/repos/{owner}/{repo}/contents/{dir}/{subdir}/{path}"}
+      - {method: GET, path: "/repos/{owner}/{repo}/contents/{dir}/{subdir}/{subdir2}/{path}"}
       - {method: GET, path: "/repositories/{id}"}
       - {method: GET, path: /search/repositories}
       - {method: GET, path: "/users/{username}/followers"}
@@ -40,5 +46,6 @@ tos:
   automated_access: allowed
   publish_measurements: allowed
   source: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service#h-api-terms
-# 60 anonymous requests/hour per IP: one run per template per 30 min keeps a full sweep < 20/hour.
+# 60 anonymous requests/hour per IP: one run per template per 30 min keeps a full sweep at 40/hour
+# (20 requests per sweep with the contents probes, 31.10.2026).
 probe_budget: {per_template_seconds: 1800}
