@@ -5,6 +5,7 @@ Fixtures only: no network except a local fake of the Telegram gateway, no VPS.
 
 import json
 import sqlite3
+from collections import Counter
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -22,6 +23,8 @@ from ops_builders import (
     run_record,
     write_results,
 )
+
+from apifacts.api.readers import merge_day
 
 MONDAY = datetime(2026, 10, 26, 6, 0, tzinfo=UTC)  # 08:00 Paris
 TUESDAY = datetime(2026, 10, 20, 13, 0, tzinfo=UTC)
@@ -586,3 +589,38 @@ def test_report_has_dogfooding_and_ping_names_it_only_when_nonzero(registry, tmp
     ping = digest.render_ping(d, "https://r")
     assert "dogfooding 2, факт есть 1" in ping
     assert 5 <= len(ping.splitlines()) <= 8
+
+
+# ── readers ────────────────────────────────────────────────────────────────────────────────────
+
+
+def test_readers_section_groups_families_over_the_window_days(registry, tmp_path):
+    out = tmp_path / "var" / "readers"
+    merge_day(out, "2026-10-19", Counter({("ChatGPT-User", "fact_page", "2xx"): 3,
+                                          ("ChatGPT-User", "home", "2xx"): 1,
+                                          ("ClaudeBot", "llms", "2xx"): 2}))
+    merge_day(out, "2026-10-25", Counter({("GPTBot", "fact_page", "4xx"): 1,
+                                          ("browser", "home", "2xx"): 4,
+                                          ("apifacts-pytest", "api_check", "2xx"): 6}))
+    merge_day(out, "2026-10-26", Counter({("GPTBot", "home", "2xx"): 100}))  # next period
+    d = digest.build(registry.root, MONDAY, db=tmp_path / "var" / "observations.sqlite")
+    assert d.readers is not None and d.readers.total == 17
+    assert digest._readers_line(d) == ("читатели: запросов 17 (ИИ-агенты 4 · ИИ-краулеры 3 · "
+                                       "браузеры 4 · apifacts-* 6)")
+    report = digest.render_report(d)
+    assert "## Читатели" in report
+    assert ("- ИИ-агенты (живое чтение по просьбе человека): ChatGPT-User 4 (fact_page 3, home 1)"
+            in report)
+    assert ("- ИИ-краулеры (обучение и ИИ-поиск): ClaudeBot 2 (llms 2) · GPTBot 1 (fact_page 1)"
+            in report)
+    assert ("- клиенты apifacts (CLI, MCP, pytest — у кого угодно, не наши хосты): "
+            "apifacts-pytest 6 (api_check 6)") in report
+    assert "- ответы: 2xx 16 · 3xx 0 · 4xx 1 · 5xx 0" in report
+    ping = digest.render_ping(d, "https://r")
+    assert "читатели" not in ping  # the ping is full at 8 lines
+    assert 5 <= len(ping.splitlines()) <= 8
+
+
+def test_readers_section_without_the_directory(registry, tmp_path):
+    d = digest.build(registry.root, MONDAY, readers=tmp_path / "none")
+    assert "- нет var/readers/ (API ещё без счётчика читателей)" in digest.render_report(d)

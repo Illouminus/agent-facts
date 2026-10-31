@@ -6,6 +6,7 @@
 
 Reads only local files: `facts/` + `services/` (the registry), `var/results.jsonl` (probe runs),
 `var/observations.sqlite` (check() and its `traffic` adoption rows, opened read-only),
+`var/readers/<day>.json` (requests to apifacts.dev by User-Agent family, `apifacts/api/readers.py`),
 `ops/publish-policy.yaml`, the routines' dogfooding log (`--dogfood`: one line per HTTP failure in
 an illouminus routine script, written by `~/routines/bin/apifacts-dogfood.sh`); the one network
 read is pypistats (PyPI downloads, D-092). No LLM, no vendor API. Output:
@@ -47,6 +48,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import state_journal  # noqa: E402  (ops/ is a script directory, not a package)
 
 from apifacts.api.adoption import Adoption, read_adoption  # noqa: E402
+from apifacts.api.readers import (  # noqa: E402
+    AI_AGENT,
+    AI_CRAWLER,
+    BROWSER,
+    OTHER,
+    OURS,
+    SCRIPT,
+    SEARCH,
+    STATUS_CLASSES,
+    Readers,
+    group_of,
+    read_readers,
+)
 from apifacts.pages.build import load_registry  # noqa: E402
 from apifacts.schema.models import Fact, Service  # noqa: E402
 
@@ -390,6 +404,27 @@ def pypi_downloads(packages: Sequence[str], window: Window, base: str = PYPISTAT
     return out
 
 
+# ── readers ────────────────────────────────────────────────────────────────────────────────────
+
+READER_GROUPS = (  # digest order and wording; every group of readers.GROUPS once
+    (AI_AGENT, "ИИ-агенты (живое чтение по просьбе человека)"),
+    (AI_CRAWLER, "ИИ-краулеры (обучение и ИИ-поиск)"),
+    (SEARCH, "поисковики"),
+    (SCRIPT, "скрипты"),
+    (BROWSER, "браузеры"),
+    (OURS, "клиенты apifacts (CLI, MCP, pytest — у кого угодно, не наши хосты)"),
+    (OTHER, "прочее"),
+)
+READER_SHORT = {AI_AGENT: "ИИ-агенты", AI_CRAWLER: "ИИ-краулеры", SEARCH: "поисковики",
+                SCRIPT: "скрипты", BROWSER: "браузеры", OURS: "apifacts-*", OTHER: "прочее"}
+
+
+def readers_metrics(directory: Path, window: Window) -> Readers:
+    """The window's UTC days (a salt period is exactly 7 of them; `--current` ends on a partial
+    one, flushed every 5 minutes)."""
+    return read_readers(directory, window.days)
+
+
 # ── publications ───────────────────────────────────────────────────────────────────────────────
 
 
@@ -476,6 +511,7 @@ class Digest:
     adoption: Adoption | None = None
     pypi: dict[str, int | None] = field(default_factory=dict)
     dogfood: DogfoodMetrics = field(default_factory=lambda: DogfoodMetrics(available=False))
+    readers: Readers | None = None
 
     @property
     def report_id(self) -> str:
@@ -485,9 +521,10 @@ class Digest:
 def build(root: Path, now: datetime, current: bool = False, results: Path | None = None,
           db: Path | None = None, policy_path: Path | None = None,
           open_card: str | None = None, pypi: dict[str, int | None] | None = None,
-          dogfood: Path | None = None) -> Digest:
+          dogfood: Path | None = None, readers: Path | None = None) -> Digest:
     window = salt_window(now, current)
     db = db or root / "var" / "observations.sqlite"
+    readers = readers or db.parent / "readers"
     services, facts = load_registry(root)
     policy_path = policy_path or root / "ops" / "publish-policy.yaml"
     try:
@@ -510,6 +547,7 @@ def build(root: Path, now: datetime, current: bool = False, results: Path | None
         adoption=read_adoption(db, window.start.date()),
         pypi=dict(pypi or {}),
         dogfood=dogfood_metrics(dogfood, window),
+        readers=readers_metrics(readers, window),
     )
 
 
@@ -561,6 +599,33 @@ def _dogfood_line(d: Digest) -> str:
             f"без факта {g.unknown} · ошибок хука {g.errors}")
 
 
+def _readers_line(d: Digest) -> str:
+    r = d.readers
+    if r is None or not r.available:
+        return "читатели: счёта ещё нет (API без var/readers/)"
+    groups = r.by_group()
+    split = " · ".join(f"{READER_SHORT[g]} {groups[g]}" for g, _ in READER_GROUPS if groups[g])
+    return f"читатели: запросов {r.total}" + (f" ({split})" if split else "")
+
+
+def _readers_lines(r: Readers) -> list[str]:
+    """One bullet per non-empty group: family N (path class split), biggest first."""
+    families = r.by_family()
+    out = []
+    for group, label in READER_GROUPS:
+        members = sorted((f for f in families if group_of(f) == group),
+                         key=lambda f: (-families[f], f))
+        if not members:
+            continue
+        parts = []
+        for family in members:
+            paths = sorted(r.paths_of(family).items(), key=lambda pn: (-pn[1], pn[0]))
+            parts.append(f"{family} {families[family]} ("
+                         + ", ".join(f"{p} {n}" for p, n in paths) + ")")
+        out.append(f"- {label}: " + " · ".join(parts))
+    return out
+
+
 def _needs_probe_line(d: Digest) -> str:
     n = len(d.facts.needs_probe)
     line = f"нужна проба: {n} reported без пробы"
@@ -605,7 +670,7 @@ def render_report(d: Digest) -> str:
         "",
         f"Окно: {w.start:%Y-%m-%dT%H:%MZ} → {w.end:%Y-%m-%dT%H:%MZ} (период соли reporter_net, "
         "UTC). Источники: `facts/`, `var/results.jsonl`, `var/observations.sqlite`, "
-        "`ops/publish-policy.yaml`. Сгенерировано `ops/digest.py`, без LLM.",
+        "`var/readers/`, `ops/publish-policy.yaml`. Сгенерировано `ops/digest.py`, без LLM.",
         "",
         "## Факты",
         "",
@@ -622,6 +687,24 @@ def render_report(d: Digest) -> str:
         "наблюдения — сохранённые; гейт 30.11: ≥ 10 клиентов за 23–29.11 или ≥ 1 наблюдение",
         f"- команда: `apifacts stats adoption --db var/observations.sqlite` → "
         f"`{d.adoption.line() if d.adoption else '—'}`",
+        "",
+        "## Читатели",
+        "",
+    ]
+    r = d.readers
+    if r is not None and r.available:
+        out.append(f"- {_readers_line(d).removeprefix('читатели: ')}")
+        out += _readers_lines(r)
+        statuses = r.statuses()
+        out.append("- ответы: " + " · ".join(f"{s} {statuses.get(s, 0)}" for s in STATUS_CLASSES))
+        if r.bad_files:
+            out.append(f"- нечитаемых файлов дня: {r.bad_files}")
+        out.append("- источник: `var/readers/<день>.json` (счётчик в API по UTC-дням окна); "
+                   "семья — по User-Agent, он не проверяется (IP не храним); путей нет, только "
+                   "класс пути; команда `apifacts stats readers --days 7`")
+    else:
+        out.append("- нет var/readers/ (API ещё без счётчика читателей)")
+    out += [
         "",
         "## Dogfooding",
         "",
@@ -828,6 +911,8 @@ def _args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--state-dir", type=Path, default=state_journal.DEFAULT_STATE)
     parser.add_argument("--results", type=Path, default=None)
     parser.add_argument("--db", type=Path, default=None)
+    parser.add_argument("--readers", type=Path, default=None,
+                        help="the API's reader counts (default: readers/ next to the db)")
     parser.add_argument("--policy", type=Path, default=None)
     parser.add_argument("--now", default=None, help="ISO time with offset (default: now)")
     parser.add_argument("--current", action="store_true",
@@ -857,7 +942,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     open_card = open_needs_probe_card(state_dir)  # read-only, also in a dry run
     pypi = pypi_downloads(PACKAGES, salt_window(now, args.current), args.pypistats)
     d = build(args.root, now, args.current, args.results, args.db, args.policy, open_card, pypi,
-              args.dogfood)
+              args.dogfood, args.readers)
     card = needs_probe_card(d) if open_card is None else None
     if card:
         d = replace(d, open_card=card[0])

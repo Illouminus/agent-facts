@@ -11,6 +11,7 @@ Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 | `var/evidence-pending.sqlite`, `var/evidence-refresh.json` | counters waiting for the daily refresh, its marker |
 | `var/bot-state.json` | day and refresh of the last "daily evidence refresh" PR |
 | `var/observations.sqlite` | check() observations and counters (spec 03) |
+| `var/readers/<day>.json` | requests by User-Agent family × path class × status class (below, «Readers») |
 | `var/deploy/` | `deployed` (sha), `deploy.log`, parked `facts-unapplied-*.patch` |
 | `var/publications.jsonl` | published items (once the publish policy is approved) |
 | `ops/KILL` | kill switch file (gitignored) |
@@ -150,6 +151,23 @@ observation):
   pre-flight out of `observations`); **reported_external** = observations stored from them.
 - Table `traffic`, one row per network per period; rows older than the previous period go at
   the salt rotation.
+
+## Readers
+
+Who reads `apifacts.dev` (site and API), by User-Agent family — the only trace, since there is no
+access log (spec 03, «Readers»):
+
+```bash
+.venv/bin/apifacts stats readers --dir var/readers --days 7   # today included, partial
+```
+
+- `var/readers/<YYYY-MM-DD>.json` (UTC day): `{family: {path_class: {status_class: n}}}`, merged
+  by the API every 5 minutes and at shutdown (lock + temp file + rename). A file that does not
+  parse is set aside as `<day>.json.bad`. `APIFACTS_READERS_DIR` overrides the place.
+- Families are a fixed ordered table in `apifacts/api/readers.py` (`FAMILIES`): a new bot is one
+  row. A UA is a claim, not verified (no IP is kept). `apifacts-*` = our client software,
+  whoever runs it — not our hosts (that is adoption's job, above).
+- The weekly digest has the «Читатели» section (report only; the ping is full).
 
 ## Caddy
 
