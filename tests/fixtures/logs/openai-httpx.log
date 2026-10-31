@@ -1,0 +1,6 @@
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+Traceback (most recent call last):
+  File "/home/runner/work/app/app/scripts/summarize.py", line 22, in <module>
+    reply = client.chat.completions.create(model="gpt-5", messages=messages)
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-abcdefghijklmnopqrstuvwx. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+Error: Process completed with exit code 1.

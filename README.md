@@ -24,6 +24,20 @@ Both packages are on PyPI, carry the same version and ship together from one tag
 ([`skills/apifacts/SKILL.md`](skills/apifacts/SKILL.md)) tells Claude Code and other agents when to
 call `apifacts check` and how to read the answer.
 
+## CI
+
+Agents that fix a red build read the failing step's log, the annotations and the job summary. The
+GitHub Action puts the known facts in all three ([`action/README.md`](action/README.md)):
+
+```yaml
+- uses: Illouminus/apifacts/action@v0
+  with:
+    run: pytest -q   # same exit code as without the action; scanned only when it fails
+```
+
+Anywhere else, pipe a log through `apifacts scan` (`uvx apifacts scan build.log`): it finds the
+failed HTTP calls that `requests`, `httpx`, `gh`, axios and `curl -f` print, and asks about each.
+
 ## MCP
 
 One tool, `check(target, method, status, body)`, over stdio; no resources, no prompts. Claude Code:

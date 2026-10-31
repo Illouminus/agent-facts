@@ -75,6 +75,19 @@ class Snapshot:
     def hosts(self) -> frozenset[str]:
         return frozenset(h for s in self.services for h in _hosts(s))
 
+    def methods_for(self, url: str) -> frozenset[str]:
+        """Methods with a registered template for this URL's path (`apifacts scan` when a log
+        does not say the method: one method → it can only be that template)."""
+        parts = urlsplit(url)
+        host = (parts.hostname or "").lower()
+        return frozenset(
+            m
+            for s in self.services
+            if match_host(host, _hosts(s))
+            for m, p in _templates(s)
+            if match_template(parts.path or "/", p)
+        )
+
     def check(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         """Same shape as the server's answer; `observed` is always empty offline."""
         target, error = _map(payload.get("target")), _map(payload.get("error"))

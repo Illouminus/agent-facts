@@ -1,0 +1,2 @@
+HTTPError: Request failed with status code 429 Too Many Requests: GET https://api.github.com/search/repositories?q=apifacts
+FetchError: [POST] "https://api.telegram.org/bot123456789:AAbbccddeeffgghhiijjkkllmmnnooppqq/sendMessage": 400 Bad Request

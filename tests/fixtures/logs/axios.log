@@ -1,0 +1,37 @@
+> node scripts/sync-users.mjs
+
+AxiosError: Request failed with status code 401
+    at settle (/home/runner/work/app/app/node_modules/axios/dist/node/axios.cjs:2031:12)
+    at IncomingMessage.handleStreamEnd (/home/runner/work/app/app/node_modules/axios/dist/node/axios.cjs:3148:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_BAD_REQUEST',
+  config: {
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    adapter: [ 'xhr', 'http', 'fetch' ],
+    timeout: 0,
+    headers: Object [AxiosHeaders] {
+      Accept: 'application/json, text/plain, */*',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer sk_test_abcdefgh12345678'
+    },
+    baseURL: 'https://api.stripe.com',
+    method: 'post',
+    url: '/v1/customers',
+    data: '{"email":"jane@example.com"}'
+  },
+  request: <ref *1> ClientRequest {
+    _header: 'POST /v1/customers HTTP/1.1\r\n' +
+      'Host: api.stripe.com\r\n'
+  },
+  response: {
+    status: 401,
+    statusText: 'Unauthorized',
+    data: { error: { message: 'Invalid API Key provided: sk_test_****5678', type: 'invalid_request_error' } }
+  }
+}
+
+Node.js v22.11.0

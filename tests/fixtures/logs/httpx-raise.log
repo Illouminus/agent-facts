@@ -1,0 +1,2 @@
+FAILED tests/test_sheets.py::test_read_range - httpx.HTTPStatusError: Client error '404 Not Found' for url 'https://sheets.googleapis.com/v4/spreadsheets/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789/values/Sheet1!A1:B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
