@@ -1,4 +1,4 @@
-# `amount must be at least $#.## usd`
+# `Amount must be at least $0.50 usd`
 
 Status: ⛔ retracted 2026-10-27 · reason: duplicate
 

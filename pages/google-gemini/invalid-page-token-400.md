@@ -1,4 +1,4 @@
-# `invalid page_token.`
+# `Invalid page_token.`
 
 **Gemini API · GET /v1beta/models · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-gemini:probe:models-invalid-page-token` (declarative, [source](
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid page_token.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

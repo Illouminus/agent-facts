@@ -1,4 +1,4 @@
-# `only the first #### search results are available`
+# `Only the first 1000 search results are available`
 
 **GitHub REST API · GET /search/repositories · HTTP 422**
 
@@ -21,6 +21,8 @@ Probe `af:github:probe:search-beyond-1000` (declarative, [source](../../probes/g
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `only the first #### search results are available`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

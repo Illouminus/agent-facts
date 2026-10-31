@@ -1,4 +1,4 @@
-# `bad request: chat not found`
+# `Bad Request: chat not found`
 
 **Telegram Bot API · GET /{bot_token}/getChat · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:telegram:probe:get-chat-not-found` (declarative, [source](../../probes
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `bad request: chat not found`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

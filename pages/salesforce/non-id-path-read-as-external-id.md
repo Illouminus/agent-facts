@@ -1,4 +1,4 @@
-# `provided external id field does not exist or is not accessible: notanid`
+# `Provided external ID field does not exist or is not accessible: notanid`
 
 **Salesforce Platform REST API · GET /services/data/{version}/sobjects/{object}/{id} · HTTP 404 `NOT_FOUND`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:non-id-read-as-external-id` (declarative, [source](..
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `provided external id field does not exist or is not accessible: notanid`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

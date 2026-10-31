@@ -1,4 +1,4 @@
-# `invalid param: wrongsize`
+# `Invalid param: WrongSize`
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 200 `-32602`**
 
@@ -21,6 +21,8 @@ Probe `af:solana:probe:invalid-pubkey` (declarative, [source](../../probes/solan
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid param: wrongsize`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

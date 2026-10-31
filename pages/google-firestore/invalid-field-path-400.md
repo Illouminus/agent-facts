@@ -1,4 +1,4 @@
-# ``invalid property path "a b". unquoted property paths must match regex ([a-za-z_][a-za-z_#-#]*), and quoted property paths must match regex (`(?:[^`\\]|(?:\\.))+`)``
+# ``Invalid property path "a b". Unquoted property paths must match regex ([a-zA-Z_][a-zA-Z_0-9]*), and quoted property paths must match regex (`(?:[^`\\]|(?:\\.))+`)``
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection} · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-firestore:probe:list-parameter-errors` (declarative, [source](.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): ``invalid property path "a b". unquoted property paths must match regex ([a-za-z_][a-za-z_#-#]*), and quoted property paths must match regex (`(?:[^`\\]|(?:\\.))+`)``
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

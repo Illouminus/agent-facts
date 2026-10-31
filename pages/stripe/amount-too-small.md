@@ -1,4 +1,4 @@
-# `amount must convert to at least ## cents. $#.## converts to approximately €#.##.`
+# `Amount must convert to at least 50 cents. $0.10 converts to approximately €0.09.`
 
 **Stripe API · POST /v1/payment_intents · HTTP 400 `amount_too_small`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:amount-too-small` (declarative, [source](../../probes/str
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `amount must convert to at least ## cents. $#.## converts to approximately €#.##.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

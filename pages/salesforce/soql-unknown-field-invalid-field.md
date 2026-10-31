@@ -1,4 +1,4 @@
-# `select nosuchfield__c from account ^ error at row:#:column:# no such column 'nosuchfield__c' on entity 'account'. if you are attempting to use a custom field, be sure to append the '__c' after the custom field name. please reference your wsdl or the describe call for the appropriate names.`
+# `SELECT NoSuchField__c FROM Account ^ ERROR at Row:1:Column:8 No such column 'NoSuchField__c' on entity 'Account'. If you are attempting to use a custom field, be sure to append the '__c' after the custom field name. Please reference your WSDL or the describe call for the appropriate names.`
 
 **Salesforce Platform REST API · GET /services/data/{version}/query · HTTP 400 `INVALID_FIELD`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:soql-unknown-field` (declarative, [source](../../prob
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `select nosuchfield__c from account ^ error at row:#:column:# no such column 'nosuchfield__c' on entity 'account'. if you are attempting to use a custom field, be sure to append the '__c' after the custom field name. please reference your wsdl or the describe call for the appropriate names.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

@@ -1,4 +1,4 @@
-# `select id from nosuchobject__c ^ error at row:#:column:## sobject type 'nosuchobject__c' is not supported. if you are attempting to use a custom object, be sure to append the '__c' after the entity name. please reference your wsdl or the describe call for the appropriate names.`
+# `SELECT Id FROM NoSuchObject__c ^ ERROR at Row:1:Column:16 sObject type 'NoSuchObject__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.`
 
 **Salesforce Platform REST API · GET /services/data/{version}/query · HTTP 400 `INVALID_TYPE`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:soql-unknown-object` (declarative, [source](../../pro
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `select id from nosuchobject__c ^ error at row:#:column:## sobject type 'nosuchobject__c' is not supported. if you are attempting to use a custom object, be sure to append the '__c' after the entity name. please reference your wsdl or the describe call for the appropriate names.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

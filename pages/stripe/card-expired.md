@@ -1,4 +1,4 @@
-# `your card has expired.`
+# `Your card has expired.`
 
 **Stripe API · POST /v1/payment_intents · HTTP 402 `expired_card`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:card-expired` (declarative, [source](../../probes/stripe/
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `your card has expired.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

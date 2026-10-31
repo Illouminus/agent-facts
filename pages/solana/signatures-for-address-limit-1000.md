@@ -1,4 +1,4 @@
-# `invalid limit; max ####`
+# `Invalid limit; max 1000`
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 200 `-32602`**
 
@@ -21,6 +21,8 @@ Probe `af:solana:probe:signatures-limit` (declarative, [source](../../probes/sol
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid limit; max ####`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

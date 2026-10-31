@@ -1,4 +1,4 @@
-# `method doesn't allow unregistered callers (callers without established identity). please use api key or other form of api consumer identity to call this api.`
+# `Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API.`
 
 **Gemini API · GET /v1beta/models · HTTP 403 `PERMISSION_DENIED`**
 
@@ -21,6 +21,8 @@ Probe `af:google-gemini:probe:models-no-key` (declarative, [source](../../probes
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `method doesn't allow unregistered callers (callers without established identity). please use api key or other form of api consumer identity to call this api.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

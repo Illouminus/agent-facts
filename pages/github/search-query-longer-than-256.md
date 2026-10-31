@@ -1,4 +1,4 @@
-# `the search is longer than ### characters.`
+# `The search is longer than 256 characters.`
 
 **GitHub REST API · GET /search/repositories · HTTP 422 `invalid`**
 
@@ -21,6 +21,8 @@ Probe `af:github:probe:search-query-too-long` (declarative, [source](../../probe
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `the search is longer than ### characters.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

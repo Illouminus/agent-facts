@@ -4,9 +4,9 @@ Hosts: `pypi.org` · 16 facts
 
 ## Error meanings
 
-- ✅ verified:server:prod · [`not found`](project-not-found-404.md) · GET /pypi/{project}/json · env prod
-- ✅ verified:server:prod · [`not found`](release-not-found-404.md) · GET /pypi/{project}/{version}/json · env prod
-- ✅ verified:server:prod · [`### not found`](simple-not-found-404.md) · GET /simple/{project}/ · env prod
+- ✅ verified:server:prod · [`Not Found`](project-not-found-404.md) · GET /pypi/{project}/json · env prod
+- ✅ verified:server:prod · [`Not Found`](release-not-found-404.md) · GET /pypi/{project}/{version}/json · env prod
+- ✅ verified:server:prod · [`404 Not Found`](simple-not-found-404.md) · GET /simple/{project}/ · env prod
 
 ## Rate limits
 

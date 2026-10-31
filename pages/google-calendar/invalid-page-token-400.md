@@ -1,4 +1,4 @@
-# `invalid page token value.`
+# `Invalid page token value.`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id}/events · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:invalid-page-token` (declarative, [source](../..
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid page token value.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

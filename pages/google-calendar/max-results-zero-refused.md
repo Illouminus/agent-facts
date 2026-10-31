@@ -1,4 +1,4 @@
-# `invalid value '#'. values must be within the range: [#, ∞)`
+# `Invalid value '0'. Values must be within the range: [1, ∞)`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id}/events · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:max-results-bounds` (declarative, [source](../..
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid value '#'. values must be within the range: [#, ∞)`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

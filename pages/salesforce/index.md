@@ -4,13 +4,13 @@ Hosts: `login.salesforce.com`, `test.salesforce.com` · 18 facts
 
 ## Error meanings
 
-- ✅ verified:server:sandbox · [`the requested resource does not exist`](record-not-found-404.md) · GET /services/data/{version}/sobjects/{object}/{id} · env sandbox
-- ✅ verified:server:sandbox · [`destination url not reset. the url returned from login must be set`](rest-on-login-host-url-not-reset.md) · GET /services/data/{version}/limits · env sandbox
-- ✅ verified:server:sandbox · [`the soql fields function must have a limit of at most ###`](soql-fields-all-needs-limit.md) · GET /services/data/{version}/query · env sandbox
-- ✅ verified:server:sandbox · [`unexpected token: '<redacted>'`](soql-malformed-query-400.md) · GET /services/data/{version}/query · env sandbox
-- ✅ verified:server:sandbox · [`select nosuchfield__c from account ^ error at row:#:column:# no such column 'nosuchfield__c' on entity 'account'. if you are attempting to use a custom field, be sure to append the '__c' after the custom field name. please reference your wsdl or the describe call for the appropriate names.`](soql-unknown-field-invalid-field.md) · GET /services/data/{version}/query · env sandbox
-- ✅ verified:server:sandbox · [`select id from nosuchobject__c ^ error at row:#:column:## sobject type 'nosuchobject__c' is not supported. if you are attempting to use a custom object, be sure to append the '__c' after the entity name. please reference your wsdl or the describe call for the appropriate names.`](soql-unknown-object-invalid-type.md) · GET /services/data/{version}/query · env sandbox
-- ✅ verified:server:sandbox · [`the requested resource does not exist`](unknown-sobject-describe-404.md) · GET /services/data/{version}/sobjects/{object}/describe · env sandbox
+- ✅ verified:server:sandbox · [`The requested resource does not exist`](record-not-found-404.md) · GET /services/data/{version}/sobjects/{object}/{id} · env sandbox
+- ✅ verified:server:sandbox · [`Destination URL not reset. The URL returned from login must be set`](rest-on-login-host-url-not-reset.md) · GET /services/data/{version}/limits · env sandbox
+- ✅ verified:server:sandbox · [`The SOQL FIELDS function must have a LIMIT of at most 200`](soql-fields-all-needs-limit.md) · GET /services/data/{version}/query · env sandbox
+- ✅ verified:server:sandbox · [`unexpected token: 'SELEC'`](soql-malformed-query-400.md) · GET /services/data/{version}/query · env sandbox
+- ✅ verified:server:sandbox · [`SELECT NoSuchField__c FROM Account ^ ERROR at Row:1:Column:8 No such column 'NoSuchField__c' on entity 'Account'. If you are attempting to use a custom field, be sure to append the '__c' after the custom field name. Please reference your WSDL or the describe call for the appropriate names.`](soql-unknown-field-invalid-field.md) · GET /services/data/{version}/query · env sandbox
+- ✅ verified:server:sandbox · [`SELECT Id FROM NoSuchObject__c ^ ERROR at Row:1:Column:16 sObject type 'NoSuchObject__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.`](soql-unknown-object-invalid-type.md) · GET /services/data/{version}/query · env sandbox
+- ✅ verified:server:sandbox · [`The requested resource does not exist`](unknown-sobject-describe-404.md) · GET /services/data/{version}/sobjects/{object}/describe · env sandbox
 
 ## Rate limits
 
@@ -22,17 +22,17 @@ Hosts: `login.salesforce.com`, `test.salesforce.com` · 18 facts
 
 - ✅ verified:server:sandbox · [A SOQL query that matches nothing returns HTTP 200 with totalSize 0, done true and an empty records array, and no nextRecordsUrl.](empty-query-result-shape.md) · GET /services/data/{version}/query · env sandbox
 - ✅ verified:server:sandbox · [REST errors are a JSON array of objects with errorCode and message (e.g. \[{errorCode: NOT_FOUND, …}\]), not a single error object.](errors-are-a-json-array.md) · GET /services/data/{version}/sobjects/{object}/{id} · env sandbox
-- ✅ verified:server:sandbox · [`provided external id field does not exist or is not accessible: notanid`](non-id-path-read-as-external-id.md) · GET /services/data/{version}/sobjects/{object}/{id} · env sandbox
+- ✅ verified:server:sandbox · [`Provided external ID field does not exist or is not accessible: notanid`](non-id-path-read-as-external-id.md) · GET /services/data/{version}/sobjects/{object}/{id} · env sandbox
 
 ## Auth quirks
 
-- ✅ verified:server:sandbox · [`session expired or invalid`](missing-session-401.md) · GET /services/data/{version}/limits · env sandbox
+- ✅ verified:server:sandbox · [`Session expired or invalid`](missing-session-401.md) · GET /services/data/{version}/limits · env sandbox
 - 🔵 official · [Where login() is restricted (the default in new orgs), a user without the Use Any API Auth permission gets INSUFFICIENT_ACCESS from login().](soap-login-needs-use-any-api-auth.md) · POST /services/Soap/u/{version} · env sandbox
 - ✅ verified:server:sandbox · [GET /services/data on the org's instance answers HTTP 200 with the list of API versions (version, url) without any credential, while /limits on the same host needs a session.](version-list-needs-no-session.md) · GET /services/data · env sandbox
 
 ## Deprecations
 
-- ✅ verified:server:sandbox · [`the requested resource no longer exists.`](retired-api-version-410.md) · GET /services/data/{version}/limits · env sandbox
+- ✅ verified:server:sandbox · [`The requested resource no longer exists.`](retired-api-version-410.md) · GET /services/data/{version}/limits · env sandbox
 - 🔵 official · [SOAP API login() is retired in Summer '27, stays available in API 64.0 and earlier until then, and is disabled by default in orgs created in Winter '26 or later.](soap-login-retiring-summer-27.md) · POST /services/Soap/u/{version} · env sandbox
 
 ---

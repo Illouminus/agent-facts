@@ -1,4 +1,4 @@
-# `model is not found: models/gemini-agent-facts-nosuch for api version v#beta`
+# `Model is not found: models/gemini-agent-facts-nosuch for api version v1beta`
 
 **Gemini API · GET /v1beta/models/{model} · HTTP 404 `NOT_FOUND`**
 
@@ -21,6 +21,8 @@ Probe `af:google-gemini:probe:model-not-found` (declarative, [source](../../prob
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `model is not found: models/gemini-agent-facts-nosuch for api version v#beta`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

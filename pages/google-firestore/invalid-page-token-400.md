@@ -22,6 +22,8 @@ Observations: none from reporters yet.
 
 ## Machine access
 
+Match signature (what `check()` matches): `invalid page token`
+
 ```sh
 curl -s https://apifacts.dev/v0/check \
   -H 'content-type: application/json' \

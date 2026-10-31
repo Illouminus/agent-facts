@@ -1,4 +1,4 @@
-# `keys for idempotent requests can only be used with the same parameters they were first used with`
+# `Keys for idempotent requests can only be used with the same parameters they were first used with.`
 
 **Stripe · POST /v1/payment_intents · SDK `stripe` (pypi) `>=7,<13` · HTTP 400 `idempotency_error`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:idempotency-key-reuse` (declarative, [source](../../probe
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `keys for idempotent requests can only be used with the same parameters they were first used with`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

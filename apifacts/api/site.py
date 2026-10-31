@@ -1,21 +1,45 @@
 """The front door (spec 06, "HTML on the domain"): `/` from README.md, the generated `pages/` as
-HTML at the same paths, `/llms.txt` and `/robots.txt`. No scripts, fonts, forms or analytics.
+HTML at the same paths, `/llms.txt`, `/robots.txt`, `/sitemap.xml` and the IndexNow key file. No
+scripts, fonts, forms or analytics.
 
 Rendered once, at startup, like the facts index: a new registry needs a restart. Markdown goes
 through markdown-it-py with raw HTML off, so every string from a page (error strings included)
 reaches the browser escaped. Links are rewritten to the domain: `pages/<service>/<slug>.md` →
 `/<service>/<slug>`, `pages/<service>/index.md` → `/<service>/`, `pages/index.md` → `/registry`;
 any other file of the repo → its blob on GitHub.
+
+`<title>` and `<meta name="description">` of fact and service pages come from the facts index, not
+from the rendered markdown: `Stripe API 400 amount_too_small: <error string>` is what a result list
+should show, and the H1 alone carries neither the service nor the status.
+
+Sitemap `lastmod` = the day this process first served the page's current *substance*: the
+markdown with the evidence counters stripped (`templates.substantive`), hashed and remembered in
+`var/sitemap-lastmod.json`. The facts are re-confirmed every night and their pages say so
+(`last confirmed`, `N confirmations`), so the file's mtime, the commit date or the registry
+version would move every page every day and teach crawlers that lastmod means nothing. The
+fact's own dates (`created`, `history`) would miss a hand-edited claim or fix, a new sibling row
+and a template change (the H1 switching to the raw error string). A page seen for the first time
+gets today; a lost or unwritable state file only makes every page "changed today" once.
 """
 
 import hashlib
 import html
+import json
+import logging
 import posixpath
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
+
+from apifacts.api.facts_index import FactsIndex
+from apifacts.pages import templates
+
+log = logging.getLogger("apifacts.api")
 
 REPO_URL = "https://github.com/Illouminus/apifacts"
 BLOB = f"{REPO_URL}/blob/main"
@@ -42,13 +66,26 @@ NAV = (
     f'<a href="{REPO_URL}">GitHub</a></nav>'
 )
 
-ROBOTS = "User-agent: *\nAllow: /\n"
+SITEMAP_URL = f"{SITE}/sitemap.xml"
+ROBOTS = f"User-agent: *\nAllow: /\n\nSitemap: {SITEMAP_URL}\n"
+# IndexNow (indexnow.org): the key only proves that whoever submits URLs for apifacts.dev controls
+# what apifacts.dev serves, so it is public by design (served at /<key>.txt). A constant, not a
+# host file: the route and ops/indexnow.py can never disagree, and nothing extra to deploy.
+# Rotate = new value here + deploy; the engines re-fetch keyLocation on the next submission.
+INDEXNOW_KEY = "2512f7f2a72f05dc4e4a02300eaac754"
+LASTMOD_STATE = "var/sitemap-lastmod.json"
 
 
 @dataclass(frozen=True)
 class Page:
     body: bytes
     etag: str
+
+
+@dataclass(frozen=True)
+class Head:
+    title: str | None  # None: the page's H1, clipped
+    description: str | None = None
 
 
 HOME_DESCRIPTION = (
@@ -111,16 +148,21 @@ def _title(tokens: list[Token]) -> str:
     return "apifacts"
 
 
-def render(markdown: str, source: str, description: str | None = None) -> Page:
+def render(
+    markdown: str, source: str, description: str | None = None, title: str | None = None
+) -> Page:
     md = MarkdownIt("commonmark", {"html": False}).enable("table")
     tokens = md.parse(markdown)
     for token in tokens:
         for child in token.children or ():
             if child.type == "link_open":
                 child.attrSet("href", _rewrite(str(child.attrGet("href") or ""), source))
-    title = _title(tokens)
     body = md.renderer.render(tokens, md.options, {})
-    return _page(title if title == "apifacts" else f"{title} · apifacts", body, description)
+    if title is None:
+        h1 = _title(tokens)
+        limit = templates.HEAD_TITLE_MAX - len(templates.HEAD_SUFFIX)
+        title = h1 if h1 == "apifacts" else templates.clip_words(h1, limit) + templates.HEAD_SUFFIX
+    return _page(title, body, description)
 
 
 NOT_FOUND = _page(
@@ -161,6 +203,7 @@ def llms_txt(services: list[tuple[str, str, int]], version: str, opt_out: str) -
         "## Optional",
         "",
         f"- [Registry index]({SITE}/registry)",
+        f"- [Sitemap]({SITEMAP_URL}): every page, lastmod = its last change of substance",
         "- Install: `pip install apifacts-pytest` (pytest plugin) ·"
         " `uvx apifacts check <url>` (CLI)",
         f"- Probe opt-out and contact: {opt_out}",
@@ -169,16 +212,107 @@ def llms_txt(services: list[tuple[str, str, int]], version: str, opt_out: str) -
     return "\n".join(lines)
 
 
-def load_pages(root: Path) -> dict[str, Page]:
-    """Domain path → rendered page, for README.md and every page file."""
-    pages: dict[str, Page] = {}
-    readme = root / README
-    if readme.is_file():
-        pages["/"] = render(readme.read_text(encoding="utf-8"), README, HOME_DESCRIPTION)
+# An error stub keeps its H1 (the normalized string) as the title; only the description is shared.
+ERROR_STUB_HEAD = Head(
+    None,
+    "An error string as apifacts normalizes it (lowercase, digits as #): the match signature of "
+    "POST /v0/check, and every API fact that returns it.",
+)
+
+
+def heads(index: FactsIndex) -> dict[str, Head]:
+    """Domain path → `<title>`/description for the registry, service and fact pages the index
+    knows (a fact skipped by the index keeps its H1 as the title)."""
+    out = {
+        "/registry": Head(
+            "apifacts registry: services and fact counts",
+            "Every service in the apifacts registry with its facts by status: verified by a "
+            "probe, official, reported, stale, retracted.",
+        )
+    }
+    for entry in index.services.values():
+        live = [f.fact for f in entry.facts]
+        out[f"/{entry.key}/"] = Head(*templates.service_head(entry.service, live))
+    for indexed in index.all_facts():
+        fact = indexed.fact
+        if (entry := index.services.get(fact.service)) is not None:
+            path = f"/{fact.service}/{templates.slug_of(fact)}"
+            title = templates.head_title(fact, entry.service)
+            out[path] = Head(title, templates.head_description(fact))
+    return out
+
+
+@dataclass(frozen=True)
+class Site:
+    pages: dict[str, Page]
+    sitemap: Page
+
+
+def load_site(root: Path, index: FactsIndex, today: str, state: Path | None) -> Site:
+    """Every page of the domain (README.md and each page file) plus the sitemap. `state` keeps
+    each page's lastmod across restarts; None = nothing remembered (every page dated `today`)."""
+    sources: dict[str, tuple[str, str]] = {}  # domain path → (repo path, markdown)
+    if (root / README).is_file():
+        sources["/"] = (README, (root / README).read_text(encoding="utf-8"))
     pages_dir = root / PAGES_DIR
     if pages_dir.is_dir():
         for file in sorted(pages_dir.rglob("*.md")):
             source = file.relative_to(root).as_posix()
             if (path := url_for(source)) is not None:
-                pages[path] = render(file.read_text(encoding="utf-8"), source)
-    return pages
+                sources[path] = (source, file.read_text(encoding="utf-8"))
+    known = heads(index) | {"/": Head("apifacts", HOME_DESCRIPTION)}
+    pages = {}
+    for path, (source, text) in sources.items():
+        head = known.get(path) or (ERROR_STUB_HEAD if path.startswith("/errors/") else None)
+        pages[path] = render(text, source, *((head.description, head.title) if head else ()))
+    digests = {
+        path: hashlib.sha256(templates.substantive(text).encode("utf-8")).hexdigest()
+        for path, (_, text) in sources.items()
+    }
+    return Site(pages, text_page(sitemap_xml(lastmods(digests, state, today))))
+
+
+_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def lastmods(digests: Mapping[str, str], state: Path | None, today: str) -> dict[str, str]:
+    """Domain path → `YYYY-MM-DD`: the remembered date while the digest is unchanged, else today.
+    Pages gone from the site are forgotten; the file is rewritten only when something changed."""
+    old: dict = {}
+    if state is not None:
+        try:
+            loaded = json.loads(state.read_text(encoding="utf-8")).get("pages")
+            old = loaded if isinstance(loaded, dict) else {}
+        except (OSError, ValueError, AttributeError):
+            pass
+    new: dict[str, dict[str, str]] = {}
+    for path, digest in digests.items():
+        seen = old.get(path)
+        same = isinstance(seen, dict) and seen.get("sha256") == digest
+        date = seen["lastmod"] if same and _DAY.match(str(seen.get("lastmod"))) else today
+        new[path] = {"sha256": digest, "lastmod": date}
+    if state is not None and new != old:
+        try:
+            state.parent.mkdir(parents=True, exist_ok=True)
+            tmp = state.with_name(state.name + ".tmp")
+            tmp.write_text(json.dumps({"pages": new}, indent=1, sort_keys=True), encoding="utf-8")
+            tmp.replace(state)
+        except OSError as exc:
+            log.warning("sitemap lastmod state not saved (%s): %s", state, exc)
+    return {path: entry["lastmod"] for path, entry in new.items()}
+
+
+def _sitemap_order(path: str) -> tuple[int, str]:
+    return (0 if path == "/" else 1 if path == "/registry" else 2, path)
+
+
+def sitemap_xml(dates: Mapping[str, str]) -> str:
+    rows = "".join(
+        f"<url><loc>{escape(SITE + path)}</loc><lastmod>{dates[path]}</lastmod></url>\n"
+        for path in sorted(dates, key=_sitemap_order)
+    )
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{rows}</urlset>\n"
+    )

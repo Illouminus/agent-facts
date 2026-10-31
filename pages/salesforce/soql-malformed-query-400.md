@@ -1,4 +1,4 @@
-# `unexpected token: '<redacted>'`
+# `unexpected token: 'SELEC'`
 
 **Salesforce Platform REST API · GET /services/data/{version}/query · HTTP 400 `MALFORMED_QUERY`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:soql-malformed-query` (declarative, [source](../../pr
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `unexpected token: '<redacted>'`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

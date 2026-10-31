@@ -1,4 +1,4 @@
-# `session expired or invalid`
+# `Session expired or invalid`
 
 **Salesforce Platform REST API · GET /services/data/{version}/limits · HTTP 401 `INVALID_SESSION_ID`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:versions-without-session` (declarative, [source](../.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `session expired or invalid`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

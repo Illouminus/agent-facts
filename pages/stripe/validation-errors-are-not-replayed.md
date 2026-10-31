@@ -1,4 +1,4 @@
-# `received unknown parameter: agent_facts_unknown`
+# `Received unknown parameter: agent_facts_unknown`
 
 **Stripe API · POST /v1/customers · HTTP 400 `parameter_unknown`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:validation-error-not-replayed` (declarative, [source](../
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `received unknown parameter: agent_facts_unknown`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

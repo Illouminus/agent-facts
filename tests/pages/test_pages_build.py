@@ -1,5 +1,6 @@
-"""Spec 06 Done-when: deterministic pages, H1 = normalized string or claim, an index per service,
-a root index, and a fact page carrying fixes, badge, first-seen/last-confirmed and CC BY 4.0."""
+"""Spec 06 Done-when: deterministic pages, H1 = error string (else normalized string, else claim),
+an index per service, a root index, and a fact page carrying fixes, badge,
+first-seen/last-confirmed and CC BY 4.0."""
 
 import os
 from pathlib import Path
@@ -9,12 +10,24 @@ import pytest
 from apifacts.fixes.templates import render_fix
 from apifacts.pages import PagesError
 from apifacts.pages.build import build_pages, load_registry, published, registry_version, sync
-from apifacts.pages.templates import FOOTER
+from apifacts.pages.templates import (
+    FOOTER,
+    HEAD_TITLE_MAX,
+    head_description,
+    head_title,
+    substantive,
+)
+from apifacts.schema.models import Status
 
 GOLDEN = Path(__file__).parent / "golden"
 IDEMPOTENCY = (
     "keys for idempotent requests can only be used with the same parameters"
     " they were first used with"
+)
+IDEMPOTENCY_ID = "af:stripe:idempotency-key-reuse-different-params"
+IDEMPOTENCY_RAW = (
+    "Keys for idempotent requests can only be used with the same parameters"
+    " they were first used with."
 )
 
 
@@ -74,7 +87,7 @@ def test_verified_fact_page_content(registry, pages):
     fact = _fact(registry, "af:stripe:idempotency-key-reuse-different-params")
     page = pages["stripe/idempotency-key-reuse-different-params.md"]
     lines = page.splitlines()
-    assert lines[0] == f"# `{IDEMPOTENCY}`"
+    assert lines[0] == f"# `{IDEMPOTENCY_RAW}`"
     assert lines[2] == (
         "**Stripe · POST /v1/payment_intents · SDK `stripe` (pypi) `>=7,<13` · "
         "HTTP 400 `idempotency_error`**"
@@ -95,6 +108,8 @@ def test_verified_fact_page_content(registry, pages):
         "official doc: <https://docs.stripe.com/api/idempotent_requests>"
     ) in page
     assert "Observations: none from reporters yet." in page
+    signature = f"Match signature (what `check()` matches): `{IDEMPOTENCY}`"
+    assert f"## Machine access\n\n{signature}\n" in page
     assert "curl -s https://apifacts.dev/v0/check" in page
     assert '"target":{"method":"POST","url":"https://api.stripe.com/v1/payment_intents"}' in page
     assert f'"error":{{"status":400,"body_excerpt":"{IDEMPOTENCY}"}}' in page
@@ -105,12 +120,19 @@ def test_verified_fact_page_content(registry, pages):
     assert "Data: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)" in page
 
 
-def test_raw_error_strings_never_reach_a_page(registry, pages):
-    raw = {f.signal.error_string for f in registry[1] if f.signal and f.signal.error_string}
-    assert raw
-    for path, text in pages.items():
-        for string in raw:
-            assert string not in text, (path, string)
+def test_error_string_leads_and_the_normalized_string_stays(registry, pages):
+    """Agents search the vendor's message as they got it (case, digits); `check()` matches the
+    normalized form, so a fact page shows both and each error stub keeps the normalized one."""
+    from apifacts.pages.templates import slug_of
+
+    for fact in registry[1]:
+        page = pages.get(f"{fact.service}/{slug_of(fact)}.md")
+        if page is None or not (fact.signal and fact.signal.error_string):
+            continue
+        assert page.startswith(f"# `{fact.signal.error_string}`\n"), fact.id
+        if fact.status.value != "retracted":
+            assert f"Match signature (what `check()` matches): `{fact.signal.normalized}`" in page
+    assert pages["errors/ee9b5326e496.md"].startswith(f"# `{IDEMPOTENCY}`\n")
 
 
 def test_reported_page_has_yellow_badge_and_no_probe_note(pages):
@@ -135,7 +157,7 @@ def test_stale_page_is_kept_with_grey_badge_and_claim_title(pages):
 def test_retracted_page_is_one_line_with_the_reason(pages):
     page = pages["stripe/amount-too-small.md"]
     assert page == (
-        "# `amount must be at least $#.## usd`\n\n"
+        "# `Amount must be at least $0.50 usd`\n\n"
         "Status: ⛔ retracted 2026-10-27 · reason: duplicate\n\n"
         f"---\n\n{FOOTER}\n"
     )
@@ -162,10 +184,11 @@ def test_service_index_groups_by_kind_with_badges(pages):
     kinds = [line for line in index.splitlines() if line.startswith("## ")]
     assert kinds == ["## Error meanings", "## Rate limits", "## Silent behavior"]
     assert (
-        f"- ✅ verified:server:prod · [`{IDEMPOTENCY}`](idempotency-key-reuse-different-params.md)"
+        f"- ✅ verified:server:prod · [`{IDEMPOTENCY_RAW}`]"
+        "(idempotency-key-reuse-different-params.md)"
         " · POST /v1/payment_intents · env prod"
     ) in index
-    retracted = "- ⛔ retracted · [`amount must be at least $#.## usd`](amount-too-small.md)\n"
+    retracted = "- ⛔ retracted · [`Amount must be at least $0.50 usd`](amount-too-small.md)\n"
     assert retracted in index
     rows = [line for line in index.splitlines() if line.startswith("- ")]
     assert rows.index(retracted.strip()) == 2  # last of the error meanings
@@ -233,3 +256,57 @@ def test_service_key_errors_collides_with_the_stubs(registry):
     services, _ = registry
     with pytest.raises(PagesError, match="errors"):
         build_pages([services[0].model_copy(update={"key": "errors"})], [])
+
+
+# ── substance (sitemap lastmod) and the HTML head ──────────────────────────────────────────────
+
+
+def _refreshed(fact):
+    """What the nightly evidence refresh does to a fact: counters and dates only (a reported
+    fact's last_confirmed is its quorum refresh, which decides whether it keeps a page)."""
+    ev = fact.evidence
+    bumped = {
+        "confirmations": (ev.confirmations or 0) + 5,
+        "vantages": (*(ev.vantages or ()), "extra-vantage"),
+    }
+    if fact.status is not Status.reported:
+        bumped["last_confirmed"] = "2026-10-29T03:00:00Z"
+    if ev.stale_counter is not None:
+        bumped["stale_counter"] = ev.stale_counter + 1
+    if ev.observations is not None and ev.observations >= 3:
+        bumped["observations"] = ev.observations + 4
+    return fact.model_copy(update={"evidence": ev.model_copy(update=bumped)})
+
+
+def test_a_refresh_does_not_change_any_page_substance(registry):
+    services, facts = registry
+    before = build_pages(services, facts, version="2026-10-29")
+    after = build_pages(services, [_refreshed(f) for f in facts], version="2026-10-30")
+    assert before.keys() == after.keys()
+    assert any(before[p] != after[p] for p in before)
+    for path in before:
+        assert substantive(before[path]) == substantive(after[path]), path
+
+
+def test_a_status_change_is_substance(registry):
+    services, facts = registry
+    stale = [
+        f.model_copy(update={"status": Status.stale}) if f.id == IDEMPOTENCY_ID else f
+        for f in facts
+    ]
+    path = "stripe/idempotency-key-reuse-different-params.md"
+    before, after = build_pages(services, facts)[path], build_pages(services, stale)[path]
+    assert substantive(before) != substantive(after)
+
+
+def test_head_title_and_description(registry):
+    services, _ = registry
+    stripe = next(s for s in services if s.key == "stripe")
+    fact = _fact(registry, IDEMPOTENCY_ID)
+    assert head_title(fact, stripe) == f"Stripe 400 idempotency_error: {IDEMPOTENCY_RAW} · apifacts"
+    assert head_description(fact).startswith("Reusing an Idempotency-Key with a different")
+    signal = fact.signal.model_copy(update={"error_string": "word " * 60})
+    title = head_title(fact.model_copy(update={"signal": signal}), stripe)
+    assert len(title) <= HEAD_TITLE_MAX
+    assert title.startswith("Stripe 400 idempotency_error: word word")
+    assert title.endswith("word… · apifacts")

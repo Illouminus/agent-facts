@@ -1,4 +1,4 @@
-# `keys for idempotent requests can only be used for the same endpoint they were first used for ('/v#/payment_intents' vs '/v#/customers'). try using a key other than '<id>' if you meant to execute a different request."`
+# `Keys for idempotent requests can only be used for the same endpoint they were first used for ('/v1/payment_intents' vs '/v1/customers'). Try using a key other than '3f1e9c2a-7b4d-4e8f-9a6c-1d2b3c4d5e6f' if you meant to execute a different request."`
 
 **Stripe API · POST /v1/payment_intents · HTTP 400 `idempotency_error`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:idempotency-key-other-endpoint` (declarative, [source](..
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `keys for idempotent requests can only be used for the same endpoint they were first used for ('/v#/payment_intents' vs '/v#/customers'). try using a key other than '<id>' if you meant to execute a different request."`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

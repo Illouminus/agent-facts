@@ -1,4 +1,4 @@
-# `not found`
+# `Not Found`
 
 **Telegram Bot API · GET /{bot_token}/{method} · HTTP 404**
 
@@ -21,6 +21,8 @@ Probe `af:telegram:probe:unknown-method` (declarative, [source](../../probes/tel
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `not found`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

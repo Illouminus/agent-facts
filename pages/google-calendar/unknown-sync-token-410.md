@@ -1,4 +1,4 @@
-# `sync token is no longer valid, a full sync is required.`
+# `Sync token is no longer valid, a full sync is required.`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id}/events · HTTP 410**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:sync-token-errors` (declarative, [source](../../
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `sync token is no longer valid, a full sync is required.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

@@ -1,4 +1,4 @@
-# ``the `payment_method_types` parameter is no longer supported. payment methods are now managed from your dashboard settings (<url>). for migration guidance, see <url>``
+# ``The `payment_method_types` parameter is no longer supported. Payment methods are now managed from your Dashboard settings (https://dashboard.stripe.com/settings/payment_methods). For migration guidance, see https://docs.stripe.com/payments/payment-methods/dynamic-payment-methods.``
 
 **Stripe API · POST /v1/payment_intents · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:payment-method-types-removed` (declarative, [source](../.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): ``the `payment_method_types` parameter is no longer supported. payment methods are now managed from your dashboard settings (<url>). for migration guidance, see <url>``
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

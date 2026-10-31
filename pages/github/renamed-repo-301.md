@@ -1,4 +1,4 @@
-# `moved permanently`
+# `Moved Permanently`
 
 **GitHub REST API · GET /repos/{owner}/{repo} · HTTP 301**
 
@@ -21,6 +21,8 @@ Probe `af:github:probe:repo-renamed` (declarative, [source](../../probes/github/
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `moved permanently`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

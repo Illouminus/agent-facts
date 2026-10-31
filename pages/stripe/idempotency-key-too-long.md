@@ -1,4 +1,4 @@
-# `idempotent key length is ### characters long, which is outside accepted lengths. idempotent keys must be #-### characters long. if you're looking for a decent generator, try using a uuid defined by ietf rfc ####.`
+# `Idempotent key length is 256 characters long, which is outside accepted lengths. Idempotent Keys must be 1-255 characters long. If you're looking for a decent generator, try using a UUID defined by IETF RFC 4122.`
 
 **Stripe API · POST /v1/customers · HTTP 400 `idempotency_error`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:idempotency-key-too-long` (declarative, [source](../../pr
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `idempotent key length is ### characters long, which is outside accepted lengths. idempotent keys must be #-### characters long. if you're looking for a decent generator, try using a uuid defined by ietf rfc ####.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

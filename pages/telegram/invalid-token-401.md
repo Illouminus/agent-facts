@@ -1,4 +1,4 @@
-# `unauthorized`
+# `Unauthorized`
 
 **Telegram Bot API · GET /{bot_token}/getMe · HTTP 401**
 
@@ -21,6 +21,8 @@ Probe `af:telegram:probe:invalid-token` (declarative, [source](../../probes/tele
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `unauthorized`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

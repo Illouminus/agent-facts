@@ -104,6 +104,22 @@ def test_refresh_service_flushes_the_ledger_only():
     )
 
 
+def test_indexnow_timer_daily_after_the_refresh():
+    timer = unit("agentfacts-indexnow.timer")["Timer"]
+    refresh = unit("agentfacts-refresh.timer")["Timer"]["OnCalendar"]
+    assert timer["OnCalendar"] == "*-*-* 05:00:00 Europe/Paris" > refresh
+    assert timer["Persistent"] == "true"
+    assert timer["Unit"] == "agentfacts-indexnow.service"
+
+
+def test_indexnow_service_runs_ops_indexnow():
+    service = unit("agentfacts-indexnow.service")["Service"]
+    assert service["Type"] == "oneshot"
+    assert service["ExecStart"] == (
+        f"{APP}/.venv/bin/python {APP}/ops/indexnow.py --state {APP}/var/indexnow.json"
+    )
+
+
 @pytest.mark.parametrize("name", sorted(p.name for p in UNITS.glob("agentfacts-*")))
 def test_no_unit_touches_keys_or_model_apis(name):
     text = (UNITS / name).read_text(encoding="utf-8").lower()

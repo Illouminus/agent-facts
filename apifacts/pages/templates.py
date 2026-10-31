@@ -105,10 +105,33 @@ def badge(status: Status) -> str:
     return f"{BADGES[status]} {status.value}"
 
 
+def error_string_of(fact: Fact) -> str | None:
+    """The vendor's error message as the probe recorded it (redacted by the runner, spec 04), if
+    the fact has one with visible text. Quorum drafts never carry one (spec 05: reporters' bodies
+    are kept normalized only), so this is never a reporter's raw text."""
+    value = fact.signal.error_string if fact.signal else None
+    return _one_line(value) if value and value.strip() else None
+
+
+def heading(fact: Fact) -> str:
+    """The page's subject as plain text: the error string verbatim, else the normalized string,
+    else the claim."""
+    return error_string_of(fact) or normalized_of(fact) or _one_line(fact.claim)
+
+
 def title(fact: Fact) -> str:
-    """H1 text: the normalized error string in a code span, else the claim (spec 06)."""
+    """H1 text (spec 06): the error string verbatim in a code span (what an agent pastes into a
+    search box: case, digits and ids intact), else the normalized string, else the claim."""
+    text = error_string_of(fact) or normalized_of(fact)
+    return code_span(text) if text is not None else md_text(fact.claim)
+
+
+def match_signature(fact: Fact) -> str | None:
+    """The normalized string when the H1 shows something else: what `check()` matches on."""
     normalized = normalized_of(fact)
-    return code_span(normalized) if normalized is not None else md_text(fact.claim)
+    if normalized is None or error_string_of(fact) is None:
+        return None
+    return f"Match signature (what `check()` matches): {code_span(normalized)}"
 
 
 def plural(n: int, word: str) -> str:
@@ -244,8 +267,10 @@ def _machine_access(fact: Fact, service: Service) -> str:
     payload = json.dumps(check_request(fact, service), ensure_ascii=False, separators=(",", ":"))
     quoted = "'" + payload.replace("'", "'\\''") + "'"
     yaml_path = f"facts/{fact.service}/{slug_of(fact)}.yaml"
+    signature = match_signature(fact)
     return (
-        "```sh\n"
+        (f"{signature}\n\n" if signature else "")
+        + "```sh\n"
         f"curl -s {CHECK_URL} \\\n"
         "  -H 'content-type: application/json' \\\n"
         f"  -d {quoted}\n"
@@ -283,7 +308,7 @@ def fact_page(fact: Fact, service: Service, siblings: Sequence[Fact] = ()) -> st
     if fact.status is Status.retracted:
         return retracted_page(fact)
     # The claim is quoted under the title, unless it already is the title.
-    claim = [f"> {md_text(fact.claim)}"] if normalized_of(fact) is not None else []
+    claim = [f"> {md_text(fact.claim)}"] if error_string_of(fact) or normalized_of(fact) else []
     return _page(
         f"# {title(fact)}",
         f"**{target_line(fact, service)}**",
@@ -349,6 +374,78 @@ def root_index(
         "facts and their typed fixes. Every fact page is titled with its normalized error string."
     )
     return _page(*blocks)
+
+
+# ── substance of a page (sitemap lastmod) ──────────────────────────────────────────────────────
+
+# What the daily evidence refresh moves on a page without changing what it says: the
+# `VOLATILE_EVIDENCE` counters of apifacts/schema/substance.py as `_status_line`, `_dimensions`
+# (a sibling's date), `_observations` and `root_index` (the registry version) print them.
+_VOLATILE = (
+    (re.compile(r" · last confirmed \d{4}-\d{2}-\d{2}"), ""),
+    (re.compile(r" · \d+ confirmations?(?: from \d+ vantages?)?"), ""),
+    (re.compile(r" · seen from \d+ vantages?"), ""),
+    (re.compile(r"by the last \d+ probe runs"), "by recent probe runs"),
+    (re.compile(r"\((\w+) \d{4}-\d{2}-\d{2}\)"), r"(\1)"),
+    (re.compile(r"Observations: \d+ distinct reporter networks\."), "Observations: ≥ 3."),
+    (re.compile(r"Registry version [^ ]+ · "), ""),
+)
+
+
+def substantive(markdown: str) -> str:
+    """A generated page without its evidence counters and dates: equal before and after a
+    refresh that only re-confirmed its facts (tests/pages: bump every volatile field, compare)."""
+    for pattern, replacement in _VOLATILE:
+        markdown = pattern.sub(replacement, markdown)
+    return markdown
+
+
+# ── HTML head: the site renders these into <title> and <meta name="description"> ──────────────
+
+HEAD_SUFFIX = " · apifacts"
+HEAD_TITLE_MAX = 160  # the whole <title>: engines show ~60 characters but index the rest
+
+
+def clip_words(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    cut = text[: limit - 1]
+    space = cut.rfind(" ")
+    return (cut[:space] if space > limit // 2 else cut).rstrip(" ,;:.") + "…"
+
+
+def head_title(fact: Fact, service: Service) -> str:
+    """`Stripe API 400 amount_too_small: <error string> · apifacts`: service, status and code
+    first (what a result list shows), then the page's subject verbatim (`heading`), clipped at a
+    word only when the whole title would pass HEAD_TITLE_MAX."""
+    signal = fact.signal
+    parts = [_one_line(service.name)]
+    if signal is not None and signal.status is not None:
+        parts.append(str(signal.status))
+    if signal is not None and signal.error_code:
+        parts.append(_one_line(signal.error_code))
+    prefix = " ".join(parts) + ": "
+    tail = (" (retracted)" if fact.status is Status.retracted else "") + HEAD_SUFFIX
+    return prefix + clip_words(heading(fact), HEAD_TITLE_MAX - len(prefix) - len(tail)) + tail
+
+
+def head_description(fact: Fact) -> str:
+    """The claim: the page's one-line summary (≤ 300 characters by schema)."""
+    claim = _one_line(fact.claim)
+    return f"Retracted. {claim}" if fact.status is Status.retracted else claim
+
+
+def service_head(service: Service, facts: Sequence[Fact]) -> tuple[str, str]:
+    """(title, description) of a service index; `facts` = its non-retracted facts."""
+    name = _one_line(service.name)
+    kinds = [h.lower() for k, h in KIND_TITLES.items() if any(f.kind is k for f in facts)]
+    what = f" ({', '.join(kinds)})" if kinds else ""
+    description = (
+        f"What {name} actually returns: {plural(len(facts), 'fact')}{what}, each dated, "
+        "with how it was established and what to do. "
+        f"Hosts: {', '.join(service.hosts)}."
+    )
+    return f"{name}: errors, limits and quirks{HEAD_SUFFIX}", description
 
 
 def error_stub(normalized: str, facts: Sequence[Fact], services: Mapping[str, Service]) -> str:

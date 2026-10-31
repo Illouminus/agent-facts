@@ -1,4 +1,4 @@
-# `the requested resource no longer exists.`
+# `The requested resource no longer exists.`
 
 **Salesforce Platform REST API · GET /services/data/{version}/limits · HTTP 410**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:api-version-retired-or-unknown` (declarative, [source
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `the requested resource no longer exists.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

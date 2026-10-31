@@ -1,4 +1,4 @@
-# `invalid json payload received. unknown name "agent_facts_unknown": cannot bind query parameter. field 'agent_facts_unknown' could not be found in request message.`
+# `Invalid JSON payload received. Unknown name "agent_facts_unknown": Cannot bind query parameter. Field 'agent_facts_unknown' could not be found in request message.`
 
 **Gemini API · GET /v1beta/models · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-gemini:probe:unknown-query-parameter` (declarative, [source](..
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid json payload received. unknown name "agent_facts_unknown": cannot bind query parameter. field 'agent_facts_unknown' could not be found in request message.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

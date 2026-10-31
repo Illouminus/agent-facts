@@ -1,4 +1,4 @@
-# `request contains an invalid argument.`
+# `Request contains an invalid argument.`
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id} · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-sheets:probe:invalid-fields-mask` (declarative, [source](../../
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `request contains an invalid argument.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

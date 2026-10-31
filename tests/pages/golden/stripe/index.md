@@ -4,13 +4,13 @@ Hosts: `api.stripe.com` · 5 facts
 
 ## Error meanings
 
-- ✅ verified:server:prod · [`keys for idempotent requests can only be used with the same parameters they were first used with`](idempotency-key-reuse-different-params.md) · POST /v1/payment_intents · env prod
-- ✅ verified:server:sandbox · [`keys for idempotent requests can only be used with the same parameters they were first used with`](idempotency-key-reuse-different-params-sandbox.md) · POST /v1/payment_intents · env sandbox
-- ⛔ retracted · [`amount must be at least $#.## usd`](amount-too-small.md)
+- ✅ verified:server:prod · [`Keys for idempotent requests can only be used with the same parameters they were first used with.`](idempotency-key-reuse-different-params.md) · POST /v1/payment_intents · env prod
+- ✅ verified:server:sandbox · [`Keys for idempotent requests can only be used with the same parameters they were first used with.`](idempotency-key-reuse-different-params-sandbox.md) · POST /v1/payment_intents · env sandbox
+- ⛔ retracted · [`Amount must be at least $0.50 usd`](amount-too-small.md)
 
 ## Rate limits
 
-- 🟡 reported · [`too many requests hit the api too quickly. we recommend an exponential backoff of your requests.`](customer-retrieve-rate-limit.md) · GET /v1/customers/{id} · env prod
+- 🟡 reported · [`Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.`](customer-retrieve-rate-limit.md) · GET /v1/customers/{id} · env prod
 
 ## Silent behavior
 

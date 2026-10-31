@@ -1,4 +1,4 @@
-# `too many requests hit the api too quickly. we recommend an exponential backoff of your requests.`
+# `Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.`
 
 **Stripe · GET /v1/customers/{id} · HTTP 429 `rate_limit`**
 
@@ -21,6 +21,8 @@ No probe or official document yet.
 Observations: 5 distinct reporter networks.
 
 ## Machine access
+
+Match signature (what `check()` matches): `too many requests hit the api too quickly. we recommend an exponential backoff of your requests.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

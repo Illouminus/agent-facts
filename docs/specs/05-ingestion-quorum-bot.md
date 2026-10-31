@@ -79,4 +79,7 @@ stays `reported` and is listed in the weekly digest under "needs a probe" (an ag
 - A normalized error string that contains a URL outside the service's `hosts` + `doc_hosts`, or carries
   a prompt-injection marker (list in `03` step 7) → dropped and counted, never stored (the strings land
   on pages and in `check()` answers).
-- Pages and `check()` answers only render the **normalized** string, inside a code span, never raw.
+- A reporter's string reaches pages and `check()` answers only **normalized**, inside a code span,
+  never raw: a quorum draft has `signal.normalized` and no `signal.error_string`. The raw
+  `error_string` a fact page leads with (06, decision 31.10) is the probe's own response, redacted
+  by the runner (04), or written by a human in a reviewed PR.

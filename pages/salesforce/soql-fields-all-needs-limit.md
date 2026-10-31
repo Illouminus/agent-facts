@@ -1,4 +1,4 @@
-# `the soql fields function must have a limit of at most ###`
+# `The SOQL FIELDS function must have a LIMIT of at most 200`
 
 **Salesforce Platform REST API · GET /services/data/{version}/query · HTTP 400 `MALFORMED_QUERY`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:soql-fields-all-needs-limit` (declarative, [source](.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `the soql fields function must have a limit of at most ###`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

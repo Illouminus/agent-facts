@@ -4,12 +4,12 @@ Hosts: `sheets.googleapis.com` · 20 facts
 
 ## Error meanings
 
-- ✅ verified:server:prod · [`unable to parse range: apifactsnosuchsheet!a#`](batch-get-fails-whole.md) · GET /v4/spreadsheets/{spreadsheet_id}/values:batchGet · env prod
-- ✅ verified:server:prod · [`unable to parse range: sheet#!a#`](default-sheet-name-follows-locale.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
-- ✅ verified:server:prod · [`request contains an invalid argument.`](invalid-fields-mask-generic-400.md) · GET /v4/spreadsheets/{spreadsheet_id} · env prod
-- ✅ verified:server:prod · [`invalid value at 'value_render_option' (type.googleapis.com/google.apps.sheets.v#.valuerenderoption), "pretty"`](invalid-value-render-option-400.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
-- ✅ verified:server:prod · [`requested entity was not found.`](spreadsheet-not-found-404.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
-- ✅ verified:server:prod · [`unable to parse range: apifactsnosuchsheet!a#`](unknown-sheet-unable-to-parse.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [`Unable to parse range: AgentFactsNoSuchSheet!A1`](batch-get-fails-whole.md) · GET /v4/spreadsheets/{spreadsheet_id}/values:batchGet · env prod
+- ✅ verified:server:prod · [`Unable to parse range: Sheet1!A1`](default-sheet-name-follows-locale.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [`Request contains an invalid argument.`](invalid-fields-mask-generic-400.md) · GET /v4/spreadsheets/{spreadsheet_id} · env prod
+- ✅ verified:server:prod · [`Invalid value at 'value_render_option' (type.googleapis.com/google.apps.sheets.v4.ValueRenderOption), "PRETTY"`](invalid-value-render-option-400.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [`Requested entity was not found.`](spreadsheet-not-found-404.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [`Unable to parse range: AgentFactsNoSuchSheet!A1`](unknown-sheet-unable-to-parse.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 
 ## Rate limits
 
@@ -30,8 +30,8 @@ Hosts: `sheets.googleapis.com` · 20 facts
 
 ## Auth quirks
 
-- ✅ verified:server:prod · [`api key not valid. please pass a valid api key.`](invalid-api-key-400.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
-- ✅ verified:server:prod · [`method doesn't allow unregistered callers (callers without established identity). please use api key or other form of api consumer identity to call this api.`](missing-api-key-403.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [`API key not valid. Please pass a valid API key.`](invalid-api-key-400.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
+- ✅ verified:server:prod · [`Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API.`](missing-api-key-403.md) · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · env prod
 
 ## Latency profiles
 

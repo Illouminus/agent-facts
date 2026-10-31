@@ -1,4 +1,4 @@
-# `api key not valid. please pass a valid api key.`
+# `API key not valid. Please pass a valid API key.`
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-sheets:probe:invalid-api-key` (declarative, [source](../../prob
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `api key not valid. please pass a valid api key.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

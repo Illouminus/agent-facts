@@ -1,4 +1,4 @@
-# `bad request`
+# `Bad Request`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id}/events · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:time-min-needs-offset` (declarative, [source](..
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `bad request`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \
