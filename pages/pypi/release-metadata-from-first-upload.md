@@ -18,6 +18,10 @@ official doc: <https://docs.pypi.org/api/json/#get-a-project>
 
 Observations: none from reporters yet.
 
+## Related errors
+
+- [`Not Found`](release-not-found-404.md) · GET /pypi/{project}/{version}/json · HTTP 404
+
 ## Machine access
 
 ```sh

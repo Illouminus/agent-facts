@@ -10,6 +10,35 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:github:probe:search-beyond-1000`](../../probes/github/search-beyond-1000.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://api.github.com/search/repositories?q=stars:>1&per_page=100&page=11
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 422
+
+{
+  "message": "Only the first 1000 search results are available"
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `PyGithub` (community) | `github.GithubException` | `e.status == 422` |
+| Node `@octokit/request` | `RequestError` | `err.status === 422` |
+
+Read from the SDK source: PyGithub 2.10.0: github/Requester.py Requester.createException; @octokit/request 10.0.16: dist-bundle/index.js fetchWrapper; @octokit/request-error 7.1.2.
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +48,10 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:github:probe:search-beyond-1000` (declarative, [source](../../probes/github/search-beyond-1000.yaml)) · official doc: <https://docs.github.com/en/rest/search/search#about-search>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`The search is longer than 256 characters.`](search-query-longer-than-256.md) · GET /search/repositories · HTTP 422 `invalid`
 
 ## Machine access
 

@@ -8,6 +8,29 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. Call GET /simple/{project}/ instead.
 
+## Example
+
+What probe [`af:pypi:probe:simple-no-trailing-slash`](../../probes/pypi/simple-no-trailing-slash.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/simple/requests
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 301
+Location: https://pypi.org/simple/requests/
+```
+
+## In your code
+
+Fix 1:
+
+```python
+response = client.request("GET", f"/simple/{project}/")
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous

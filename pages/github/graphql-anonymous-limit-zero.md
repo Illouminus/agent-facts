@@ -8,6 +8,34 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. Request OAuth scope public_repo.
 
+## Example
+
+What probe [`af:github:probe:rate-limit`](../../probes/github/rate-limit.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://api.github.com/rate_limit
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+
+{
+  "resources": {
+    "core": {
+      "limit": 60
+    },
+    "search": {
+      "limit": 10
+    },
+    "graphql": {
+      "limit": 0
+    }
+  }
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous

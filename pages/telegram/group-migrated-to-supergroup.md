@@ -18,6 +18,11 @@ official doc: <https://core.telegram.org/bots/api#responseparameters>
 
 Observations: none from reporters yet.
 
+## Related errors
+
+- [Exceeding flood control returns HTTP 429; parameters.retry_after holds the number of seconds left to wait before the request can be repeated.](flood-control-429-retry-after.md) · POST /{bot_token}/sendMessage · HTTP 429
+- [The documented sending limits are about one message per second per chat, 20 messages per minute per group and about 30 messages per second for broadcasts; past them the API answers 429.](message-rate-limits.md) · POST /{bot_token}/sendMessage · HTTP 429
+
 ## Machine access
 
 ```sh

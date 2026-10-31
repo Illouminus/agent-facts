@@ -8,6 +8,14 @@ Status: 🔵 official · first seen 2026-10-20
 
 1. Call GET /pypi/{project}/json instead.
 
+## In your code
+
+Fix 1:
+
+```python
+response = client.request("GET", f"/pypi/{project}/json")
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any

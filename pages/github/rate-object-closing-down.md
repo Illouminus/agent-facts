@@ -8,6 +8,14 @@ Status: 🔵 official · first seen 2026-10-20
 
 1. Send header X-GitHub-Api-Version = 2022-11-28.
 
+## In your code
+
+Fix 1:
+
+```python
+headers["X-GitHub-Api-Version"] = "2022-11-28"
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any

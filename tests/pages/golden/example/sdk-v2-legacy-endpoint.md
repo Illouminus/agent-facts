@@ -8,6 +8,14 @@ Status: 🔵 official · first seen 2026-10-20
 
 1. Upgrade example-sdk (pypi) to ≥ 3.0.0.
 
+## In your code
+
+Fix 1:
+
+```sh
+pip install 'example-sdk>=3.0.0'
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any

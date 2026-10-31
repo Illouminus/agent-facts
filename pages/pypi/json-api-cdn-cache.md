@@ -8,6 +8,34 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:pypi:probe:json-project`](../../probes/pypi/json-project.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/pypi/requests/json
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+Cache-Control: <matches max-age=900>
+X-PyPI-Last-Serial: <matches ^[0-9]+$>
+ETag: …
+
+{
+  "info": {
+    "name": "requests",
+    "downloads": {
+      "last_day": -1,
+      "last_month": -1
+    }
+  },
+  "releases": "…"
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -17,6 +45,10 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:pypi:probe:json-project` (declarative, [source](../../probes/pypi/json-project.yaml)) · official doc: <https://docs.pypi.org/api/#caching>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](project-not-found-404.md) · GET /pypi/{project}/json · HTTP 404
 
 ## Machine access
 

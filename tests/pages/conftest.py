@@ -21,10 +21,12 @@ FACT_FILES = (
     "fact-amount-too-small-retracted.yaml",
     "fact-example-sdk-v2-legacy-endpoint.yaml",
 )
+PROBE_FILES = ("probe-idempotency-key-reuse.yaml", "probe-deleted-customer.yaml")
 
 
 def lay_out(root: Path) -> Path:
-    """Copy the fixture set into `root` as services/<key>.yaml and facts/<service>/<slug>.yaml."""
+    """Copy the fixture set into `root` as services/<key>.yaml, facts/<service>/<slug>.yaml and
+    probes/<service>/<slug>.yaml."""
     for name in SERVICE_FILES:
         key = load_yaml(VALID / name)["key"]
         (root / "services").mkdir(parents=True, exist_ok=True)
@@ -33,6 +35,10 @@ def lay_out(root: Path) -> Path:
         _, service, slug = load_yaml(VALID / name)["id"].split(":", 2)
         (root / "facts" / service).mkdir(parents=True, exist_ok=True)
         shutil.copyfile(VALID / name, root / "facts" / service / f"{slug}.yaml")
+    for name in PROBE_FILES:
+        _, service, _, slug = load_yaml(VALID / name)["id"].split(":", 3)
+        (root / "probes" / service).mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(VALID / name, root / "probes" / service / f"{slug}.yaml")
     return root
 
 

@@ -10,7 +10,7 @@ import yaml
 from bot_repo import Checkout, FakeGh, sh
 
 from apifacts.bot.pr import publish
-from apifacts.pages.build import build_pages, load_registry, sync
+from apifacts.pages.build import registry_pages, sync
 from apifacts.probe.runner import TickOptions, refresh_evidence, run_tick
 from apifacts.schema.yamlio import load_yaml, plain
 
@@ -36,7 +36,7 @@ class World:
         doc["dimensions"]["env"] = "sandbox"
         doc["status"] = "verified:server:sandbox"
         self.repo.write(SANDBOX, yaml.safe_dump(doc, sort_keys=False))
-        sync(self.work / "pages", build_pages(*load_registry(self.work)))
+        sync(self.work / "pages", registry_pages(self.work))
         sh(self.work, "add", "-A")
         sh(self.work, "commit", "--quiet", "-m", "sandbox fact")
         sh(self.work, "push", "--quiet", "origin", "main")

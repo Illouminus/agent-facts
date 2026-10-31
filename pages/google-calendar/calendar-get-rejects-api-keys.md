@@ -10,6 +10,38 @@ Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026
 
 1. Request OAuth scope https://www.googleapis.com/auth/calendar.readonly.
 
+## Example
+
+What probe [`af:google-calendar:probe:calendar-get-needs-oauth`](../../probes/google-calendar/calendar-get-needs-oauth.yaml) sends (prod) and what it checks in the answer; the real key is elided.
+
+```http
+GET https://www.googleapis.com/calendar/v3/calendars/916ea40bea99d99c310e2aab42492c44500629a59cd44e4f50a73d08a15b3c9a@group.calendar.google.com?key=<key>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 401
+
+{
+  "error": {
+    "status": "UNAUTHENTICATED",
+    "message": "API keys are not supported by this API. Expected OAuth2 access token or other authentication credentials that assert a principal. See https://cloud.google.com/docs/authentication"
+  }
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `google-api-python-client` | `googleapiclient.errors.HttpError` | `e.status_code == 401` |
+| Node `googleapis` | `GaxiosError` | `err.status === 401` |
+
+Read from the SDK source: google-api-python-client 2.201.0: googleapiclient/http.py HttpRequest.execute; googleapis 189.0.0 → googleapis-common 9 → gaxios 8.3.2: build/cjs/src/gaxios.js, common.js GaxiosError.
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: api_key

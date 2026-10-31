@@ -14,7 +14,7 @@ from ruamel.yaml.error import YAMLError
 
 from apifacts.pages import PagesError, templates
 from apifacts.pages.errors_index import error_groups
-from apifacts.schema.models import Fact, Service, Status
+from apifacts.schema.models import Fact, Probe, Service, Status
 from apifacts.schema.validate import collect_files
 from apifacts.schema.yamlio import load_yaml, plain
 
@@ -47,6 +47,18 @@ def load_registry(root: Path) -> tuple[tuple[Service, ...], tuple[Fact, ...]]:
     if len(set(ids)) != len(ids):
         raise PagesError("duplicate fact id in facts/; run `apifacts validate`")
     return tuple(services), tuple(facts)
+
+
+def load_probes(root: Path) -> tuple[Probe, ...]:
+    """Probes under `root/probes` sorted by id: the Example section of the facts citing them."""
+    probes = sorted((_load(p, Probe) for p in _files(root / "probes")), key=lambda p: p.id)
+    return tuple(probes)
+
+
+def registry_pages(root: Path, version: str | None = None) -> dict[str, str]:
+    """`build_pages` over the repository at `root`: what the CLI, CI and the bot all run."""
+    services, facts = load_registry(root)
+    return build_pages(services, facts, load_probes(root), version=version)
 
 
 # ── what is published ───────────────────────────────────────────────────────────────────────────
@@ -102,6 +114,41 @@ def siblings(fact: Fact, facts: Iterable[Fact]) -> tuple[Fact, ...]:
     )
 
 
+def _related_key(fact: Fact, other: Fact) -> tuple[int, str] | None:
+    """Rank of `other` as a related error of `fact`, or None: same endpoint and same error
+    status first, then the same error status, then the same endpoint."""
+    a, b = fact.target, other.target
+    same_endpoint = a.path_template is not None and (a.method, a.path_template) == (
+        b.method,
+        b.path_template,
+    )
+    status = fact.signal.status if fact.signal else None
+    other_status = other.signal.status if other.signal else None
+    if other_status is None or other_status < 400:
+        return None  # related *errors*: a 200 behaviour of the endpoint is not one
+    same_status = status == other_status
+    if not (same_endpoint or same_status):
+        return None
+    rank = 0 if same_endpoint and same_status else 1 if same_status else 2
+    return rank, templates.slug_of(other)
+
+
+def related(fact: Fact, facts: Iterable[Fact], exclude: Iterable[Fact] = ()) -> tuple[Fact, ...]:
+    """Other published error facts (HTTP ≥ 400) of the same service with the same status or the
+    same endpoint (spec 06 "Related errors"), best first, at most `templates.RELATED_MAX`; dimension
+    rows (`exclude`, listed under Dimensions) and retracted facts are left out."""
+    skip = {fact.id} | {f.id for f in exclude}
+    ranked = sorted(
+        (key, f)
+        for f in facts
+        if f.id not in skip
+        and f.service == fact.service
+        and f.status is not Status.retracted
+        and (key := _related_key(fact, f)) is not None
+    )
+    return tuple(f for _, f in ranked[: templates.RELATED_MAX])
+
+
 # ── pages ────────────────────────────────────────────────────────────────────────────────────────
 
 ERRORS_DIR = "errors"
@@ -118,12 +165,17 @@ def _check_paths(services: Sequence[Service], facts: Sequence[Fact]) -> None:
 
 
 def build_pages(
-    services: Iterable[Service], facts: Iterable[Fact], version: str | None = None
+    services: Iterable[Service],
+    facts: Iterable[Fact],
+    probes: Iterable[Probe] = (),
+    version: str | None = None,
 ) -> dict[str, str]:
     """`{path relative to pages/: markdown}` for the registry, sorted by path.
 
-    `version` overrides the registry version (default: the latest date in the facts); reported
-    expiry is measured against it, so the output depends on nothing but the arguments."""
+    `probes` feed the Example section of the facts that cite them. `version` overrides the
+    registry version (default: the latest date in the facts); reported expiry is measured
+    against it, so the output depends on nothing but the arguments."""
+    probe_by_id = {p.id: p for p in probes}
     services = sorted(services, key=lambda s: s.key)
     facts = sorted(facts, key=lambda f: f.id)
     version = version or registry_version(facts)
@@ -142,7 +194,9 @@ def build_pages(
         own = by_service[service.key]
         pages[f"{service.key}/{INDEX}.md"] = templates.service_index(service, own)
         for fact in own:
-            page = templates.fact_page(fact, service, siblings(fact, own))
+            rows = siblings(fact, own)
+            probe = probe_by_id.get(fact.evidence.probe) if fact.evidence.probe else None
+            page = templates.fact_page(fact, service, rows, probe, related(fact, own, rows))
             pages[f"{service.key}/{templates.slug_of(fact)}.md"] = page
     for prefix, (normalized, group) in error_groups(live).items():
         pages[f"{ERRORS_DIR}/{prefix}.md"] = templates.error_stub(normalized, group, by_key)

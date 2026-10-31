@@ -10,6 +10,22 @@ Status: ✅ verified:server:prod · first seen 2026-10-31 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:npm-registry:probe:dist-tags-not-found`](../../probes/npm-registry/dist-tags-not-found.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://registry.npmjs.org/-/package/agent-facts-probe-no-such-package/dist-tags
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+
+$ = "Not Found"
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -19,6 +35,12 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:npm-registry:probe:dist-tags-not-found` (declarative, [source](../../probes/npm-registry/dist-tags-not-found.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](missing-package-version-path-404.md) · GET /{package}/{version} · HTTP 404
+- [`Not found`](package-not-found-404.md) · GET /{package} · HTTP 404
+- [`version not found: 0.0.99`](version-not-found-404.md) · GET /{package}/{version} · HTTP 404
 
 ## Machine access
 

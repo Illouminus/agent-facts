@@ -8,6 +8,14 @@ Status: 🔵 official · first seen 2026-10-20
 
 1. Call GET /simple/{project}/ instead.
 
+## In your code
+
+Fix 1:
+
+```python
+response = client.request("GET", f"/simple/{project}/")
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any · also seen: [anonymous](downloads-always-minus-one.md) (verified 2026-10-31)
@@ -17,6 +25,10 @@ env: prod · plan: any · region: any · account_state: any · also seen: [anony
 official doc: <https://docs.pypi.org/api/json/#get-a-project>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](project-not-found-404.md) · GET /pypi/{project}/json · HTTP 404
 
 ## Machine access
 

@@ -10,6 +10,46 @@ Status: ✅ verified:server:sandbox · first seen 2026-10-24 · last confirmed 2
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:stripe:probe:card-expired`](../../probes/stripe/card-expired.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+```http
+POST https://api.stripe.com/v1/payment_intents
+Authorization: Bearer <key>
+Content-Type: application/x-www-form-urlencoded
+
+amount=1000&currency=usd&payment_method=pm_card_chargeDeclinedExpiredCard&confirm=true&automatic_payment_methods[enabled]=true&automatic_payment_methods[allow_redirects]=never
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 402
+
+{
+  "error": {
+    "type": "card_error",
+    "code": "expired_card",
+    "decline_code": "expired_card",
+    "advice_code": "confirm_card_data",
+    "message": "Your card has expired.",
+    "param": "exp_month"
+  }
+}
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `stripe` | `stripe.CardError` | `e.http_status == 402` · `e.code == "expired_card"` |
+| Node `stripe` | `Stripe.errors.StripeCardError` | `err.statusCode === 402` · `err.code === "expired_card"` |
+
+Read from the SDK source: stripe 16.1.0: stripe/\_api_requestor.py specific_v1_api_error, stripe/\_error.py; stripe 23.1.0: cjs/Error.js generateV1Error, cjs/RequestSender.js.
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: any
@@ -19,6 +59,15 @@ env: sandbox · plan: any · region: any · account_state: any
 Probe `af:stripe:probe:card-expired` (declarative, [source](../../probes/stripe/card-expired.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Your card was declined.`](card-declined-generic.md) · POST /v1/payment_intents · HTTP 402 `card_declined`
+- [`Your card's security code is incorrect.`](card-incorrect-cvc.md) · POST /v1/payment_intents · HTTP 402 `incorrect_cvc`
+- [`Your card has insufficient funds. Use a different payment method to complete this purchase.`](card-insufficient-funds.md) · POST /v1/payment_intents · HTTP 402 `card_declined`
+- [`Your card was declined.`](card-lost-generic-message.md) · POST /v1/payment_intents · HTTP 402 `card_declined`
+- [`Amount must convert to at least 50 cents. $0.10 converts to approximately €0.09.`](amount-too-small.md) · POST /v1/payment_intents · HTTP 400 `amount_too_small`
+- [`Amount must convert to at least 50 cents. $0.10 converts to approximately €0.09.`](execution-errors-are-replayed.md) · POST /v1/payment_intents · HTTP 400 `amount_too_small`
 
 ## Machine access
 

@@ -8,6 +8,26 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:pypi:probe:json-unnormalized-name`](../../probes/pypi/json-unnormalized-name.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/pypi/Typing_Extensions/json
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+
+{
+  "info": {
+    "name": "typing-extensions"
+  }
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -17,6 +37,10 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:pypi:probe:json-unnormalized-name` (declarative, [source](../../probes/pypi/json-unnormalized-name.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](project-not-found-404.md) · GET /pypi/{project}/json · HTTP 404
 
 ## Machine access
 

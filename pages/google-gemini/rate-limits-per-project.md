@@ -8,6 +8,23 @@ Status: 🔵 official · first seen 2026-10-24
 
 1. Retry with exponential backoff from 1000 ms × 2, cap 60000 ms, ≤ 5 attempts, with jitter.
 
+## In your code
+
+Fix 1:
+
+```python
+import random
+import time
+
+delay_ms = 1000
+for attempt in range(5):
+    response = client.send(request)
+    if response.is_success:
+        break
+    time.sleep(random.uniform(0, delay_ms) / 1000)
+    delay_ms = min(delay_ms * 2, 60000)
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -17,6 +34,11 @@ env: prod · plan: any · region: any · account_state: any
 official doc: <https://ai.google.dev/gemini-api/docs/rate-limits>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Your API key was reported as leaked. Please use another API key.`](leaked-key-403.md) · POST /v1beta/models/{model_and_method} · HTTP 403 `PERMISSION_DENIED`
+- [Exceeding a rate limit or quota returns HTTP 429 RESOURCE_EXHAUSTED, a transient error, like 503 UNAVAILABLE; 400, 402 and 403 are client errors that a retry does not fix.](resource-exhausted-429.md) · POST /v1beta/models/{model_and_method} · HTTP 429 `RESOURCE_EXHAUSTED`
 
 ## Machine access
 

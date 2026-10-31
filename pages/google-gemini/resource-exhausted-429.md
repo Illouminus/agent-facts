@@ -8,6 +8,32 @@ Status: 🔵 official · first seen 2026-10-24
 
 1. Retry with exponential backoff from 1000 ms × 2, cap 60000 ms, ≤ 5 attempts, with jitter.
 
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `google-genai` | `google.genai.errors.ClientError` | `e.code == 429` · `e.status == "RESOURCE_EXHAUSTED"` |
+| Node `@google/genai` | `ApiError` | `err.status === 429` |
+
+Read from the SDK source: google-genai 2.34.0: google/genai/errors.py APIError.raise_error; @google/genai 2.32.0: dist/node/index.cjs throwErrorIfNotOK, class ApiError.
+
+Fix 1:
+
+```python
+import random
+import time
+
+delay_ms = 1000
+for attempt in range(5):
+    response = client.send(request)
+    if response.status_code != 429:
+        break
+    time.sleep(random.uniform(0, delay_ms) / 1000)
+    delay_ms = min(delay_ms * 2, 60000)
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -17,6 +43,10 @@ env: prod · plan: any · region: any · account_state: any
 official doc: <https://ai.google.dev/gemini-api/docs/troubleshooting>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Your API key was reported as leaked. Please use another API key.`](leaked-key-403.md) · POST /v1beta/models/{model_and_method} · HTTP 403 `PERMISSION_DENIED`
 
 ## Machine access
 

@@ -8,6 +8,25 @@ Status: ⚪ stale · first seen 2026-10-21 · last confirmed 2026-10-24 · 3 con
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:stripe:probe:deleted-customer`](../../probes/stripe/deleted-customer.yaml) sends (sandbox) and what it checks in the answer; the real key is elided.
+
+```http
+GET https://api.stripe.com/v1/customers/cus_deleted_fixture
+Authorization: Bearer <key>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+
+{
+  "deleted": true
+}
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: any
@@ -17,6 +36,10 @@ env: sandbox · plan: any · region: any · account_state: any
 Probe `af:stripe:probe:deleted-customer` (declarative, [source](../../probes/stripe/deleted-customer.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.`](customer-retrieve-rate-limit.md) · GET /v1/customers/{id} · HTTP 429 `rate_limit`
 
 ## Machine access
 

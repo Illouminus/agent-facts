@@ -10,6 +10,54 @@ Status: ✅ verified:server:prod · first seen 2026-10-24 · last confirmed 2026
 
 1. Call GET /v1beta/models/{model} instead.
 
+## Example
+
+What probe [`af:google-gemini:probe:latest-alias-v1beta-only`](../../probes/google-gemini/latest-alias-v1beta-only.yaml) sends (prod) and what it checks in the answer; the real key is elided.
+
+Step 1 → HTTP 200:
+
+```http
+GET https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest
+x-goog-api-key: <key>
+```
+
+Step 2 → HTTP 404:
+
+```http
+GET https://generativelanguage.googleapis.com/v1/models/gemini-flash-latest
+x-goog-api-key: <key>
+```
+
+Step 3 → HTTP 404:
+
+```http
+GET https://generativelanguage.googleapis.com/v1/models/gemini-3-flash-preview
+x-goog-api-key: <key>
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 404
+```
+
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `google-genai` | `google.genai.errors.ClientError` | `e.code == 404` · `e.status == "NOT_FOUND"` |
+| Node `@google/genai` | `ApiError` | `err.status === 404` |
+
+Read from the SDK source: google-genai 2.34.0: google/genai/errors.py APIError.raise_error; @google/genai 2.32.0: dist/node/index.cjs throwErrorIfNotOK, class ApiError.
+
+Fix 1:
+
+```python
+response = client.request("GET", f"/v1beta/models/{model}")
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -19,6 +67,11 @@ env: prod · plan: any · region: any · account_state: any
 Probe `af:google-gemini:probe:latest-alias-v1beta-only` (declarative, [source](../../probes/google-gemini/latest-alias-v1beta-only.yaml))
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Model is not found: models/gemini-1.5-flash for api version v1beta`](gemini-1-5-models-retired.md) · GET /v1beta/models/{model} · HTTP 404 `NOT_FOUND`
+- [`Model is not found: models/gemini-agent-facts-nosuch for api version v1beta`](model-not-found-404.md) · GET /v1beta/models/{model} · HTTP 404 `NOT_FOUND`
 
 ## Machine access
 

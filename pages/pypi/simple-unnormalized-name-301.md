@@ -8,6 +8,21 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:pypi:probe:simple-unnormalized-name`](../../probes/pypi/simple-unnormalized-name.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/simple/Typing_Extensions/
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 301
+Location: https://pypi.org/simple/typing-extensions/
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -17,6 +32,10 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:pypi:probe:simple-unnormalized-name` (declarative, [source](../../probes/pypi/simple-unnormalized-name.yaml)) · official doc: <https://docs.pypi.org/api/index-api/>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`404 Not Found`](simple-not-found-404.md) · GET /simple/{project}/ · HTTP 404
 
 ## Machine access
 

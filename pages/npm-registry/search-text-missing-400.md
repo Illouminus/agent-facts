@@ -10,6 +10,32 @@ Status: ✅ verified:server:prod · first seen 2026-10-31 · last confirmed 2026
 
 1. No client-side fix known (by design).
 
+## Example
+
+What probe [`af:npm-registry:probe:search-text-missing`](../../probes/npm-registry/search-text-missing.yaml) sends (prod) and what it checks in the answer.
+
+Step 1 → HTTP 400:
+
+```http
+GET https://registry.npmjs.org/-/v1/search
+```
+
+Step 2 → HTTP 400:
+
+```http
+GET https://registry.npmjs.org/-/v1/search?text=
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 400
+
+{
+  "code": "ERR_TEXT_MISSING"
+}
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous

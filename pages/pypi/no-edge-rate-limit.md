@@ -8,6 +8,14 @@ Status: 🔵 official · first seen 2026-10-20
 
 1. Send header User-Agent = the account setting contact_identifying_user_agent.
 
+## In your code
+
+Fix 1:
+
+```python
+headers["User-Agent"] = YOUR_CONTACT_IDENTIFYING_USER_AGENT
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -17,6 +25,10 @@ env: prod · plan: any · region: any · account_state: any
 official doc: <https://docs.pypi.org/api/#rate-limiting>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](project-not-found-404.md) · GET /pypi/{project}/json · HTTP 404
 
 ## Machine access
 

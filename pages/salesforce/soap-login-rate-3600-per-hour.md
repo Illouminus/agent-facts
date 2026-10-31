@@ -8,6 +8,23 @@ Status: 🔵 official · first seen 2026-10-24
 
 1. Retry with exponential backoff from 60000 ms × 2, cap 3600000 ms, ≤ 3 attempts, with jitter.
 
+## In your code
+
+Fix 1:
+
+```python
+import random
+import time
+
+delay_ms = 60000
+for attempt in range(3):
+    response = client.send(request)
+    if response.is_success:
+        break
+    time.sleep(random.uniform(0, delay_ms) / 1000)
+    delay_ms = min(delay_ms * 2, 3600000)
+```
+
 ## Dimensions
 
 env: sandbox · plan: any · region: any · account_state: developer_edition

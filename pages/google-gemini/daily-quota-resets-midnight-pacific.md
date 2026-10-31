@@ -18,6 +18,11 @@ official doc: <https://ai.google.dev/gemini-api/docs/rate-limits>
 
 Observations: none from reporters yet.
 
+## Related errors
+
+- [`Your API key was reported as leaked. Please use another API key.`](leaked-key-403.md) · POST /v1beta/models/{model_and_method} · HTTP 403 `PERMISSION_DENIED`
+- [Exceeding a rate limit or quota returns HTTP 429 RESOURCE_EXHAUSTED, a transient error, like 503 UNAVAILABLE; 400, 402 and 403 are client errors that a retry does not fix.](resource-exhausted-429.md) · POST /v1beta/models/{model_and_method} · HTTP 429 `RESOURCE_EXHAUSTED`
+
 ## Machine access
 
 ```sh

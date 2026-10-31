@@ -8,6 +8,35 @@ Status: ✅ verified:server:prod · first seen 2026-10-20 · last confirmed 2026
 
 1. Call GET /simple/{project}/ instead.
 
+## Example
+
+What probe [`af:pypi:probe:json-release`](../../probes/pypi/json-release.yaml) sends (prod) and what it checks in the answer.
+
+```http
+GET https://pypi.org/pypi/requests/2.31.0/json
+```
+
+Response (only what the probe asserts; other fields omitted):
+
+```http
+HTTP 200
+
+{
+  "info": {
+    "version": "2.31.0"
+  },
+  "urls": "…"
+}
+```
+
+## In your code
+
+Fix 1:
+
+```python
+response = client.request("GET", f"/simple/{project}/")
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: anonymous
@@ -17,6 +46,10 @@ env: prod · plan: any · region: any · account_state: anonymous
 Probe `af:pypi:probe:json-release` (declarative, [source](../../probes/pypi/json-release.yaml)) · official doc: <https://docs.pypi.org/api/json/#get-a-release>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [`Not Found`](release-not-found-404.md) · GET /pypi/{project}/{version}/json · HTTP 404
 
 ## Machine access
 

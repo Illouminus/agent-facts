@@ -1642,6 +1642,7 @@
     }
   },
   "info": {
+    "description": "An open registry of dated facts about what third-party HTTP APIs, SDKs and CLIs actually return, established by deterministic probes (no language model in the verification path). No authentication. Start with `POST /v0/check` when a call to a third-party API fails; every fact also has a page at https://apifacts.dev/<service>/<slug>. MCP (stdio): `uvx --from 'apifacts[mcp]' apifacts mcp`, described at https://apifacts.dev/.well-known/mcp.json.",
     "summary": "Verified facts about machine interfaces for AI agents (data CC BY 4.0).",
     "title": "apifacts",
     "version": "v0"
@@ -1668,7 +1669,7 @@
     },
     "/v0/check": {
       "post": {
-        "description": "Facts and typed fixes for a target and (optionally) an observed error. Never empty.\nA target outside the registered templates is answered but not stored.",
+        "description": "Send the request that failed (`target`: method and URL) and, if you have it, what came back (`error`: HTTP status and the first 2 KB of the body or exception text). The answer lists the matching facts (by normalized error string on that endpoint, else by status, else the service's rate-limit and availability facts), each with typed fixes (a closed vocabulary: set_header, retry_after_header, use_endpoint, ...), its verification status and dates. Never empty: `unknown` says why nothing matched (unregistered target, no fact for the signal, no extractable signal).\n\nPrivacy: query string and fragment are dropped before matching; a call with an `error` on a registered template is stored as one normalized observation (no body, headers, query or raw IP). Do not send credentials: the body excerpt is for the vendor's error message.",
         "operationId": "check_v0_check_post",
         "requestBody": {
           "content": {
@@ -1722,7 +1723,7 @@
             "description": "Too Many Requests"
           }
         },
-        "summary": "Check"
+        "summary": "Look up known facts for a failed API call"
       }
     },
     "/v0/facts/{service}": {
@@ -1761,7 +1762,7 @@
             "description": "Not Found"
           }
         },
-        "summary": "Facts"
+        "summary": "Every fact of one service"
       }
     },
     "/v0/facts/{service}/{slug}": {
@@ -1809,7 +1810,7 @@
             "description": "Not Found"
           }
         },
-        "summary": "Fact"
+        "summary": "One fact, as its YAML says"
       }
     },
     "/v0/services": {
@@ -1827,7 +1828,7 @@
             "description": "Successful Response"
           }
         },
-        "summary": "Services"
+        "summary": "Services, hosts and fact counts"
       }
     }
   }

@@ -8,6 +8,32 @@ Status: 🔵 official · first seen 2026-10-24
 
 1. Retry with exponential backoff from 1000 ms × 2, cap 60000 ms, ≤ 5 attempts, with jitter.
 
+## In your code
+
+When an SDK receives this response:
+
+| SDK | Raises | Check |
+| --- | --- | --- |
+| Python `python-telegram-bot` (community) | `telegram.error.RetryAfter` | — |
+| Node `telegraf` (community) | `TelegramError` | `err.code === 429` |
+
+Read from the SDK source: python-telegram-bot 22.8: telegram/request/\_baserequest.py BaseRequest.\_request_wrapper; telegraf 4.16.3: lib/core/network/client.js callApi, lib/core/network/error.js.
+
+Fix 1:
+
+```python
+import random
+import time
+
+delay_ms = 1000
+for attempt in range(5):
+    response = client.send(request)
+    if response.status_code != 429:
+        break
+    time.sleep(random.uniform(0, delay_ms) / 1000)
+    delay_ms = min(delay_ms * 2, 60000)
+```
+
 ## Dimensions
 
 env: prod · plan: any · region: any · account_state: any
@@ -17,6 +43,10 @@ env: prod · plan: any · region: any · account_state: any
 official doc: <https://core.telegram.org/bots/api#responseparameters>
 
 Observations: none from reporters yet.
+
+## Related errors
+
+- [The documented sending limits are about one message per second per chat, 20 messages per minute per group and about 30 messages per second for broadcasts; past them the API answers 429.](message-rate-limits.md) · POST /{bot_token}/sendMessage · HTTP 429
 
 ## Machine access
 
