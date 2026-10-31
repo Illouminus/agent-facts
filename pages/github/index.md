@@ -1,9 +1,14 @@
 # GitHub REST API
 
-Hosts: `api.github.com` · 23 facts
+Hosts: `api.github.com` · 29 facts
 
 ## Error meanings
 
+- ✅ verified:server:prod · [`Not Found`](contents-missing-path-404.md) · GET /repos/{owner}/{repo}/contents/{path} · env prod
+- ✅ verified:server:prod · [`Not Found`](contents-missing-path-404-depth-2.md) · GET /repos/{owner}/{repo}/contents/{dir}/{path} · env prod
+- ✅ verified:server:prod · [`Not Found`](contents-missing-path-404-depth-3.md) · GET /repos/{owner}/{repo}/contents/{dir}/{subdir}/{path} · env prod
+- ✅ verified:server:prod · [`Not Found`](contents-missing-path-404-depth-4.md) · GET /repos/{owner}/{repo}/contents/{dir}/{subdir}/{subdir2}/{path} · env prod
+- ✅ verified:server:prod · [`No commit found for the ref agent-facts-no-such-ref`](contents-unknown-ref-404.md) · GET /repos/{owner}/{repo}/contents/{path} · env prod
 - ✅ verified:server:prod · [`Not Found`](missing-repo-404.md) · GET /repos/{owner}/{repo} · env prod
 - ✅ verified:server:prod · [`The search is longer than 256 characters.`](search-query-longer-than-256.md) · GET /search/repositories · env prod
 - ✅ verified:server:prod · [`404 Not Found`](trailing-slash-404.md) · GET /rate_limit/ · env prod
@@ -24,6 +29,7 @@ Hosts: `api.github.com` · 23 facts
 ## Silent behavior
 
 - ✅ verified:server:prod · [Anonymous GET /repos/{owner}/{repo} responses are shared-cacheable for 60 s (public, s-maxage=60) and Vary does not list X-GitHub-Api-Version, so by HTTP caching rules a cache may serve a body of another API version.](anonymous-cache-ignores-api-version.md) · GET /repos/{owner}/{repo} · env prod
+- ✅ verified:server:prod · [GET /repos/{owner}/{repo}/contents on a directory returns a JSON array of entries, while a file path returns one object with type file and base64-encoded content (encoding: base64).](contents-directory-is-array.md) · GET /repos/{owner}/{repo}/contents · env prod
 - ✅ verified:server:prod · [REST error bodies carry a status field holding the HTTP code as a JSON string, such as "404", not as a number.](error-status-is-a-string.md) · GET /repos/{owner}/{repo} · env prod
 - ✅ verified:server:prod · [A per_page above 100 on GET /users/{username}/followers is silently reduced to 100: HTTP 200 with 100 items, no error, and Link URLs that repeat the requested per_page.](per-page-silently-capped-at-100.md) · GET /users/{username}/followers · env prod
 - ✅ verified:server:prod · [`Moved Permanently`](renamed-repo-301.md) · GET /repos/{owner}/{repo} · env prod
