@@ -1,0 +1,31 @@
+id: af:resend:missing-api-key-before-lookup
+service: resend
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/emails/{email_id}"
+signal:
+  status: 401
+  error_code: missing_api_key
+  error_string: "Missing API Key"
+  normalized: "missing api key"
+claim: "GET /emails/{email_id} without an API key returns HTTP 401 missing_api_key even for an id that does not exist: the key is checked before the email is looked up, so the 401 says nothing about the id."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: Authorization, value_source: account_setting:bearer_api_key}
+status: verified:server:prod
+evidence:
+  probe: af:resend:probe:no-key
+  first_seen: 2026-10-31T13:09:02Z
+  last_confirmed: 2026-10-31T13:09:02Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

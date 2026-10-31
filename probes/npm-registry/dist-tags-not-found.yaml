@@ -1,0 +1,10 @@
+# dist-tags of a package that does not exist: 404 with the bare JSON string "Not Found".
+id: af:npm-registry:probe:dist-tags-not-found
+service: npm-registry
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /-/package/agent-facts-probe-no-such-package/dist-tags}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $, equals: Not Found}

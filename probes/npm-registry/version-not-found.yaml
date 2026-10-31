@@ -1,0 +1,14 @@
+# An existing package with an unknown version or dist-tag: 404 whose body is a bare JSON string,
+# not an object.
+id: af:npm-registry:probe:version-not-found
+service: npm-registry
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /left-pad/0.0.99}
+  - {do: http, method: GET, path: /left-pad/agent-facts-no-such-tag}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $, equals: "version not found: 0.0.99"}
+  - {step: 2, status: 404}
+  - {step: 2, json_path: $, equals: "version not found: agent-facts-no-such-tag"}

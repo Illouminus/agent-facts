@@ -1,0 +1,32 @@
+# npm public registry read API (packuments, versions, dist-tags, search), keyless. The Open Source
+# Terms forbid automating the website but allow using the documented Public APIs; probes are a few
+# anonymous GETs an hour on error paths, far under the terms' five-million-a-month line.
+key: npm-registry
+name: npm registry
+hosts: [registry.npmjs.org]
+doc_hosts: [docs.npmjs.com]
+surfaces:
+  http:
+    base_url: https://registry.npmjs.org
+    # A slot fills one segment: a scoped name requested as /@scope/name has two segments and lands
+    # on /{package}/{version}; the npm CLI's form @scope%2fname matches no template (an encoded
+    # slash never fills a slot).
+    templates:
+      - {method: GET, path: "/{package}"}
+      - {method: GET, path: "/{package}/{version}"}
+      - {method: GET, path: "/-/package/{package}/dist-tags"}
+      - {method: GET, path: /-/v1/search}
+    signal_fields:
+      - status
+      - code
+      - error
+      - retry-after
+dimensions:
+  env: {prod: https://registry.npmjs.org}
+  account_state: [anonymous]
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://docs.npmjs.com/policies/open-source-terms
+probe_budget: {per_template_seconds: 1800}

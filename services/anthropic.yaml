@@ -1,0 +1,37 @@
+# Claude API (Anthropic), keyless: probes send no key or an obviously fake x-api-key and only
+# GET model metadata, so they reach nothing but the authentication layer. POST endpoints are
+# registered so check() stores what agents report on them; prod probes may not POST.
+key: anthropic
+name: Claude API (Anthropic)
+hosts: [api.anthropic.com]
+doc_hosts: [docs.anthropic.com, docs.claude.com, platform.claude.com]
+surfaces:
+  http:
+    base_url: https://api.anthropic.com
+    templates:
+      - {method: POST, path: /v1/messages}
+      - {method: POST, path: /v1/messages/count_tokens}
+      - {method: POST, path: /v1/messages/batches}
+      - {method: GET, path: "/v1/messages/batches/{batch_id}"}
+      - {method: GET, path: /v1/models}
+      - {method: GET, path: "/v1/models/{model_id}"}
+    signal_fields:  # error.type first: check() takes the first code-shaped field
+      - status
+      - error.type
+      - error.message
+      - x-should-retry
+      - retry-after
+      - anthropic-ratelimit-requests-remaining
+      - anthropic-ratelimit-tokens-remaining
+  sdk:
+    - {ecosystem: pypi, package: anthropic}
+    - {ecosystem: npm, package: "@anthropic-ai/sdk"}
+dimensions:
+  env: {prod: https://api.anthropic.com}
+  account_state: [anonymous]
+auth: {kind: none}
+tos:
+  automated_access: allowed
+  publish_measurements: allowed
+  source: https://www.anthropic.com/legal/commercial-terms
+probe_budget: {per_template_seconds: 1800}

@@ -1,0 +1,14 @@
+# Two-segment paths for a package that does not exist: unscoped /<name>/<version> answers the
+# bare string "Not Found", a scoped /@scope/<name> the object {"error": "Not found"}.
+id: af:npm-registry:probe:missing-package-two-segments
+service: npm-registry
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /agent-facts-probe-no-such-package/latest}
+  - {do: http, method: GET, path: /@agent-facts-probe/no-such-package}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $, equals: Not Found}
+  - {step: 2, status: 404}
+  - {step: 2, json_path: $.error, equals: Not found}

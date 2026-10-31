@@ -1,0 +1,14 @@
+# A package that does not exist: 404 with {"error": "Not found"}. Names are lowercase and an
+# uppercase spelling of an existing package is not redirected, it is the same 404.
+id: af:npm-registry:probe:package-not-found
+service: npm-registry
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /agent-facts-probe-no-such-package}
+  - {do: http, method: GET, path: /Left-Pad}
+assert:
+  - {step: 1, status: 404}
+  - {step: 1, json_path: $.error, equals: Not found}
+  - {step: 2, status: 404}
+  - {step: 2, json_path: $.error, equals: Not found}

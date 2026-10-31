@@ -1,0 +1,28 @@
+id: af:anthropic:error-envelope
+service: anthropic
+kind: silent_behavior
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/models"
+signal:
+  status: 401
+claim: "Errors are a JSON object {type: \"error\", error: {type, message}, request_id}; the vendor code is error.type (e.g. authentication_error) and the request id also comes in the request-id header."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: none_known, reason_kind: by_design}
+status: verified:server:prod
+evidence:
+  probe: af:anthropic:probe:no-key
+  first_seen: 2026-10-31T13:08:58Z
+  last_confirmed: 2026-10-31T13:08:58Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

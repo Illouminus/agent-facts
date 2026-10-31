@@ -1,0 +1,14 @@
+# Search without text (absent or empty): 400 ERR_TEXT_MISSING, not an empty result list.
+id: af:npm-registry:probe:search-text-missing
+service: npm-registry
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /-/v1/search}
+  - {do: http, method: GET, path: /-/v1/search, query: {text: ""}}
+assert:
+  - {step: 1, status: 400}
+  - {step: 1, json_path: $.code, equals: ERR_TEXT_MISSING}
+  - {step: 1, json_path: $.error, equals: "'text' query parameter is required"}
+  - {step: 2, status: 400}
+  - {step: 2, json_path: $.code, equals: ERR_TEXT_MISSING}

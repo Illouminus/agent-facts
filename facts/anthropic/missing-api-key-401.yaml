@@ -1,0 +1,31 @@
+id: af:anthropic:missing-api-key-401
+service: anthropic
+kind: auth_quirk
+target:
+  surface: http
+  method: GET
+  path_template: "/v1/models"
+signal:
+  status: 401
+  error_code: authentication_error
+  error_string: "x-api-key header is required"
+  normalized: "x-api-key header is required"
+claim: "A request without an x-api-key header returns HTTP 401 authentication_error \"x-api-key header is required\" with the header x-should-retry: false."
+dimensions:
+  env: prod
+  account_state: anonymous
+fixes:
+  - {action: set_header, name: x-api-key, value_source: account_setting:api_key}
+status: verified:server:prod
+evidence:
+  probe: af:anthropic:probe:no-key
+  first_seen: 2026-10-31T13:08:58Z
+  last_confirmed: 2026-10-31T13:08:58Z
+  confirmations: 1
+  stale_counter: 0
+  vantages: [mac-dev]
+provenance:
+  source: probe
+  author: bot
+  created: 2026-10-31
+  history: [{date: 2026-10-31, change: created, by: bot}, {date: 2026-10-31, change: verified, by: bot, previous_status: reported}]

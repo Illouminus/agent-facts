@@ -1,0 +1,20 @@
+# No x-api-key: 401 authentication_error before anything else is looked at (a model that does not
+# exist is a 401 too, not a 404), marked x-should-retry: false.
+id: af:anthropic:probe:no-key
+service: anthropic
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /v1/models}
+  - {do: http, method: GET, path: /v1/models/claude-agent-facts-no-such-model}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: $.type, equals: error}
+  - {step: 1, json_path: $.error.type, equals: authentication_error}
+  - {step: 1, json_path: $.error.message, equals: x-api-key header is required}
+  - {step: 1, json_path: $.request_id, exists: true}
+  - {step: 1, header: request-id, present: true}
+  - {step: 1, header: x-should-retry, equals: "false"}
+  - {step: 2, status: 401}
+  - {step: 2, json_path: $.error.type, equals: authentication_error}
+  - {step: 2, json_path: $.error.message, equals: x-api-key header is required}

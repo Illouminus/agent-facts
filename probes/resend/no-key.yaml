@@ -1,0 +1,16 @@
+# No API key: 401 missing_api_key in Resend's flat envelope {statusCode, message, name}, before the
+# resource is looked up (an email id that does not exist is a 401 too, not a 404).
+id: af:resend:probe:no-key
+service: resend
+env: prod
+account_state: anonymous
+steps:
+  - {do: http, method: GET, path: /domains}
+  - {do: http, method: GET, path: /emails/agent-facts-no-such-email}
+assert:
+  - {step: 1, status: 401}
+  - {step: 1, json_path: $.statusCode, equals: 401}
+  - {step: 1, json_path: $.name, equals: missing_api_key}
+  - {step: 1, json_path: $.message, equals: Missing API Key}
+  - {step: 2, status: 401}
+  - {step: 2, json_path: $.name, equals: missing_api_key}
