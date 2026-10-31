@@ -32,7 +32,7 @@ inputs:
   version:
     description: apifacts version installed from PyPI (needs one that has `apifacts scan`).
     required: false
-    default: "0.2.1"
+    default: "0.3.0"
 
 runs:
   using: composite
@@ -49,7 +49,7 @@ runs:
         set +e  # this step decides its own exit code, below
 
         apifacts_scan() {
-          local spec="apifacts==${APIFACTS_ACTION_VERSION:-0.2.1}" args=(scan --github)
+          local spec="apifacts==${APIFACTS_ACTION_VERSION:-0.3.0}" args=(scan --github)
           [ "$APIFACTS_ACTION_OFFLINE" = "true" ] && args+=(--offline)
           if command -v uvx >/dev/null 2>&1; then
             uvx --quiet --from "$spec" apifacts "${args[@]}" "$1"
