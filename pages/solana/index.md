@@ -4,10 +4,10 @@ Hosts: `api.mainnet-beta.solana.com`, `api.mainnet.solana.com` · 14 facts
 
 ## Error meanings
 
-- ✅ verified:server:prod · [`` method does not support commitment below `confirmed` ``](get-block-commitment-processed.md) · POST / · env prod
-- ✅ verified:server:prod · [`invalid param: wrongsize`](invalid-pubkey-wrong-size.md) · POST / · env prod
-- ✅ verified:server:prod · [`too many inputs provided; max ###`](multiple-accounts-max-100.md) · POST / · env prod
-- ✅ verified:server:prod · [`invalid limit; max ####`](signatures-for-address-limit-1000.md) · POST / · env prod
+- ✅ verified:server:prod · [`` Method does not support commitment below `confirmed` ``](get-block-commitment-processed.md) · POST / · env prod
+- ✅ verified:server:prod · [`Invalid param: WrongSize`](invalid-pubkey-wrong-size.md) · POST / · env prod
+- ✅ verified:server:prod · [`Too many inputs provided; max 100`](multiple-accounts-max-100.md) · POST / · env prod
+- ✅ verified:server:prod · [`Invalid limit; max 1000`](signatures-for-address-limit-1000.md) · POST / · env prod
 
 ## Rate limits
 
@@ -21,13 +21,13 @@ Hosts: `api.mainnet-beta.solana.com`, `api.mainnet.solana.com` · 14 facts
 
 ## Deprecations
 
-- ✅ verified:server:prod · [`method not found`](get-confirmed-block-removed.md) · POST / · env prod
-- ✅ verified:server:prod · [`method not found`](get-confirmed-transaction-removed.md) · POST / · env prod
-- ✅ verified:server:prod · [`method not found`](get-recent-blockhash-removed.md) · POST / · env prod
+- ✅ verified:server:prod · [`Method not found`](get-confirmed-block-removed.md) · POST / · env prod
+- ✅ verified:server:prod · [`Method not found`](get-confirmed-transaction-removed.md) · POST / · env prod
+- ✅ verified:server:prod · [`Method not found`](get-recent-blockhash-removed.md) · POST / · env prod
 
 ## Availability
 
-- ✅ verified:server:prod · [`your ip or provider is blocked from this endpoint`](get-program-accounts-blocked-403.md) · POST / · env prod
+- ✅ verified:server:prod · [`Your IP or provider is blocked from this endpoint`](get-program-accounts-blocked-403.md) · POST / · env prod
 - 🔵 official · [On the public RPC endpoints HTTP 403 means the IP address or website has been blocked; high-traffic websites may be blocked without prior notice.](public-endpoint-403-blocked.md) · POST / · env prod
 - 🔵 official · [The public RPC endpoints are not intended for production applications, and their rate limits are subject to change without prior notice.](public-endpoint-not-for-production.md) · POST / · env prod
 

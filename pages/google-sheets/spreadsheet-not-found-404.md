@@ -1,4 +1,4 @@
-# `requested entity was not found.`
+# `Requested entity was not found.`
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · HTTP 404 `NOT_FOUND`**
 
@@ -21,6 +21,8 @@ Probe `af:google-sheets:probe:spreadsheet-not-found` (declarative, [source](../.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `requested entity was not found.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

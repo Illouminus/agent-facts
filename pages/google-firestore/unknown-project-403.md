@@ -1,4 +1,4 @@
-# `permission denied on resource project agent-facts-nosuch-project-x.`
+# `Permission denied on resource project agent-facts-nosuch-project-x.`
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · HTTP 403 `PERMISSION_DENIED`**
 
@@ -21,6 +21,8 @@ Probe `af:google-firestore:probe:unknown-project` (declarative, [source](../../p
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `permission denied on resource project agent-facts-nosuch-project-x.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

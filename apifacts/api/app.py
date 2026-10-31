@@ -68,7 +68,16 @@ from apifacts.api.models import (
 from apifacts.api.normalize import ExtractedSignal, extract_signal, find_urls, looks_like_prompt
 from apifacts.api.ratelimit import RateLimiter
 from apifacts.api.seed_hosts import metric_host
-from apifacts.api.site import NOT_FOUND, ROBOTS, Page, llms_txt, load_pages, text_page
+from apifacts.api.site import (
+    INDEXNOW_KEY,
+    LASTMOD_STATE,
+    NOT_FOUND,
+    ROBOTS,
+    Page,
+    llms_txt,
+    load_site,
+    text_page,
+)
 from apifacts.api.store import Drop, Store, salt_period
 from apifacts.probe import OPT_OUT_EMAIL
 from apifacts.schema.registry import on_vendor_domain
@@ -81,6 +90,7 @@ CACHE_CONTROL = "public, max-age=300"
 DEFAULT_TRUSTED_PROXIES = ("127.0.0.1", "::1")
 CHECK_PATH = "/v0/check"
 ROBOTS_PAGE = text_page(ROBOTS)
+INDEXNOW_KEY_PAGE = text_page(INDEXNOW_KEY)
 
 
 def _error_body(code: str, message: str, field: str | None = None) -> dict[str, Any]:
@@ -110,6 +120,7 @@ class _State:
     results: Path
     pages: dict[str, Page]
     llms: Page
+    sitemap: Page
 
 
 def _state(request: Request) -> _State:
@@ -453,6 +464,9 @@ def create_app(
         store = Store(db)
         index = FactsIndex.load(root, os.environ.get("APIFACTS_REGISTRY_VERSION") or None)
         listed = [(e.key, e.service.name, len(e.facts)) for e in index.services.values()]
+        now = utcnow or (lambda: datetime.now(UTC))
+        lastmod_state = Path(os.environ.get("APIFACTS_SITEMAP_STATE") or root / LASTMOD_STATE)
+        site = load_site(root, index, now().date().isoformat(), lastmod_state)
         app.state.apifacts = _State(
             index=index,
             store=store,
@@ -460,14 +474,15 @@ def create_app(
             template_cap=template_cap,
             trusted_proxies=trusted,
             own_nets=parse_proxies(own_nets) if own_nets is not None else own_nets_from_env(db),
-            utcnow=utcnow or (lambda: datetime.now(UTC)),
+            utcnow=now,
             results=Path(
                 results_path
                 or os.environ.get("APIFACTS_RESULTS")
                 or root / "var" / "results.jsonl"
             ),
-            pages=load_pages(root),
+            pages=site.pages,
             llms=text_page(llms_txt(listed, index.version, OPT_OUT_EMAIL)),
+            sitemap=site.sitemap,
         )
         try:
             yield
@@ -579,6 +594,14 @@ def create_app(
     @page("/robots.txt")
     def robots(request: Request) -> Response:
         return _site(request, ROBOTS_PAGE, "text/plain")
+
+    @page("/sitemap.xml")
+    def sitemap(request: Request) -> Response:
+        return _site(request, _state(request).sitemap, "application/xml")
+
+    @page(f"/{INDEXNOW_KEY}.txt")
+    def indexnow_key(request: Request) -> Response:
+        return _site(request, INDEXNOW_KEY_PAGE, "text/plain")
 
     @page("/")
     def home(request: Request) -> Response:

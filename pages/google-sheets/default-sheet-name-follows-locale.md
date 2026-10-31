@@ -1,4 +1,4 @@
-# `unable to parse range: sheet#!a#`
+# `Unable to parse range: Sheet1!A1`
 
 **Google Sheets API · GET /v4/spreadsheets/{spreadsheet_id}/values/{range} · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-sheets:probe:default-sheet-name-localized` (declarative, [sourc
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `unable to parse range: sheet#!a#`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

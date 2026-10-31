@@ -1,4 +1,4 @@
-# `* listmodelsrequest.page_size: page_size must be positive`
+# `* ListModelsRequest.page_size: page_size must be positive`
 
 **Gemini API · GET /v1beta/models · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-gemini:probe:models-page-size-negative` (declarative, [source](
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `* listmodelsrequest.page_size: page_size must be positive`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

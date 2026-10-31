@@ -1,0 +1,13 @@
+# 05:00 Paris time, once a day: after the 03:00 evidence refresh, its bot PR (hourly quorum tick)
+# and the deploy that follows. Persistent: a morning missed while the host was down runs at boot.
+# Enable: systemctl --user enable --now agentfacts-indexnow.timer
+[Unit]
+Description=apifacts IndexNow submission, 05:00 Europe/Paris
+
+[Timer]
+OnCalendar=*-*-* 05:00:00 Europe/Paris
+Persistent=true
+Unit=agentfacts-indexnow.service
+
+[Install]
+WantedBy=timers.target

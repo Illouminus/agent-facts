@@ -1,4 +1,4 @@
-# `page size must be nonnegative.`
+# `Page size must be nonnegative.`
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection} · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-firestore:probe:list-parameter-errors` (declarative, [source](.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `page size must be nonnegative.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

@@ -1,4 +1,4 @@
-# `invalid stripe api version: ####-##-##`
+# `Invalid Stripe API version: 2099-01-01`
 
 **Stripe API · GET /v1/customers · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:invalid-api-version` (declarative, [source](../../probes/
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid stripe api version: ####-##-##`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

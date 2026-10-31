@@ -1,4 +1,4 @@
-# `the version you specified in the "x-github-api-version" request header, "####-##-##", is not a supported version. the following versions are currently supported: "####-##-##" (most recent) and "####-##-##".`
+# `The version you specified in the "X-GitHub-API-Version" request header, "2021-01-01", is not a supported version. The following versions are currently supported: "2026-03-10" (most recent) and "2022-11-28".`
 
 **GitHub REST API · GET /repos/{owner}/{repo} · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:github:probe:repo-api-version-unsupported` (declarative, [source](../.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `the version you specified in the "x-github-api-version" request header, "####-##-##", is not a supported version. the following versions are currently supported: "####-##-##" (most recent) and "####-##-##".`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

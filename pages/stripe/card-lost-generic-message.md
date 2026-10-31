@@ -1,4 +1,4 @@
-# `your card was declined.`
+# `Your card was declined.`
 
 **Stripe API · POST /v1/payment_intents · HTTP 402 `card_declined`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:card-lost` (declarative, [source](../../probes/stripe/car
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `your card was declined.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

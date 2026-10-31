@@ -1,4 +1,4 @@
-# `the requested resource does not exist`
+# `The requested resource does not exist`
 
 **Salesforce Platform REST API · GET /services/data/{version}/sobjects/{object}/{id} · HTTP 404 `NOT_FOUND`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:record-not-found` (declarative, [source](../../probes
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `the requested resource does not exist`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

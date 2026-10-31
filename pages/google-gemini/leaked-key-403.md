@@ -1,4 +1,4 @@
-# `your api key was reported as leaked. please use another api key.`
+# `Your API key was reported as leaked. Please use another API key.`
 
 **Gemini API · POST /v1beta/models/{model_and_method} · HTTP 403 `PERMISSION_DENIED`**
 
@@ -21,6 +21,8 @@ official doc: <https://ai.google.dev/gemini-api/docs/troubleshooting>
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `your api key was reported as leaked. please use another api key.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

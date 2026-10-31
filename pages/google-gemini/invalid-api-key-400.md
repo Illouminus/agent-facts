@@ -1,4 +1,4 @@
-# `api key not valid. please pass a valid api key.`
+# `API key not valid. Please pass a valid API key.`
 
 **Gemini API · GET /v1beta/models · HTTP 400 `INVALID_ARGUMENT`**
 
@@ -21,6 +21,8 @@ Probe `af:google-gemini:probe:models-invalid-key` (declarative, [source](../../p
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `api key not valid. please pass a valid api key.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

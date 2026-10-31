@@ -1,4 +1,4 @@
-# `sync token cannot be used with other request restrictions.`
+# `Sync token cannot be used with other request restrictions.`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id}/events · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:sync-token-errors` (declarative, [source](../../
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `sync token cannot be used with other request restrictions.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

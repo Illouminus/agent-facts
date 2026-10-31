@@ -1,4 +1,4 @@
-# `this property cannot be expanded (data.agent_facts).`
+# `This property cannot be expanded (data.agent_facts).`
 
 **Stripe API · GET /v1/customers · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:expand-not-expandable` (declarative, [source](../../probe
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `this property cannot be expanded (data.agent_facts).`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

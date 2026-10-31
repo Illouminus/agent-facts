@@ -1,4 +1,4 @@
-# `your card has insufficient funds. use a different payment method to complete this purchase.`
+# `Your card has insufficient funds. Use a different payment method to complete this purchase.`
 
 **Stripe API · POST /v1/payment_intents · HTTP 402 `card_declined`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:card-insufficient-funds` (declarative, [source](../../pro
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `your card has insufficient funds. use a different payment method to complete this purchase.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

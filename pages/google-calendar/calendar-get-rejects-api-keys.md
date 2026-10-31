@@ -1,4 +1,4 @@
-# `api keys are not supported by this api. expected oauth# access token or other authentication credentials that assert a principal. see <url>`
+# `API keys are not supported by this API. Expected OAuth2 access token or other authentication credentials that assert a principal. See https://cloud.google.com/docs/authentication`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id} · HTTP 401 `UNAUTHENTICATED`**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:calendar-get-needs-oauth` (declarative, [source]
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `api keys are not supported by this api. expected oauth# access token or other authentication credentials that assert a principal. see <url>`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

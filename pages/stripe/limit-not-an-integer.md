@@ -1,4 +1,4 @@
-# `invalid integer: abc`
+# `Invalid integer: abc`
 
 **Stripe API · GET /v1/customers · HTTP 400 `parameter_invalid_integer`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:limit-not-an-integer` (declarative, [source](../../probes
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `invalid integer: abc`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

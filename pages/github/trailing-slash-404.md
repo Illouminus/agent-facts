@@ -1,4 +1,4 @@
-# `### not found`
+# `404 Not Found`
 
 **GitHub REST API · GET /rate_limit/ · HTTP 404**
 
@@ -21,6 +21,8 @@ Probe `af:github:probe:trailing-slash` (declarative, [source](../../probes/githu
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `### not found`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

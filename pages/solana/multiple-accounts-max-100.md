@@ -1,4 +1,4 @@
-# `too many inputs provided; max ###`
+# `Too many inputs provided; max 100`
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 200 `-32602`**
 
@@ -21,6 +21,8 @@ Probe `af:solana:probe:multiple-accounts-limit` (declarative, [source](../../pro
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `too many inputs provided; max ###`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

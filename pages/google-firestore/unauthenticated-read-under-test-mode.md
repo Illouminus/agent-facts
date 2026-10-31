@@ -1,4 +1,4 @@
-# `document "projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch" not found.`
+# `Document "projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch" not found.`
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · HTTP 404 `NOT_FOUND`**
 
@@ -21,6 +21,8 @@ Probe `af:google-firestore:probe:unauthenticated-test-mode` (declarative, [sourc
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `document "projects/agent-facts-probes/databases/(default)/documents/agent_facts/nosuch" not found.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

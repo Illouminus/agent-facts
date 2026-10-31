@@ -1,4 +1,4 @@
-# `your card's security code is incorrect.`
+# `Your card's security code is incorrect.`
 
 **Stripe API · POST /v1/payment_intents · HTTP 402 `incorrect_cvc`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:card-incorrect-cvc` (declarative, [source](../../probes/s
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `your card's security code is incorrect.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

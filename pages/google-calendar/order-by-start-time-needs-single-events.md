@@ -1,4 +1,4 @@
-# `the requested ordering is not available for the particular query.`
+# `The requested ordering is not available for the particular query.`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id}/events · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:order-by-start-time` (declarative, [source](../.
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `the requested ordering is not available for the particular query.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

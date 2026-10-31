@@ -1,4 +1,4 @@
-# `the database agentfacts-nosuch-db does not exist for project agent-facts-probes please visit <url> to add a cloud datastore or cloud firestore database.`
+# `The database agentfacts-nosuch-db does not exist for project agent-facts-probes Please visit https://console.cloud.google.com/datastore/setup?project=agent-facts-probes to add a Cloud Datastore or Cloud Firestore database.`
 
 **Cloud Firestore (Firebase) REST API · GET /v1/projects/{project}/databases/{database}/documents/{collection}/{document} · HTTP 404 `NOT_FOUND`**
 
@@ -21,6 +21,8 @@ Probe `af:google-firestore:probe:unknown-database` (declarative, [source](../../
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `the database agentfacts-nosuch-db does not exist for project agent-facts-probes please visit <url> to add a cloud datastore or cloud firestore database.`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

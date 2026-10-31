@@ -1,4 +1,4 @@
-# `not found`
+# `Not Found`
 
 **Google Calendar API · GET /calendar/v3/calendars/{calendar_id}/events · HTTP 404**
 
@@ -21,6 +21,8 @@ Probe `af:google-calendar:probe:calendar-not-found` (declarative, [source](../..
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `not found`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

@@ -1,4 +1,4 @@
-# `bad request: user not found`
+# `Bad Request: user not found`
 
 **Telegram Bot API · GET /{bot_token}/{method} · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:telegram:probe:user-photos-unknown-user` (declarative, [source](../../
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `bad request: user not found`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

@@ -1,4 +1,4 @@
-# `model is not found: models/gemini-#.#-flash for api version v#beta`
+# `Model is not found: models/gemini-1.5-flash for api version v1beta`
 
 **Gemini API · GET /v1beta/models/{model} · HTTP 404 `NOT_FOUND`**
 
@@ -21,6 +21,8 @@ Probe `af:google-gemini:probe:gemini-1-5-retired` (declarative, [source](../../p
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `model is not found: models/gemini-#.#-flash for api version v#beta`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

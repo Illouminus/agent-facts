@@ -181,6 +181,10 @@ class FactsIndex:
         """One fact by slug, retracted ones included (a link never breaks; the status says)."""
         return self._all.get((service, slug))
 
+    def all_facts(self) -> tuple[IndexedFact, ...]:
+        """Every loaded fact, retracted ones included (each keeps its page), by id."""
+        return tuple(sorted(self._all.values(), key=lambda f: f.fact.id))
+
     def services_for_host(self, host: str) -> list[ServiceEntry]:
         """Exact `hosts` match, or a tenant host on `auth.instance_hosts` (it or a subdomain:
         `<org>.my.salesforce.com`, D-090); no other subdomains (default-deny). By key;

@@ -4,12 +4,12 @@ Hosts: `api.telegram.org` · 16 facts
 
 ## Error meanings
 
-- ✅ verified:server:prod · [`bad request: chat_id is empty`](chat-id-empty-400.md) · GET /{bot_token}/getChat · env prod
-- ✅ verified:server:prod · [`bad request: chat not found`](chat-not-found-400.md) · GET /{bot_token}/getChat · env prod
+- ✅ verified:server:prod · [`Bad Request: chat_id is empty`](chat-id-empty-400.md) · GET /{bot_token}/getChat · env prod
+- ✅ verified:server:prod · [`Bad Request: chat not found`](chat-not-found-400.md) · GET /{bot_token}/getChat · env prod
 - 🔵 official · [When a group has been migrated to a supergroup, the error's parameters.migrate_to_chat_id holds the supergroup's new identifier.](group-migrated-to-supergroup.md) · POST /{bot_token}/sendMessage · env prod
-- ✅ verified:server:prod · [`bad request: invalid file_id`](invalid-file-id-400.md) · GET /{bot_token}/getFile · env prod
-- ✅ verified:server:prod · [`not found`](unknown-method-404.md) · GET /{bot_token}/{method} · env prod
-- ✅ verified:server:prod · [`bad request: user not found`](user-not-found-400.md) · GET /{bot_token}/{method} · env prod
+- ✅ verified:server:prod · [`Bad Request: invalid file_id`](invalid-file-id-400.md) · GET /{bot_token}/getFile · env prod
+- ✅ verified:server:prod · [`Not Found`](unknown-method-404.md) · GET /{bot_token}/{method} · env prod
+- ✅ verified:server:prod · [`Bad Request: user not found`](user-not-found-400.md) · GET /{bot_token}/{method} · env prod
 
 ## Rate limits
 
@@ -27,8 +27,8 @@ Hosts: `api.telegram.org` · 16 facts
 
 ## Auth quirks
 
-- ✅ verified:server:prod · [`unauthorized`](invalid-token-401.md) · GET /{bot_token}/getMe · env prod
-- ✅ verified:server:prod · [`not found`](malformed-token-404.md) · GET /{bot_token}/getMe · env prod
+- ✅ verified:server:prod · [`Unauthorized`](invalid-token-401.md) · GET /{bot_token}/getMe · env prod
+- ✅ verified:server:prod · [`Not Found`](malformed-token-404.md) · GET /{bot_token}/getMe · env prod
 
 ---
 

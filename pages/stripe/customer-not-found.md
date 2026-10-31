@@ -1,4 +1,4 @@
-# `no such customer: 'cus_apifactsnosuch'`
+# `No such customer: 'cus_apifactsnosuch'`
 
 **Stripe API · GET /v1/customers/{id} · HTTP 404 `resource_missing`**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:customer-not-found` (declarative, [source](../../probes/s
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `no such customer: 'cus_apifactsnosuch'`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

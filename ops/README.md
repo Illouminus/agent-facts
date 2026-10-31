@@ -13,6 +13,8 @@ Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 | `var/observations.sqlite` | check() observations and counters (spec 03) |
 | `var/deploy/` | `deployed` (sha), `deploy.log`, parked `facts-unapplied-*.patch` |
 | `var/publications.jsonl` | published items (once the publish policy is approved) |
+| `var/sitemap-lastmod.json` | per page: hash of its substance and its sitemap `lastmod` (written by the API at startup) |
+| `var/indexnow.json` | URLs and `lastmod` last accepted by IndexNow, the last run's answer |
 | `ops/KILL` | kill switch file (gitignored) |
 | `~/.config/systemd/user/agentfacts-*` | symlinks to `ops/systemd/` (`systemctl --user link`) |
 
@@ -23,6 +25,7 @@ Spec: `docs/specs/08-ops-autonomy.md`. No Docker: a git checkout of this repo at
 | `agentfacts-digest.timer` | Monday 08:00 Europe/Paris, `ops/digest.py` | yes |
 | `agentfacts-refresh.timer` | daily 03:00 Europe/Paris, `probe run --refresh-evidence` | by hand after the deploy that adds it |
 | `agentfacts-quorum.timer` | hourly, quorum + bot (own token, verified-only auto-merge) | after the D-089 PR |
+| `agentfacts-indexnow.timer` | daily 05:00 Europe/Paris, `ops/indexnow.py` | by hand after the deploy that adds it |
 
 ## First install (once)
 
@@ -102,6 +105,26 @@ user whose own keys directory holds only the apifacts keys (mount namespaces wor
 units); lifting the AppArmor restriction would weaken the whole host and is not proposed.
 
 Check a property before adding it: `systemd-run --user --pipe --wait -p <Property>=… /bin/sh -c 'grep -E "NoNewPrivs|Seccomp" /proc/self/status'`.
+
+## IndexNow
+
+Changed pages go to IndexNow (Bing and the engines that share its submissions) once a day; the
+sitemap's `lastmod` moves only on a change of substance (spec 06), so a refresh-only night submits
+nothing. After the deploy that adds the units:
+
+```bash
+curl -s https://apifacts.dev/robots.txt | tail -1                    # Sitemap: https://apifacts.dev/sitemap.xml
+curl -s https://apifacts.dev/sitemap.xml | head -4                   # urlset, one <url> per page
+curl -s https://apifacts.dev/$(.venv/bin/python -c 'from apifacts.api.site import INDEXNOW_KEY as k; print(k)').txt
+.venv/bin/python ops/indexnow.py --dry-run                           # first run: every page
+systemctl --user enable --now agentfacts-indexnow.timer
+```
+
+`journalctl --user -u agentfacts-indexnow` shows `submitted N URLs (HTTP 200|202)`; 202 = key
+validation pending, 403 = the key file is not reachable at `https://apifacts.dev/<key>.txt`
+(check Caddy), 422 = a URL outside the host. `var/indexnow.json` → `last_run` keeps the answer.
+Resubmit everything: move `var/indexnow.json` away. Optionally add the sitemap in Bing Webmaster
+Tools (import from Google Search Console) to see crawl stats; not needed for IndexNow.
 
 ## Kill switch
 

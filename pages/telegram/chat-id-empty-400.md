@@ -1,4 +1,4 @@
-# `bad request: chat_id is empty`
+# `Bad Request: chat_id is empty`
 
 **Telegram Bot API · GET /{bot_token}/getChat · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:telegram:probe:get-chat-id-empty` (declarative, [source](../../probes/
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `bad request: chat_id is empty`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

@@ -1,4 +1,4 @@
-# `bad request: invalid file_id`
+# `Bad Request: invalid file_id`
 
 **Telegram Bot API · GET /{bot_token}/getFile · HTTP 400**
 
@@ -21,6 +21,8 @@ Probe `af:telegram:probe:get-file-invalid` (declarative, [source](../../probes/t
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `bad request: invalid file_id`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

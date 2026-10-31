@@ -1,4 +1,4 @@
-# `your ip or provider is blocked from this endpoint`
+# `Your IP or provider is blocked from this endpoint`
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 403 `403`**
 
@@ -21,6 +21,8 @@ Probe `af:solana:probe:program-accounts-blocked` (declarative, [source](../../pr
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `your ip or provider is blocked from this endpoint`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

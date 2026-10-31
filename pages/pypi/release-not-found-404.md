@@ -1,4 +1,4 @@
-# `not found`
+# `Not Found`
 
 **PyPI (Python Package Index) · GET /pypi/{project}/{version}/json · HTTP 404**
 
@@ -21,6 +21,8 @@ Probe `af:pypi:probe:json-not-found` (declarative, [source](../../probes/pypi/js
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `not found`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

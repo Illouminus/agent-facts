@@ -1,4 +1,4 @@
-# `` method does not support commitment below `confirmed` ``
+# `` Method does not support commitment below `confirmed` ``
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 200 `-32602`**
 
@@ -21,6 +21,8 @@ Probe `af:solana:probe:block-commitment-processed` (declarative, [source](../../
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `` method does not support commitment below `confirmed` ``
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

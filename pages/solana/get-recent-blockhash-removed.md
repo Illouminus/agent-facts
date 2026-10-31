@@ -1,4 +1,4 @@
-# `method not found`
+# `Method not found`
 
 **Solana JSON-RPC (public mainnet endpoint) · POST / · HTTP 200 `-32601`**
 
@@ -21,6 +21,8 @@ Probe `af:solana:probe:methods-removed` (declarative, [source](../../probes/sola
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `method not found`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

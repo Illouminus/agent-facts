@@ -1,4 +1,4 @@
-# `destination url not reset. the url returned from login must be set`
+# `Destination URL not reset. The URL returned from login must be set`
 
 **Salesforce Platform REST API · GET /services/data/{version}/limits · HTTP 400 `URL_NOT_RESET`**
 
@@ -21,6 +21,8 @@ Probe `af:salesforce:probe:rest-on-login-host` (declarative, [source](../../prob
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `destination url not reset. the url returned from login must be set`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \

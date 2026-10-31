@@ -1,4 +1,4 @@
-# `you did not provide an api key. you need to provide your api key in the authorization header, using bearer auth (e.g. 'authorization: <redacted>'). see <url> for details, or we can help at <url>`
+# `You did not provide an API key. You need to provide your API key in the Authorization header, using Bearer auth (e.g. 'Authorization: Bearer YOUR_SECRET_KEY'). See https://stripe.com/docs/api#authentication for details, or we can help at https://support.stripe.com/.`
 
 **Stripe API · GET /v1/customers · HTTP 401**
 
@@ -21,6 +21,8 @@ Probe `af:stripe:probe:no-api-key` (declarative, [source](../../probes/stripe/no
 Observations: none from reporters yet.
 
 ## Machine access
+
+Match signature (what `check()` matches): `you did not provide an api key. you need to provide your api key in the authorization header, using bearer auth (e.g. 'authorization: <redacted>'). see <url> for details, or we can help at <url>`
 
 ```sh
 curl -s https://apifacts.dev/v0/check \
